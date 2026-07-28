@@ -2,7 +2,7 @@
 
 # 🍳 CociHub
 
-### Tus recetas, siempre a mano
+### Comer es un placer, cocinar un privilegio, enseñar una resposabilidad
 
 Plataforma web de recetas personales diseñada para consultar, organizar, adaptar y compartir recetas desde cualquier dispositivo.
 

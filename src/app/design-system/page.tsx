@@ -1,4 +1,5 @@
 import { Container } from "@/components/layout/container";
+import { Button } from "@/components/ui/button";
 
 const colors = [
   ["Principal", "bg-brand", "#D95D39"],
@@ -98,6 +99,80 @@ export default function DesignSystemPage() {
                 administración.
               </p>
             </article>
+          </div>
+        </section>
+        
+        <section className="mt-16">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
+              Componentes básicos
+            </p>
+
+            <h2 className="mt-3 font-serif text-3xl font-bold">
+              Botones
+            </h2>
+
+            <p className="mt-4 text-muted-foreground">
+              Variantes, tamaños y estados principales de los botones de CociHub.
+            </p>
+          </div>
+
+          <div className="mt-8 rounded-lg border border-border bg-surface p-6 shadow-[var(--shadow-sm)]">
+            <h3 className="font-serif text-xl font-bold">
+              Variantes
+            </h3>
+
+            <div className="mt-5 flex flex-wrap gap-4">
+              <Button>Botón principal</Button>
+
+              <Button variant="secondary">
+                Botón secundario
+              </Button>
+
+              <Button variant="tertiary">
+                Botón terciario
+              </Button>
+
+              <Button variant="danger">
+                Eliminar receta
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-lg border border-border bg-surface p-6 shadow-[var(--shadow-sm)]">
+            <h3 className="font-serif text-xl font-bold">
+              Tamaños
+            </h3>
+
+            <div className="mt-5 flex flex-wrap items-center gap-4">
+              <Button size="sm">
+                Pequeño
+              </Button>
+
+              <Button size="md">
+                Mediano
+              </Button>
+
+              <Button size="lg">
+                Grande
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-lg border border-border bg-surface p-6 shadow-[var(--shadow-sm)]">
+            <h3 className="font-serif text-xl font-bold">
+              Estados
+            </h3>
+
+            <div className="mt-5 flex flex-wrap gap-4">
+              <Button disabled>
+                Deshabilitado
+              </Button>
+
+              <Button isLoading>
+                Guardar receta
+              </Button>
+            </div>
           </div>
         </section>
       </Container>

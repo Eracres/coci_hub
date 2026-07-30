@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { IngredientListDemo } from "@/components/admin/recipes/ingredient-list-demo";
 
 const colors = [
   ["Principal", "bg-brand", "#D95D39"],
@@ -399,6 +400,27 @@ export default function DesignSystemPage() {
               label="Receta destacada"
               description="La receta podrá aparecer en la portada de CociHub."
             />
+          </div>
+        </section>
+
+        <section className="mt-16">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
+              Formularios administrativos
+            </p>
+
+            <h2 className="mt-3 font-serif text-3xl font-bold">
+              Gestión de ingredientes
+            </h2>
+
+            <p className="mt-4 leading-relaxed text-muted-foreground">
+              Se utiliza un único formulario para añadir o editar ingredientes. Cada
+              ingrediente guardado aparece en una lista ordenable dentro de su grupo.
+            </p>
+          </div>
+
+          <div className="mt-8">
+            <IngredientListDemo />
           </div>
         </section>
       </Container>

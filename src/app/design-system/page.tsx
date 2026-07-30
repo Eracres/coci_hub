@@ -3,6 +3,10 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup } from "@/components/ui/radio-group";
+import { Select } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 const colors = [
   ["Principal", "bg-brand", "#D95D39"],
@@ -276,6 +280,125 @@ export default function DesignSystemPage() {
                 className="min-h-44"
               />
             </FormField>
+          </div>
+        </section>
+
+        <section className="mt-16">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
+              Componentes básicos
+            </p>
+
+            <h2 className="mt-3 font-serif text-3xl font-bold">
+              Selectores y controles
+            </h2>
+
+            <p className="mt-4 text-muted-foreground">
+              Controles para clasificar recetas, seleccionar opciones y gestionar
+              estados administrativos.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-8 rounded-lg border border-border bg-surface p-6 shadow-[var(--shadow-sm)]">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <FormField
+                htmlFor="recipe-type"
+                label="Tipo de receta"
+                description="Selecciona el tipo principal."
+                required
+              >
+                <Select id="recipe-type" name="recipe-type" defaultValue="">
+                  <option value="" disabled>
+                    Selecciona un tipo
+                  </option>
+                  <option value="breakfast">Desayuno</option>
+                  <option value="starter">Entrante</option>
+                  <option value="main-course">Plato principal</option>
+                  <option value="side-dish">Guarnición</option>
+                  <option value="dessert">Postre</option>
+                </Select>
+              </FormField>
+
+              <FormField
+                htmlFor="ingredient-unit"
+                label="Unidad de medida"
+                description="Unidad utilizada para un ingrediente."
+              >
+                <Select id="ingredient-unit" name="ingredient-unit">
+                  <option value="g">Gramos</option>
+                  <option value="kg">Kilogramos</option>
+                  <option value="ml">Mililitros</option>
+                  <option value="l">Litros</option>
+                  <option value="unit">Unidades</option>
+                  <option value="tbsp">Cucharadas</option>
+                  <option value="tsp">Cucharaditas</option>
+                  <option value="to-taste">Al gusto</option>
+                </Select>
+              </FormField>
+            </div>
+
+            <RadioGroup
+              name="difficulty"
+              legend="Dificultad"
+              defaultValue="easy"
+              required
+              options={[
+                {
+                  value: "easy",
+                  label: "Fácil",
+                  description: "No requiere técnicas avanzadas.",
+                },
+                {
+                  value: "medium",
+                  label: "Media",
+                  description: "Requiere cierta experiencia.",
+                },
+                {
+                  value: "hard",
+                  label: "Difícil",
+                  description: "Incluye técnicas más complejas.",
+                },
+              ]}
+            />
+
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                Etiquetas y características
+              </h3>
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <Checkbox
+                  id="vegetarian"
+                  name="vegetarian"
+                  label="Vegetariana"
+                />
+
+                <Checkbox
+                  id="quick"
+                  name="quick"
+                  label="Receta rápida"
+                />
+
+                <Checkbox
+                  id="economic"
+                  name="economic"
+                  label="Económica"
+                />
+
+                <Checkbox
+                  id="share"
+                  name="share"
+                  label="Para compartir"
+                />
+              </div>
+            </div>
+
+            <Switch
+              id="featured"
+              name="featured"
+              label="Receta destacada"
+              description="La receta podrá aparecer en la portada de CociHub."
+            />
           </div>
         </section>
       </Container>

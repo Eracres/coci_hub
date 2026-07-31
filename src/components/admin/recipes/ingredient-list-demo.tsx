@@ -15,12 +15,14 @@ import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/ui/form-error";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 type IngredientDraft = {
   quantity: string;
   unit: string;
   name: string;
   notes: string;
+  scalable: boolean;
 };
 
 type Ingredient = IngredientDraft & {
@@ -38,6 +40,7 @@ const emptyDraft: IngredientDraft = {
   unit: "",
   name: "",
   notes: "",
+  scalable: true,
 };
 
 const unitOptions = [
@@ -65,6 +68,7 @@ const initialGroups: IngredientGroup[] = [
         unit: "g",
         name: "Garbanzos cocidos",
         notes: "Escurridos y lavados",
+        scalable: true,
       },
       {
         id: "ingredient-beetroot",
@@ -72,6 +76,7 @@ const initialGroups: IngredientGroup[] = [
         unit: "g",
         name: "Remolacha cocida",
         notes: "Cortada en trozos",
+        scalable: true,
       },
       {
         id: "ingredient-sesame",
@@ -79,6 +84,7 @@ const initialGroups: IngredientGroup[] = [
         unit: "tbsp",
         name: "Semillas de sésamo",
         notes: "",
+        scalable: true,
       },
     ],
   },
@@ -136,10 +142,10 @@ export function IngredientListDemo() {
     return drafts[groupId] ?? emptyDraft;
   }
 
-  function updateDraft(
+  function updateDraft<K extends keyof IngredientDraft>(
     groupId: string,
-    field: keyof IngredientDraft,
-    value: string,
+    field: K,
+    value: IngredientDraft[K],
   ) {
     setDrafts((currentDrafts) => ({
       ...currentDrafts,
@@ -149,7 +155,7 @@ export function IngredientListDemo() {
       },
     }));
 
-    if (field === "name" && value.trim()) {
+    if (field === "name" && typeof value === "string" && value.trim()) {
       setErrors((currentErrors) => ({
         ...currentErrors,
         [groupId]: "",
@@ -261,6 +267,7 @@ export function IngredientListDemo() {
       unit: draft.unit,
       name: draft.name.trim(),
       notes: draft.notes.trim(),
+      scalable: draft.scalable,
     };
 
     setGroups((currentGroups) =>
@@ -311,6 +318,7 @@ export function IngredientListDemo() {
         unit: ingredient.unit,
         name: ingredient.name,
         notes: ingredient.notes,
+        scalable: ingredient.scalable,
       },
     }));
 
@@ -342,6 +350,7 @@ export function IngredientListDemo() {
         unit: ingredient.unit,
         name: ingredient.name,
         notes: ingredient.notes,
+        scalable: ingredient.scalable,
       },
     }));
 
@@ -651,6 +660,25 @@ export function IngredientListDemo() {
                       placeholder="Ej. Escurridos y lavados"
                     />
                   </div>
+
+                  <Switch
+                    id={`ingredient-scalable-${group.id}`}
+                    name={`ingredient-scalable-${group.id}`}
+                    label="Adaptar al número de comensales"
+                    description={
+                      draft.scalable
+                        ? "La cantidad se recalculará cuando cambien las raciones."
+                        : "La cantidad permanecerá igual para cualquier número de comensales."
+                    }
+                    checked={draft.scalable}
+                    onChange={(event) =>
+                      updateDraft(
+                        group.id,
+                        "scalable",
+                        event.target.checked,
+                      )
+                    }
+                  />
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-3">
@@ -753,6 +781,22 @@ export function IngredientListDemo() {
                                   {ingredient.notes}
                                 </p>
                               )}
+
+                              <span
+                                className={`
+                                  mt-3 inline-flex rounded-full px-2.5 py-1
+                                  text-xs font-semibold
+                                  ${
+                                    ingredient.scalable
+                                      ? "bg-secondary/10 text-secondary-hover"
+                                      : "bg-page-muted text-muted-foreground"
+                                  }
+                                `}
+                              >
+                                {ingredient.scalable
+                                  ? "Se adapta a los comensales"
+                                  : "No se recalcula"}
+                              </span>
                             </div>
                           </div>
 

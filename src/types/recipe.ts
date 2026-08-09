@@ -12,6 +12,15 @@ export type AllergenPresence =
   | "present"
   | "possible";
 
+export type RecipeSourceType =
+  | "own"
+  | "family"
+  | "book"
+  | "magazine"
+  | "web"
+  | "handwritten"
+  | "other";
+
 export type RecipeIngredient = {
   id?: string;
 
@@ -61,15 +70,7 @@ export type RecipeAllergen = {
 };
 
 export type RecipeSource = {
-  type:
-    | "own"
-    | "family"
-    | "book"
-    | "magazine"
-    | "web"
-    | "handwritten"
-    | "other"
-    | null;
+  type: RecipeSourceType | null;
 
   title: string | null;
 
@@ -89,7 +90,7 @@ export type Recipe = {
 
   slug: string;
 
-  shortDescription: string;
+  shortDescription: string | null;
 
   introduction: string | null;
 
@@ -99,17 +100,17 @@ export type Recipe = {
 
   status: RecipeStatus;
 
-  difficulty: RecipeDifficulty;
+  difficulty: RecipeDifficulty | null;
 
-  baseServings: number;
+  baseServings: number | null;
 
-  preparationMinutes: number;
+  preparationMinutes: number | null;
 
   cookingMinutes: number | null;
 
   additionalMinutes: number | null;
 
-  recipeTypeId: string;
+  recipeTypeId: string | null;
 
   categoryIds: string[];
 

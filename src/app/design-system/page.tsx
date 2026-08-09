@@ -8,6 +8,10 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { IngredientListDemo } from "@/components/admin/recipes/ingredient-list-demo";
+import { RecipeStepsDemo } from "@/components/admin/recipes/recipe-steps-demo";
+import { RecipeServingsDemo } from "@/components/admin/recipes/recipe-servings-demo";
+import { ImageUploaderDemo } from "@/components/admin/recipes/image-uploader-demo";
+import { RecipeBasicInfoDemo } from "@/components/admin/recipes/recipe-basic-info-demo";
 
 const colors = [
   ["Principal", "bg-brand", "#D95D39"],
@@ -421,6 +425,92 @@ export default function DesignSystemPage() {
 
           <div className="mt-8">
             <IngredientListDemo />
+          </div>
+        </section>
+
+        <section className="mt-16">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
+              Formularios administrativos
+            </p>
+
+            <h2 className="mt-3 font-serif text-3xl font-bold">
+              Pasos de elaboración
+            </h2>
+
+            <p className="mt-4 leading-relaxed text-muted-foreground">
+              Se utiliza un único formulario para crear o editar cada paso. Los pasos
+              añadidos aparecen en una lista ordenada que reproduce de forma aproximada
+              su presentación en la receta pública.
+            </p>
+          </div>
+
+          <div className="mt-8">
+            <RecipeStepsDemo />
+          </div>
+        </section>
+
+        <section className="mt-16">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
+              Formularios administrativos
+            </p>
+
+            <h2 className="mt-3 font-serif text-3xl font-bold">
+              Raciones y comensales
+            </h2>
+
+            <p className="mt-4 leading-relaxed text-muted-foreground">
+              Toda receta debe indicar para cuántas personas están
+              calculados sus ingredientes. La vista pública utilizará ese
+              valor para recalcular las cantidades.
+            </p>
+          </div>
+
+          <div className="mt-8">
+            <RecipeServingsDemo />
+          </div>
+        </section>
+
+        <section className="mt-16">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
+              Formularios administrativos
+            </p>
+
+            <h2 className="mt-3 font-serif text-3xl font-bold">
+              Imagen principal
+            </h2>
+
+            <p className="mt-4 leading-relaxed text-muted-foreground">
+              Componente para seleccionar, validar y
+              previsualizar la fotografía principal de una
+              receta antes de almacenarla.
+            </p>
+          </div>
+
+          <div className="mt-8">
+            <ImageUploaderDemo />
+          </div>
+        </section>
+        <section className="mt-16">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
+              Formularios administrativos
+            </p>
+
+            <h2 className="mt-3 font-serif text-3xl font-bold">
+              Información básica
+            </h2>
+
+            <p className="mt-4 leading-relaxed text-muted-foreground">
+              Datos principales con los que se identificará
+              una receta dentro de CociHub.
+            </p>
+          </div>
+
+          <div className="mt-8">
+            <RecipeBasicInfoDemo />
           </div>
         </section>
       </Container>

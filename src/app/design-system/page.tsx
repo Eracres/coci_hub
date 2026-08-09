@@ -20,6 +20,7 @@ import { RecipeAdditionalInfoDemo } from "@/components/admin/recipes/recipe-addi
 import { RecipeAllergensDemo } from "@/components/admin/recipes/recipe-allergens-demo";
 import { RecipePublicationDemo } from "@/components/admin/recipes/recipe-publication-demo";
 
+import { RecipeFormDemo } from "@/components/admin/recipes/recipe-form-demo";
 
 const colors = [
   ["Principal", "bg-brand", "#D95D39"],
@@ -672,6 +673,29 @@ export default function DesignSystemPage() {
 
             <div className="mt-6">
               <RecipePublicationDemo />
+            </div>
+          </div>
+
+          {/* Composición completa */}
+
+          <div className="mt-24 border-t border-border pt-16">
+            <div className="max-w-3xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
+                Composición final
+              </p>
+
+              <h2 className="mt-3 font-serif text-3xl font-bold">
+                Formulario administrativo completo
+              </h2>
+
+              <p className="mt-4 leading-relaxed text-muted-foreground">
+                Integración visual de todos los módulos utilizados para crear
+                y editar una receta dentro del área administrativa de CociHub.
+              </p>
+            </div>
+
+            <div className="mt-10">
+              <RecipeFormDemo />
             </div>
           </div>
 

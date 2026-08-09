@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { RecipeClassificationDemo } from "@/components/admin/recipes/recipe-classification-demo";
 import { RecipeTimesDemo } from "@/components/admin/recipes/recipe-times-demo";
-
+import { RecipeAdditionalInfoDemo } from "@/components/admin/recipes/recipe-additional-info-demo";
 
 const colors = [
   ["Principal", "bg-brand", "#D95D39"],
@@ -632,6 +632,20 @@ export default function DesignSystemPage() {
               <RecipeStepsDemo />
             </div>
           </div>
+
+          {/* Información adicional */}
+
+          <div className="mt-16">
+            <SectionIntro
+              title="Información adicional"
+              description="Consejos, sustituciones, conservación, congelación, recalentado y procedencia de la receta."
+            />
+
+            <div className="mt-6">
+              <RecipeAdditionalInfoDemo />
+            </div>
+          </div>
+          
         </section>
       </Container>
     </main>

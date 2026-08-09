@@ -18,6 +18,8 @@ import { RecipeClassificationDemo } from "@/components/admin/recipes/recipe-clas
 import { RecipeTimesDemo } from "@/components/admin/recipes/recipe-times-demo";
 import { RecipeAdditionalInfoDemo } from "@/components/admin/recipes/recipe-additional-info-demo";
 import { RecipeAllergensDemo } from "@/components/admin/recipes/recipe-allergens-demo";
+import { RecipePublicationDemo } from "@/components/admin/recipes/recipe-publication-demo";
+
 
 const colors = [
   ["Principal", "bg-brand", "#D95D39"],
@@ -657,6 +659,19 @@ export default function DesignSystemPage() {
 
             <div className="mt-6">
               <RecipeAllergensDemo />
+            </div>
+          </div>
+
+          {/* Publicación */}
+
+          <div className="mt-16">
+            <SectionIntro
+              title="Publicación"
+              description="Control del estado de la receta, validación de requisitos y acciones para guardar, previsualizar, publicar o archivar."
+            />
+
+            <div className="mt-6">
+              <RecipePublicationDemo />
             </div>
           </div>
 

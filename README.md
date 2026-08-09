@@ -2,12 +2,12 @@
 
 # 🍳 CociHub
 
-### Tus recetas, siempre a mano.
+### Comer es un placer, cocinar un privilegio, enseñar una responsabilidad.
 
 Plataforma web de recetas personales diseñada para consultar, organizar, adaptar y compartir recetas desde cualquier dispositivo.
 
 [![Estado](https://img.shields.io/badge/estado-en%20desarrollo-3F7D57?style=for-the-badge)](#-roadmap)
-[![Fase](https://img.shields.io/badge/fase-3%20sistema%20de%20diseño-D95D39?style=for-the-badge)](#-roadmap)
+[![Fase](https://img.shields.io/badge/fase-4%20arquitectura%20técnica-D95D39?style=for-the-badge)](#-roadmap)
 [![Next.js](https://img.shields.io/badge/Next.js-en%20uso-292522?style=for-the-badge&logo=nextdotjs)](#-stack-tecnológico-previsto)
 [![TypeScript](https://img.shields.io/badge/TypeScript-en%20uso-3978A8?style=for-the-badge&logo=typescript)](#-stack-tecnológico-previsto)
 [![Supabase](https://img.shields.io/badge/Supabase-previsto-3F7D57?style=for-the-badge&logo=supabase)](#-stack-tecnológico-previsto)
@@ -1401,28 +1401,21 @@ Supabase
 - [x] Definir flujos de usuario.
 - [x] Identificar componentes reutilizables.
 
-## Fase 3 — Sistema de diseño
+## Fase 3 — Sistema de diseño ✅ COMPLETADA
 
 ### 3.1 Fundamentos visuales
 
 - [x] Convertir la paleta en tokens.
 - [x] Configurar Inter y Lora.
-- [x] Definir sombras.
-- [x] Definir radios.
+- [x] Definir sombras y radios.
 - [x] Definir contenedor, espaciado y breakpoints principales.
 - [x] Crear la ruta interna `/design-system`.
 
 ### 3.2 Componentes UI básicos
 
-- [x] Diseñar e implementar botones.
-- [x] Diseñar e implementar inputs.
-- [x] Diseñar e implementar textareas.
-- [x] Diseñar e implementar selectores.
-- [x] Diseñar e implementar checkboxes.
-- [x] Diseñar e implementar radio groups.
-- [x] Diseñar e implementar switches.
-- [x] Implementar `FormField`.
-- [x] Implementar `FormError`.
+- [x] Implementar botones, inputs, textareas y selectores.
+- [x] Implementar checkboxes, radio groups y switches.
+- [x] Implementar `FormField` y `FormError`.
 - [x] Documentar variantes y estados básicos dentro del design system.
 
 ### 3.3 Formulario administrativo de receta
@@ -1432,23 +1425,24 @@ Supabase
 - [x] Clasificación.
 - [x] Raciones y comensales.
 - [x] Tiempos.
-- [x] Gestión de ingredientes.
+- [x] Gestión de ingredientes y grupos.
 - [x] Elaboración y pasos.
-- [x] Información adicional.
-- [x] Alérgenos presentes y posibles.
+- [x] Información adicional y procedencia.
+- [x] Alérgenos presentes y posibles trazas.
 - [x] Flujo de publicación.
 
-### 3.4 Pendiente para cerrar la fase
+### 3.4 Composición final
 
-- [ ] Integrar todos los módulos en un único `RecipeForm`.
-- [ ] Revisar el flujo completo de creación/edición.
-- [ ] Revisar responsive del formulario completo.
-- [ ] Revisar consistencia visual y accesibilidad.
-- [ ] Realizar limpieza final de los componentes de demostración.
+- [x] Integrar los módulos en `RecipeFormDemo`.
+- [x] Crear navegación interna del formulario.
+- [x] Revisar la composición en escritorio, tablet y móvil.
+- [x] Mantener los módulos individuales documentados en `/design-system`.
 
-> La Fase 3 se encuentra prácticamente completada. El último trabajo pendiente es la composición final del formulario administrativo completo.
+> La Fase 3 queda cerrada. El formulario completo existe todavía como composición visual; la gestión de estado, validación y persistencia reales se desarrollarán durante la arquitectura técnica y el desarrollo.
 
-## Fase 4 — Arquitectura técnica
+## Fase 4 — Arquitectura técnica 🟡 EN CURSO
+
+El objetivo de esta fase es transformar los prototipos visuales de la Fase 3 en una arquitectura preparada para datos reales, validación, autenticación y persistencia.
 
 - [x] Crear estructura inicial de carpetas.
 - [ ] Definir Server Components y Client Components.
@@ -1646,6 +1640,6 @@ La licencia se definirá antes de la publicación de la primera versión estable
 
 <div align="center">
 
-**CociHub — Tus recetas, siempre a mano.**
+**CociHub — Comer es un placer, cocinar un privilegio, enseñar una responsabilidad.**
 
 </div>

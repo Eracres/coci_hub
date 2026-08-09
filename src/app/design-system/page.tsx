@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RecipeClassificationDemo } from "@/components/admin/recipes/recipe-classification-demo";
 import { RecipeTimesDemo } from "@/components/admin/recipes/recipe-times-demo";
 import { RecipeAdditionalInfoDemo } from "@/components/admin/recipes/recipe-additional-info-demo";
+import { RecipeAllergensDemo } from "@/components/admin/recipes/recipe-allergens-demo";
 
 const colors = [
   ["Principal", "bg-brand", "#D95D39"],
@@ -645,7 +646,20 @@ export default function DesignSystemPage() {
               <RecipeAdditionalInfoDemo />
             </div>
           </div>
-          
+
+          {/* Alérgenos */}
+
+          <div className="mt-16">
+            <SectionIntro
+              title="Alérgenos"
+              description="Identificación orientativa de alérgenos presentes y posibles trazas relacionadas con los ingredientes utilizados."
+            />
+
+            <div className="mt-6">
+              <RecipeAllergensDemo />
+            </div>
+          </div>
+
         </section>
       </Container>
     </main>

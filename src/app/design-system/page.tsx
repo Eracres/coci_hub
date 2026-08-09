@@ -14,6 +14,7 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { RecipeClassificationDemo } from "@/components/admin/recipes/recipe-classification-demo";
 
 const colors = [
   ["Principal", "bg-brand", "#D95D39"],
@@ -575,6 +576,19 @@ export default function DesignSystemPage() {
 
             <div className="mt-6">
               <ImageUploaderDemo />
+            </div>
+          </div>
+
+          {/* Clasificación */}
+
+          <div className="mt-16">
+            <SectionIntro
+              title="Clasificación"
+              description="Define el tipo principal, las categorías, etiquetas, dificultad y visibilidad destacada de la receta."
+            />
+
+            <div className="mt-6">
+              <RecipeClassificationDemo />
             </div>
           </div>
 

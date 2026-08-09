@@ -15,6 +15,8 @@ import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { RecipeClassificationDemo } from "@/components/admin/recipes/recipe-classification-demo";
+import { RecipeTimesDemo } from "@/components/admin/recipes/recipe-times-demo";
+
 
 const colors = [
   ["Principal", "bg-brand", "#D95D39"],
@@ -589,6 +591,19 @@ export default function DesignSystemPage() {
 
             <div className="mt-6">
               <RecipeClassificationDemo />
+            </div>
+          </div>
+
+          {/* Tiempos */}
+
+          <div className="mt-16">
+            <SectionIntro
+              title="Tiempos"
+              description="Define la duración de preparación, cocinado y tiempos adicionales. El total se calcula automáticamente."
+            />
+
+            <div className="mt-6">
+              <RecipeTimesDemo />
             </div>
           </div>
 

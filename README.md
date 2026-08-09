@@ -2,14 +2,14 @@
 
 # 🍳 CociHub
 
-### Comer es un placer, cocinar un privilegio, enseñar una resposabilidad
+### Tus recetas, siempre a mano.
 
 Plataforma web de recetas personales diseñada para consultar, organizar, adaptar y compartir recetas desde cualquier dispositivo.
 
-[![Estado](https://img.shields.io/badge/estado-planificación-E5A93D?style=for-the-badge)](#-estado-del-proyecto)
-[![Fase](https://img.shields.io/badge/fase-diseño%20y%20arquitectura-D95D39?style=for-the-badge)](#-roadmap)
-[![Next.js](https://img.shields.io/badge/Next.js-previsto-292522?style=for-the-badge&logo=nextdotjs)](#-stack-tecnológico-previsto)
-[![TypeScript](https://img.shields.io/badge/TypeScript-previsto-3978A8?style=for-the-badge&logo=typescript)](#-stack-tecnológico-previsto)
+[![Estado](https://img.shields.io/badge/estado-en%20desarrollo-3F7D57?style=for-the-badge)](#-roadmap)
+[![Fase](https://img.shields.io/badge/fase-3%20sistema%20de%20diseño-D95D39?style=for-the-badge)](#-roadmap)
+[![Next.js](https://img.shields.io/badge/Next.js-en%20uso-292522?style=for-the-badge&logo=nextdotjs)](#-stack-tecnológico-previsto)
+[![TypeScript](https://img.shields.io/badge/TypeScript-en%20uso-3978A8?style=for-the-badge&logo=typescript)](#-stack-tecnológico-previsto)
 [![Supabase](https://img.shields.io/badge/Supabase-previsto-3F7D57?style=for-the-badge&logo=supabase)](#-stack-tecnológico-previsto)
 
 </div>
@@ -233,7 +233,6 @@ Su objetivo no es implementar todas las ideas futuras, sino resolver correctamen
 - [ ] Migas de pan.
 - [ ] Footer.
 - [ ] Página Sobre CociHub.
-- [ ] Página de contacto.
 - [ ] Página 404.
 - [ ] Página de error general.
 - [ ] Aviso legal.
@@ -282,32 +281,32 @@ Su objetivo no es implementar todas las ideas futuras, sino resolver correctamen
 
 ### Formulario de receta
 
-- [ ] Información básica.
-- [ ] Tiempos y raciones.
-- [ ] Imagen principal.
-- [ ] Tipo principal.
-- [ ] Categorías.
-- [ ] Etiquetas.
-- [ ] Dificultad.
-- [ ] Grupos de ingredientes.
-- [ ] Ingredientes dinámicos.
-- [ ] Pasos dinámicos.
-- [ ] Reordenación de ingredientes y pasos.
-- [ ] Imágenes opcionales por paso.
-- [ ] Consejos y sustituciones.
-- [ ] Conservación, congelación y recalentado.
-- [ ] Selección de alérgenos.
-- [ ] Guardado como borrador.
-- [ ] Previsualización.
-- [ ] Publicación.
+> Los módulos visuales del formulario ya están diseñados en `/design-system`. Su integración funcional definitiva en `RecipeForm` todavía está pendiente.
+
+- [x] Diseñar información básica.
+- [x] Diseñar imagen principal.
+- [x] Diseñar clasificación: tipo, categorías, etiquetas, dificultad y destacada.
+- [x] Diseñar raciones base y demostración de recalculado.
+- [x] Diseñar tiempos y cálculo automático del total.
+- [x] Diseñar grupos e ingredientes dinámicos.
+- [x] Diseñar indicador `scalable` por ingrediente.
+- [x] Diseñar pasos dinámicos y reordenables.
+- [x] Diseñar información adicional.
+- [x] Diseñar fuente y procedencia.
+- [x] Diseñar alérgenos presentes y posibles.
+- [x] Diseñar estados `draft`, `published` y `archived`.
+- [x] Diseñar acciones de borrador, previsualización, publicación, despublicación y archivado.
+- [ ] Integrar los módulos en `RecipeForm`.
+- [ ] Conectar validación real con React Hook Form + Zod.
+- [ ] Conectar subida real de imágenes.
+- [ ] Persistir datos en Supabase.
 
 ### Gestión auxiliar
 
 - [ ] Gestión de categorías.
 - [ ] Gestión de etiquetas.
-- [ ] Gestión de alérgenos.
-- [ ] Gestión de imágenes.
-- [ ] Ajustes básicos.
+
+> En el MVP no se crearán páginas administrativas independientes para alérgenos, imágenes o ajustes. Los alérgenos partirán de un catálogo predefinido y las imágenes se gestionarán desde los propios formularios.
 
 ---
 
@@ -375,54 +374,52 @@ CociHub se divide en dos áreas claramente diferenciadas:
 ```text
 CociHub
 │
-├── Inicio
-│   ├── Buscador
-│   ├── Recetas destacadas
-│   ├── Últimas recetas
-│   ├── Categorías principales
-│   └── Presentación de CociHub
+├── Home
+│   ├── Search
+│   ├── Featured recipes
+│   ├── Latest recipes
+│   ├── Main categories
+│   └── About CociHub preview
 │
-├── Recetas
-│   ├── Todas las recetas
-│   ├── Resultados de búsqueda
-│   ├── Filtros y ordenación
-│   └── Detalle de receta
-│       ├── Información general
-│       ├── Ingredientes
-│       ├── Elaboración
-│       ├── Consejos
-│       ├── Sustituciones
-│       ├── Conservación
-│       ├── Alérgenos
-│       └── Compartir
+├── Recipes
+│   ├── All recipes
+│   ├── Search results
+│   ├── Filters and sorting
+│   └── Recipe detail
+│       ├── General information
+│       ├── Ingredients
+│       ├── Preparation
+│       ├── Tips
+│       ├── Substitutions
+│       ├── Storage
+│       ├── Allergens
+│       └── Share
 │
-├── Categorías
-│   ├── Todas las categorías
-│   └── Detalle de categoría
-│       └── Recetas relacionadas
+├── Categories
+│   ├── All categories
+│   └── Category detail
+│       └── Related recipes
 │
-├── Sobre CociHub
-├── Contacto
+├── About
 ├── Login
 │
-├── Administración
+├── Admin
 │   ├── Dashboard
-│   ├── Recetas
-│   │   ├── Listado
-│   │   ├── Nueva receta
-│   │   ├── Editar receta
-│   │   └── Previsualizar receta
-│   ├── Categorías
-│   ├── Etiquetas
-│   ├── Alérgenos
-│   ├── Imágenes
-│   └── Ajustes
+│   ├── Recipes
+│   │   ├── List
+│   │   ├── New recipe
+│   │   ├── Edit recipe
+│   │   └── Preview
+│   ├── Categories
+│   └── Tags
 │
-└── Sistema
-    ├── Página 404
-    ├── Error general
-    ├── Aviso legal
-    ├── Privacidad
+├── Design system (internal)
+│
+└── System
+    ├── 404
+    ├── General error
+    ├── Legal notice
+    ├── Privacy
     └── Cookies
 ```
 
@@ -430,21 +427,29 @@ CociHub
 
 # 🛣️ Rutas previstas
 
+Las rutas del proyecto utilizarán nombres en inglés para mantener coherencia con la estructura técnica, componentes y convenciones del código.
+
 ## Públicas
 
 ```text
 /
-/recetas
-/recetas/[slug]
-/buscar
-/categorias
-/categorias/[slug]
-/sobre-cocihub
-/contacto
-/privacidad
+/recipes
+/recipes/[slug]
+/categories
+/categories/[slug]
+/about
+/privacy
 /cookies
-/aviso-legal
+/legal-notice
 ```
+
+La búsqueda se resolverá mediante parámetros sobre el listado, por ejemplo:
+
+```text
+/recipes?search=falafel
+```
+
+No se creará una ruta independiente `/search` en el MVP.
 
 ## Autenticación
 
@@ -456,15 +461,20 @@ CociHub
 
 ```text
 /admin
-/admin/recetas
-/admin/recetas/nueva
-/admin/recetas/[id]/editar
-/admin/categorias
-/admin/etiquetas
-/admin/alergenos
-/admin/imagenes
-/admin/ajustes
+/admin/recipes
+/admin/recipes/new
+/admin/recipes/[id]/edit
+/admin/categories
+/admin/tags
 ```
+
+## Desarrollo interno
+
+```text
+/design-system
+```
+
+> `/design-system` es una ruta interna de trabajo utilizada para documentar y probar tokens, componentes UI y módulos administrativos durante la Fase 3.
 
 ---
 
@@ -715,14 +725,20 @@ La tabla se transformará en tarjetas administrativas con:
 
 ## 10. Formulario de receta
 
-El formulario se dividirá en seis secciones:
+El formulario administrativo se ha definido mediante módulos independientes y reutilizables:
 
 1. **Información básica**
-2. **Tiempos y raciones**
-3. **Ingredientes**
-4. **Elaboración**
-5. **Información adicional**
-6. **Publicación**
+2. **Imagen principal**
+3. **Clasificación**
+4. **Raciones y comensales**
+5. **Tiempos**
+6. **Ingredientes**
+7. **Elaboración**
+8. **Información adicional**
+9. **Alérgenos**
+10. **Publicación**
+
+Durante la Fase 3 cada módulo se está desarrollando primero como componente demostrativo dentro de `/design-system`. El siguiente paso será integrarlos en un único `RecipeForm`.
 
 ### Comportamiento previsto
 
@@ -877,11 +893,12 @@ Falafel de remolacha
 Cada ingrediente tendrá:
 
 - Nombre.
-- Cantidad.
+- Cantidad numérica opcional.
 - Unidad.
 - Notas opcionales.
 - Grupo.
 - Posición.
+- Indicador `scalable` para decidir si la cantidad debe recalcularse al cambiar las raciones.
 
 Los grupos permitirán separar, por ejemplo:
 
@@ -892,7 +909,7 @@ Para la salsa
 Para decorar
 ```
 
-Las cantidades podrán ser decimales y también admitirse expresiones no numéricas:
+Las cantidades numéricas podrán ser decimales. Las expresiones no numéricas se representarán sin cantidad escalable:
 
 ```text
 0,5 cebollas
@@ -901,6 +918,8 @@ Las cantidades podrán ser decimales y también admitirse expresiones no numéri
 Sal — al gusto
 Aceite — cantidad necesaria
 ```
+
+Al cambiar las raciones solo se recalcularán los ingredientes con cantidad numérica y `scalable = true`. Expresiones como `al gusto`, `una pizca` o `cantidad necesaria` permanecerán sin cambios.
 
 ## Pasos
 
@@ -920,10 +939,20 @@ Cada paso tendrá:
 - Conservación.
 - Congelación.
 - Recalentado.
-- Alérgenos.
-- Notas personales.
-- Fuente o inspiración.
+- Fuente o procedencia.
+- Autor o referencia de la fuente.
+- Página o URL cuando corresponda.
+- Notas sobre adaptaciones realizadas.
 - Fechas de creación, actualización y publicación.
+
+## Alérgenos
+
+Los alérgenos se tratarán de forma independiente y orientativa:
+
+- **Presentes:** forman parte directamente de la receta.
+- **Posibles / trazas:** pueden depender de la marca, elaboración industrial o contaminación cruzada.
+
+La interfaz no afirmará que una receta es completamente segura para una alergia y recomendará comprobar siempre el etiquetado de los productos utilizados.
 
 ---
 
@@ -958,10 +987,10 @@ erDiagram
 | `tags` | Etiquetas complementarias |
 | `recipe_tags` | Relación muchos a muchos entre recetas y etiquetas |
 | `ingredient_groups` | Bloques de ingredientes |
-| `ingredients` | Ingredientes, cantidades, unidades y notas |
+| `ingredients` | Ingredientes, cantidades, unidades, notas y comportamiento `scalable` |
 | `recipe_steps` | Pasos ordenados de elaboración |
 | `allergens` | Catálogo de alérgenos |
-| `recipe_allergens` | Relación entre recetas y alérgenos |
+| `recipe_allergens` | Relación entre recetas y alérgenos, incluyendo presencia `present` o `possible` |
 
 ## Estados previstos
 
@@ -979,6 +1008,13 @@ hard
 draft
 published
 archived
+```
+
+### Presencia de alérgenos
+
+```text
+present
+possible
 ```
 
 ### Roles preparados
@@ -1287,22 +1323,22 @@ Ejemplo:
 
 # 🧰 Stack tecnológico previsto
 
-| Área | Tecnología |
-|---|---|
-| Framework | Next.js |
-| UI | React |
-| Lenguaje | TypeScript |
-| Estilos | Tailwind CSS |
-| Formularios | React Hook Form |
-| Validación | Zod |
-| Backend | Next.js |
-| Base de datos | PostgreSQL |
-| Plataforma de datos | Supabase |
-| Autenticación | Supabase Auth |
-| Imágenes | Supabase Storage |
-| Iconos | Lucide React |
-| Despliegue | Vercel |
-| Control de versiones | Git y GitHub |
+| Área | Tecnología | Estado |
+|---|---|---|
+| Framework | Next.js | ✅ Configurado |
+| UI | React | ✅ Configurado |
+| Lenguaje | TypeScript | ✅ Configurado |
+| Estilos | Tailwind CSS | ✅ Configurado |
+| Formularios | React Hook Form | ⏳ Pendiente |
+| Validación | Zod | ⏳ Pendiente |
+| Backend | Next.js | 🟡 En preparación |
+| Base de datos | PostgreSQL | ⏳ Pendiente |
+| Plataforma de datos | Supabase | ⏳ Pendiente |
+| Autenticación | Supabase Auth | ⏳ Pendiente |
+| Imágenes | Supabase Storage | ⏳ Pendiente |
+| Iconos | Lucide React | ✅ En uso |
+| Despliegue | Vercel | ⏳ Pendiente |
+| Control de versiones | Git y GitHub | ✅ En uso |
 
 ## Arquitectura prevista
 
@@ -1367,24 +1403,54 @@ Supabase
 
 ## Fase 3 — Sistema de diseño
 
-- [ ] Convertir la paleta en tokens.
-- [ ] Configurar Inter y Lora.
-- [ ] Definir sombras.
-- [ ] Definir radios.
-- [ ] Diseñar botones.
-- [ ] Diseñar inputs y selectores.
-- [ ] Diseñar tarjetas.
-- [ ] Diseñar etiquetas.
-- [ ] Diseñar alertas y toasts.
-- [ ] Diseñar modales.
-- [ ] Diseñar tablas.
-- [ ] Diseñar skeletons.
-- [ ] Crear mockups de alta fidelidad.
-- [ ] Documentar variantes responsive.
+### 3.1 Fundamentos visuales
+
+- [x] Convertir la paleta en tokens.
+- [x] Configurar Inter y Lora.
+- [x] Definir sombras.
+- [x] Definir radios.
+- [x] Definir contenedor, espaciado y breakpoints principales.
+- [x] Crear la ruta interna `/design-system`.
+
+### 3.2 Componentes UI básicos
+
+- [x] Diseñar e implementar botones.
+- [x] Diseñar e implementar inputs.
+- [x] Diseñar e implementar textareas.
+- [x] Diseñar e implementar selectores.
+- [x] Diseñar e implementar checkboxes.
+- [x] Diseñar e implementar radio groups.
+- [x] Diseñar e implementar switches.
+- [x] Implementar `FormField`.
+- [x] Implementar `FormError`.
+- [x] Documentar variantes y estados básicos dentro del design system.
+
+### 3.3 Formulario administrativo de receta
+
+- [x] Información básica.
+- [x] Imagen principal.
+- [x] Clasificación.
+- [x] Raciones y comensales.
+- [x] Tiempos.
+- [x] Gestión de ingredientes.
+- [x] Elaboración y pasos.
+- [x] Información adicional.
+- [x] Alérgenos presentes y posibles.
+- [x] Flujo de publicación.
+
+### 3.4 Pendiente para cerrar la fase
+
+- [ ] Integrar todos los módulos en un único `RecipeForm`.
+- [ ] Revisar el flujo completo de creación/edición.
+- [ ] Revisar responsive del formulario completo.
+- [ ] Revisar consistencia visual y accesibilidad.
+- [ ] Realizar limpieza final de los componentes de demostración.
+
+> La Fase 3 se encuentra prácticamente completada. El último trabajo pendiente es la composición final del formulario administrativo completo.
 
 ## Fase 4 — Arquitectura técnica
 
-- [ ] Crear estructura de carpetas.
+- [x] Crear estructura inicial de carpetas.
 - [ ] Definir Server Components y Client Components.
 - [ ] Revisar el modelo SQL.
 - [ ] Crear migraciones.
@@ -1399,12 +1465,12 @@ Supabase
 
 ## Fase 5 — Desarrollo
 
-- [ ] Inicializar Next.js.
-- [ ] Configurar TypeScript.
-- [ ] Configurar Tailwind CSS.
-- [ ] Configurar tipografías.
-- [ ] Crear layouts.
-- [ ] Crear componentes base.
+- [x] Inicializar Next.js.
+- [x] Configurar TypeScript.
+- [x] Configurar Tailwind CSS.
+- [x] Configurar tipografías.
+- [x] Crear layout raíz.
+- [x] Crear componentes UI base.
 - [ ] Desarrollar la página de inicio.
 - [ ] Desarrollar el listado.
 - [ ] Desarrollar el detalle.
@@ -1456,7 +1522,7 @@ Las siguientes funcionalidades se reservan para versiones posteriores:
 - Recetas colaborativas.
 - Notificaciones.
 - Aplicación móvil nativa.
-- Inteligencia artificial.
+- Importación automática mediante IA (prevista para una fase posterior; primero desde texto y posteriormente desde imagen/fotografía).
 - Suscripciones.
 - Publicidad.
 - Pagos.
@@ -1513,33 +1579,52 @@ docs/
 
 ---
 
-# 📂 Estructura futura del repositorio
+# 📂 Estructura actual del repositorio
 
-La estructura técnica definitiva se establecerá en la fase de arquitectura. Como referencia inicial:
+La estructura ya ha comenzado a materializar la arquitectura prevista:
 
 ```text
-cocihub/
+coci_hub/
 ├── docs/
 ├── public/
-│   ├── images/
-│   └── icons/
 ├── src/
 │   ├── app/
-│   ├── components/
-│   │   ├── admin/
-│   │   ├── recipes/
-│   │   └── ui/
-│   ├── lib/
-│   ├── schemas/
-│   ├── services/
-│   ├── types/
-│   └── styles/
-├── .env.example
+│   │   ├── design-system/
+│   │   │   └── page.tsx
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   │
+│   └── components/
+│       ├── admin/
+│       │   └── recipes/
+│       │       ├── image-uploader-demo.tsx
+│       │       ├── ingredient-list-demo.tsx
+│       │       ├── recipe-additional-info-demo.tsx
+│       │       ├── recipe-allergens-demo.tsx
+│       │       ├── recipe-basic-info-demo.tsx
+│       │       ├── recipe-classification-demo.tsx
+│       │       ├── recipe-publication-demo.tsx
+│       │       ├── recipe-servings-demo.tsx
+│       │       ├── recipe-steps-demo.tsx
+│       │       └── recipe-times-demo.tsx
+│       ├── layout/
+│       └── ui/
+├── .gitignore
+├── AGENTS.md
+├── CLAUDE.md
+├── eslint.config.mjs
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
 ├── README.md
-└── package.json
+└── tsconfig.json
 ```
 
-> Esta estructura es provisional y se revisará antes de iniciar el desarrollo.
+A medida que avance la Fase 4 se añadirán las capas de `lib`, `schemas`, `services`, `types` y la integración con Supabase.
 
 ---
 

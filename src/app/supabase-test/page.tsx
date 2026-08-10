@@ -1,47 +1,34 @@
-import {
-  createClient,
-} from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function SupabaseTestPage() {
-  const supabase =
-    await createClient();
+  const supabase = await createClient();
 
-  const {
-    data: recipeTypes,
-    error: recipeTypesError,
-  } =
-    await supabase
-      .from("recipe_types")
-      .select("*")
-      .order("position");
+  const { data: recipes, error: selectError } = await supabase
+    .from("recipes")
+    .select("id, title, status");
 
-  const {
-    data: allergens,
-    error: allergensError,
-  } =
-    await supabase
-      .from("allergens")
-      .select("*")
-      .order("position");
+  const { data: insertedRecipe, error: insertError } = await supabase
+    .from("recipes")
+    .insert({
+      title: "Intento anónimo",
+      slug: "intento-anonimo",
+    })
+    .select();
 
   return (
     <main className="p-8">
-      <h1 className="font-serif text-3xl font-bold">
-        Supabase Test
+      <h1 className="text-3xl font-bold">
+        Prueba de seguridad Supabase
       </h1>
 
-      <pre className="mt-6 overflow-auto rounded-lg border border-border bg-surface p-4 text-sm">
+      <pre className="mt-6 overflow-auto rounded-lg border p-4 text-sm">
         {JSON.stringify(
           {
-            recipeTypes,
-            recipeTypesError:
-              recipeTypesError?.message ??
-              null,
+            publicRecipes: recipes,
+            selectError: selectError?.message ?? null,
 
-            allergens,
-            allergensError:
-              allergensError?.message ??
-              null,
+            insertResult: insertedRecipe,
+            insertError: insertError?.message ?? null,
           },
           null,
           2,

@@ -7,13 +7,22 @@ export default async function SupabaseTestPage() {
     await createClient();
 
   const {
-    data,
-    error,
+    data: recipeTypes,
+    error: recipeTypesError,
   } =
     await supabase
-      .from("recipes")
+      .from("recipe_types")
       .select("*")
-      .limit(5);
+      .order("position");
+
+  const {
+    data: allergens,
+    error: allergensError,
+  } =
+    await supabase
+      .from("allergens")
+      .select("*")
+      .order("position");
 
   return (
     <main className="p-8">
@@ -24,9 +33,14 @@ export default async function SupabaseTestPage() {
       <pre className="mt-6 overflow-auto rounded-lg border border-border bg-surface p-4 text-sm">
         {JSON.stringify(
           {
-            recipes: data,
-            error:
-              error?.message ??
+            recipeTypes,
+            recipeTypesError:
+              recipeTypesError?.message ??
+              null,
+
+            allergens,
+            allergensError:
+              allergensError?.message ??
               null,
           },
           null,

@@ -10,7 +10,10 @@ export default async function SupabaseTestPage() {
     data,
     error,
   } =
-    await supabase.auth.getUser();
+    await supabase
+      .from("recipes")
+      .select("*")
+      .limit(5);
 
   return (
     <main className="p-8">
@@ -21,9 +24,7 @@ export default async function SupabaseTestPage() {
       <pre className="mt-6 overflow-auto rounded-lg border border-border bg-surface p-4 text-sm">
         {JSON.stringify(
           {
-            user:
-              data.user ?? null,
-
+            recipes: data,
             error:
               error?.message ??
               null,

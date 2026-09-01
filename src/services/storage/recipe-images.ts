@@ -2,10 +2,30 @@ import { createClient } from "@/lib/supabase/client";
 
 const BUCKET = "recipe-images";
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+const ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
+
 export async function uploadRecipeImage(
   recipeId: string,
   file: File,
 ) {
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    throw new Error(
+      "Formato no permitido. Utiliza JPEG, PNG o WebP.",
+    );
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(
+      "La imagen no puede superar los 5 MB.",
+    );
+  }
+
   const supabase = createClient();
 
   const extension =
@@ -23,6 +43,7 @@ export async function uploadRecipeImage(
       .upload(path, file, {
         upsert: true,
         cacheControl: "3600",
+        contentType: file.type,
       });
 
   if (error) {
@@ -34,8 +55,7 @@ export async function uploadRecipeImage(
   return data.path;
 }
 
-
-export function getRecipeImagePath(
+export function getRecipeImageUrl(
   path: string,
 ) {
   const supabase = createClient();
@@ -47,7 +67,6 @@ export function getRecipeImagePath(
 
   return data.publicUrl;
 }
-
 
 export async function deleteRecipeImage(
   path: string,

@@ -160,10 +160,12 @@ export const recipeSchema = z.object({
     )
     .nullable(),
 
-  imageUrl: z
+  imagePath: z
     .string()
-    .url(
-      "La imagen debe tener una URL válida.",
+    .trim()
+    .max(
+      500,
+      "La ruta de la imagen es demasiado larga.",
     )
     .nullable(),
 
@@ -320,11 +322,11 @@ export const publishedRecipeSchema =
       }
 
 
-      if (!recipe.imageUrl) {
+      if (!recipe.imagePath) {
         context.addIssue({
           code: "custom",
           path: [
-            "imageUrl",
+            "imagePath",
           ],
           message:
             "Añade una imagen principal antes de publicar.",

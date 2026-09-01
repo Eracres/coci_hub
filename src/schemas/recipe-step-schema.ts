@@ -41,8 +41,10 @@ export const recipeStepSchema = z.object({
     )
     .nullable(),
 
-  imageUrl: z
+  imagePath: z
     .string()
+    .trim()
+    .max(500)
     .url(
       "La imagen debe tener una URL válida.",
     )

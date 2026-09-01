@@ -58,7 +58,7 @@ export type RecipeStep = {
 
   tip: string | null;
 
-  imageUrl: string | null;
+  imagePath: string | null;
 
   position: number;
 };
@@ -94,7 +94,7 @@ export type Recipe = {
 
   introduction: string | null;
 
-  imageUrl: string | null;
+  imagePath: string | null;
 
   imageAlt: string | null;
 

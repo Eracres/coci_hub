@@ -6,11 +6,17 @@ import {
 } from "@/components/admin/recipes/recipe-basic-info-form";
 
 import {
+  RecipeClassificationForm,
+} from "@/components/admin/recipes/recipe-classification-form";
+
+import {
   RecipeImageUploader,
 } from "@/components/admin/recipes/recipe-image-uploader";
 
 import {
   getAdminRecipeById,
+  getRecipeClassificationOptions,
+  getRecipeClassificationRelations,
 } from "@/services/recipes/recipe-service";
 
 type EditRecipePageProps = {
@@ -24,8 +30,17 @@ export default async function EditRecipePage({
 }: EditRecipePageProps) {
   const { id } = await params;
 
-  const recipe =
-    await getAdminRecipeById(id);
+  const [
+    recipe,
+    classificationOptions,
+    classificationRelations,
+  ] = await Promise.all([
+    getAdminRecipeById(id),
+
+    getRecipeClassificationOptions(),
+
+    getRecipeClassificationRelations(id),
+  ]);
 
   if (!recipe) {
     notFound();
@@ -62,6 +77,10 @@ export default async function EditRecipePage({
       </header>
 
       <div className="mt-10 space-y-8">
+        {/* =================================================
+            01. INFORMACIÓN BÁSICA
+        ================================================= */}
+
         <RecipeBasicInfoForm
           recipeId={recipe.id}
           initialValues={{
@@ -79,11 +98,59 @@ export default async function EditRecipePage({
           }}
         />
 
+
+        {/* =================================================
+            02. IMAGEN PRINCIPAL
+        ================================================= */}
+
         <RecipeImageUploader
           recipeId={recipe.id}
           initialImagePath={
             recipe.image_path
           }
+        />
+
+
+        {/* =================================================
+            03. CLASIFICACIÓN
+        ================================================= */}
+
+        <RecipeClassificationForm
+          recipeId={recipe.id}
+
+          recipeTypes={
+            classificationOptions
+              .recipeTypes
+          }
+
+          categories={
+            classificationOptions
+              .categories
+          }
+
+          tags={
+            classificationOptions
+              .tags
+          }
+
+          initialValues={{
+            recipeTypeId:
+              recipe.recipe_type_id,
+
+            difficulty:
+              recipe.difficulty,
+
+            categoryIds:
+              classificationRelations
+                .categoryIds,
+
+            tagIds:
+              classificationRelations
+                .tagIds,
+
+            featured:
+              recipe.featured,
+          }}
         />
       </div>
     </main>

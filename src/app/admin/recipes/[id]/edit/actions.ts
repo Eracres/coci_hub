@@ -16,6 +16,16 @@ import {
     updateRecipeBasicInfo,
 } from "@/services/recipes/recipe-service";
 
+import {
+  normalizeRecipeClassification,
+  recipeClassificationSchema,
+  type RecipeClassificationFormData,
+} from "@/schemas/recipe-classification-schema";
+
+import {
+  updateRecipeClassification,
+} from "@/services/recipes/recipe-service";
+
 export type UpdateBasicInfoResult = {
     success: boolean;
     message?: string;
@@ -131,4 +141,64 @@ export async function updateRecipeImageAction(
     );
 
     revalidatePath("/admin/recipes");
+}
+
+export type UpdateClassificationResult = {
+  success: boolean;
+  message?: string;
+};
+
+export async function updateRecipeClassificationAction(
+  recipeId: string,
+  input: RecipeClassificationFormData,
+): Promise<UpdateClassificationResult> {
+  const validation =
+    recipeClassificationSchema.safeParse(
+      input,
+    );
+
+  if (!validation.success) {
+    return {
+      success: false,
+      message:
+        "Los datos de clasificación no son válidos.",
+    };
+  }
+
+  const normalized =
+    normalizeRecipeClassification(
+      validation.data,
+    );
+
+  try {
+    await updateRecipeClassification(
+      recipeId,
+      normalized,
+    );
+
+    revalidatePath(
+      `/admin/recipes/${recipeId}/edit`,
+    );
+
+    revalidatePath(
+      "/admin/recipes",
+    );
+
+    return {
+      success: true,
+      message:
+        "Clasificación guardada correctamente.",
+    };
+  } catch (error) {
+    console.error(
+      "UPDATE CLASSIFICATION ERROR:",
+      error,
+    );
+
+    return {
+      success: false,
+      message:
+        "No se pudo guardar la clasificación.",
+    };
+  }
 }

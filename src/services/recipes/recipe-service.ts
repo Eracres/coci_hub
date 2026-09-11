@@ -4,6 +4,10 @@ import type {
     RecipeBasicInfoData,
 } from "@/schemas/recipe-basic-info-schema";
 
+import type {
+  RecipeClassificationData,
+} from "@/schemas/recipe-classification-schema";
+
 export async function updateRecipeBasicInfo(
     recipeId: string,
     input: RecipeBasicInfoData,
@@ -75,7 +79,18 @@ export type AdminRecipe = {
     short_description: string | null;
     introduction: string | null;
 
-    status: RecipeStatus;
+    recipe_type_id: string | null;
+
+    difficulty:
+    | "easy"
+    | "medium"
+    | "hard"
+    | null;
+
+    status:
+    | "draft"
+    | "published"
+    | "archived";
 
     image_path: string | null;
     image_alt: string | null;
@@ -89,17 +104,17 @@ export type AdminRecipe = {
 };
 
 export async function getAdminRecipeById(
-  recipeId: string,
+    recipeId: string,
 ): Promise<AdminRecipe | null> {
-  const supabase =
-    await createClient();
+    const supabase =
+        await createClient();
 
-  const {
-    data,
-    error,
-  } = await supabase
-    .from("recipes")
-    .select(`
+    const {
+        data,
+        error,
+    } = await supabase
+        .from("recipes")
+        .select(`
       id,
       author_id,
       title,
@@ -112,18 +127,20 @@ export async function getAdminRecipeById(
       featured,
       created_at,
       updated_at,
-      published_at
+      published_at,
+      recipe_type_id,
+      difficulty
     `)
-    .eq("id", recipeId)
-    .maybeSingle();
+        .eq("id", recipeId)
+        .maybeSingle();
 
-  if (error) {
-    throw new Error(
-      `No se pudo obtener la receta: ${error.message}`,
-    );
-  }
+    if (error) {
+        throw new Error(
+            `No se pudo obtener la receta: ${error.message}`,
+        );
+    }
 
-  return data;
+    return data;
 }
 
 export async function updateRecipeImagePath(
@@ -252,4 +269,174 @@ export async function getAdminRecipes(): Promise<
     }
 
     return data ?? [];
+}
+
+export type RecipeTypeOption = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+export type CategoryOption = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+export type TagOption = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+export type RecipeClassificationOptions = {
+  recipeTypes: RecipeTypeOption[];
+  categories: CategoryOption[];
+  tags: TagOption[];
+};
+
+export async function getRecipeClassificationOptions():
+Promise<RecipeClassificationOptions> {
+  const supabase =
+    await createClient();
+
+  const [
+    recipeTypesResult,
+    categoriesResult,
+    tagsResult,
+  ] = await Promise.all([
+    supabase
+      .from("recipe_types")
+      .select("id, name, slug")
+      .order("position"),
+
+    supabase
+      .from("categories")
+      .select("id, name, slug")
+      .order("name"),
+
+    supabase
+      .from("tags")
+      .select("id, name, slug")
+      .order("name"),
+  ]);
+
+  if (recipeTypesResult.error) {
+    throw new Error(
+      `No se pudieron obtener los tipos: ${recipeTypesResult.error.message}`,
+    );
+  }
+
+  if (categoriesResult.error) {
+    throw new Error(
+      `No se pudieron obtener las categorías: ${categoriesResult.error.message}`,
+    );
+  }
+
+  if (tagsResult.error) {
+    throw new Error(
+      `No se pudieron obtener las etiquetas: ${tagsResult.error.message}`,
+    );
+  }
+
+  return {
+    recipeTypes:
+      recipeTypesResult.data ?? [],
+
+    categories:
+      categoriesResult.data ?? [],
+
+    tags:
+      tagsResult.data ?? [],
+  };
+}
+
+export async function getRecipeClassificationRelations(
+  recipeId: string,
+) {
+  const supabase =
+    await createClient();
+
+  const [
+    categoriesResult,
+    tagsResult,
+  ] = await Promise.all([
+    supabase
+      .from("recipe_categories")
+      .select("category_id")
+      .eq(
+        "recipe_id",
+        recipeId,
+      ),
+
+    supabase
+      .from("recipe_tags")
+      .select("tag_id")
+      .eq(
+        "recipe_id",
+        recipeId,
+      ),
+  ]);
+
+  if (categoriesResult.error) {
+    throw new Error(
+      `No se pudieron obtener las categorías de la receta: ${categoriesResult.error.message}`,
+    );
+  }
+
+  if (tagsResult.error) {
+    throw new Error(
+      `No se pudieron obtener las etiquetas de la receta: ${tagsResult.error.message}`,
+    );
+  }
+
+  return {
+    categoryIds:
+      categoriesResult.data.map(
+        (item) =>
+          item.category_id,
+      ),
+
+    tagIds:
+      tagsResult.data.map(
+        (item) =>
+          item.tag_id,
+      ),
+  };
+}
+
+export async function updateRecipeClassification(
+  recipeId: string,
+  input: RecipeClassificationData,
+) {
+  const supabase =
+    await createClient();
+
+  const { error } =
+    await supabase.rpc(
+      "update_recipe_classification",
+      {
+        p_recipe_id:
+          recipeId,
+
+        p_recipe_type_id:
+          input.recipeTypeId,
+
+        p_difficulty:
+          input.difficulty,
+
+        p_featured:
+          input.featured,
+
+        p_category_ids:
+          input.categoryIds,
+
+        p_tag_ids:
+          input.tagIds,
+      },
+    );
+
+  if (error) {
+    throw error;
+  }
 }

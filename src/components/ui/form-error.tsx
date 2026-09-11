@@ -5,7 +5,10 @@ type FormErrorProps = {
   message?: string;
 };
 
-export function FormError({ id, message }: FormErrorProps) {
+export function FormError({
+  id,
+  message,
+}: FormErrorProps) {
   if (!message) {
     return null;
   }
@@ -21,7 +24,9 @@ export function FormError({ id, message }: FormErrorProps) {
         className="mt-0.5 size-4 shrink-0"
       />
 
-      <span>{message}</span>
+      <span>
+        {message}
+      </span>
     </p>
   );
 }

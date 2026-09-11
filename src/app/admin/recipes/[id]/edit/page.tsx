@@ -1,6 +1,9 @@
 import Link from "next/link";
-
 import { notFound } from "next/navigation";
+
+import {
+  RecipeBasicInfoForm,
+} from "@/components/admin/recipes/recipe-basic-info-form";
 
 import {
   RecipeImageUploader,
@@ -19,8 +22,7 @@ type EditRecipePageProps = {
 export default async function EditRecipePage({
   params,
 }: EditRecipePageProps) {
-  const { id } =
-    await params;
+  const { id } = await params;
 
   const recipe =
     await getAdminRecipeById(id);
@@ -28,6 +30,13 @@ export default async function EditRecipePage({
   if (!recipe) {
     notFound();
   }
+
+  const statusLabel =
+    recipe.status === "draft"
+      ? "Borrador"
+      : recipe.status === "published"
+        ? "Publicada"
+        : "Archivada";
 
   return (
     <main className="mx-auto max-w-5xl p-8">
@@ -38,14 +47,9 @@ export default async function EditRecipePage({
         ← Volver a recetas
       </Link>
 
-      <div className="mt-6">
+      <header className="mt-6">
         <p className="text-sm">
-          {recipe.status === "draft"
-            ? "Borrador"
-            : recipe.status ===
-                "published"
-              ? "Publicada"
-              : "Archivada"}
+          {statusLabel}
         </p>
 
         <h1 className="mt-2 text-3xl font-bold">
@@ -55,9 +59,26 @@ export default async function EditRecipePage({
         <p className="mt-2 text-sm">
           /recipes/{recipe.slug}
         </p>
-      </div>
+      </header>
 
-      <div className="mt-10">
+      <div className="mt-10 space-y-8">
+        <RecipeBasicInfoForm
+          recipeId={recipe.id}
+          initialValues={{
+            title:
+              recipe.title,
+
+            slug:
+              recipe.slug,
+
+            shortDescription:
+              recipe.short_description,
+
+            introduction:
+              recipe.introduction,
+          }}
+        />
+
         <RecipeImageUploader
           recipeId={recipe.id}
           initialImagePath={

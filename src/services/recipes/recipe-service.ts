@@ -1,48 +1,118 @@
 import { createClient } from "@/lib/supabase/server";
 
+import type {
+    RecipeBasicInfoData,
+} from "@/schemas/recipe-basic-info-schema";
+
+export async function updateRecipeBasicInfo(
+    recipeId: string,
+    input: RecipeBasicInfoData,
+) {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("recipes")
+        .update({
+            title: input.title,
+            slug: input.slug,
+
+            short_description:
+                input.shortDescription,
+
+            introduction:
+                input.introduction,
+        })
+        .eq("id", recipeId)
+        .select(`
+            id,
+            title,
+            slug,
+            short_description,
+            introduction,
+            updated_at
+            `)
+        .single();
+
+    if (error) {
+        throw error;
+    }
+
+    return data;
+}
+
+export type RecipeStatus =
+    | "draft"
+    | "published"
+
 export type AdminRecipeListItem = {
-  id: string;
-  title: string;
-  slug: string;
-  status: "draft" | "published" | "archived";
-  featured: boolean;
-  image_path: string | null;
-  created_at: string;
-  updated_at: string;
-  published_at: string | null;
+    id: string;
+
+    title: string;
+    slug: string;
+
+    short_description: string | null;
+
+    status: RecipeStatus;
+
+    featured: boolean;
+
+    image_path: string | null;
+
+    created_at: string;
+    updated_at: string;
+
+    published_at: string | null;
 };
 
+
 export type AdminRecipe = {
-  id: string;
-  author_id: string;
-  title: string;
-  slug: string;
-  status: "draft" | "published" | "archived";
-  image_path: string | null;
-  image_alt: string | null;
-  featured: boolean;
-  created_at: string;
-  updated_at: string;
+    id: string;
+    author_id: string;
+
+    title: string;
+    slug: string;
+
+    short_description: string | null;
+    introduction: string | null;
+
+    status: RecipeStatus;
+
+    image_path: string | null;
+    image_alt: string | null;
+
+    featured: boolean;
+
+    created_at: string;
+    updated_at: string;
+
+    published_at: string | null;
 };
 
 export async function getAdminRecipeById(
   recipeId: string,
 ): Promise<AdminRecipe | null> {
-  const supabase = await createClient();
+  const supabase =
+    await createClient();
 
-  const { data, error } = await supabase
+  const {
+    data,
+    error,
+  } = await supabase
     .from("recipes")
     .select(`
       id,
       author_id,
       title,
       slug,
+      short_description,
+      introduction,
       status,
       image_path,
       image_alt,
       featured,
       created_at,
-      updated_at
+      updated_at,
+      published_at
     `)
     .eq("id", recipeId)
     .maybeSingle();
@@ -57,130 +127,129 @@ export async function getAdminRecipeById(
 }
 
 export async function updateRecipeImagePath(
-  recipeId: string,
-  imagePath: string | null,
+    recipeId: string,
+    imagePath: string | null,
 ) {
-  const supabase = await createClient();
+    const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("recipes")
-    .update({
-      image_path: imagePath,
-    })
-    .eq("id", recipeId)
-    .select("id, image_path")
-    .single();
+    const { data, error } = await supabase
+        .from("recipes")
+        .update({
+            image_path: imagePath,
+        })
+        .eq("id", recipeId)
+        .select("id, image_path")
+        .single();
 
-  if (error) {
-    throw new Error(
-      `No se pudo actualizar la imagen de la receta: ${error.message}`,
-    );
-  }
+    if (error) {
+        throw new Error(
+            `No se pudo actualizar la imagen de la receta: ${error.message}`,
+        );
+    }
 
-  return data;
+    return data;
 }
 
 type CreateRecipeDraftInput = {
-  title: string;
-  slug: string;
+    title: string;
+    slug: string;
 };
 
 export async function createRecipeDraft(
-  input: CreateRecipeDraftInput,
+    input: CreateRecipeDraftInput,
 ) {
-  const supabase = await createClient();
+    const supabase = await createClient();
 
-  const {
-    data: claimsData,
-    error: claimsError,
-  } = await supabase.auth.getClaims();
+    const {
+        data: claimsData,
+        error: claimsError,
+    } = await supabase.auth.getClaims();
 
-  const userId =
-    claimsData?.claims?.sub;
+    const userId =
+        claimsData?.claims?.sub;
 
-  if (
-    claimsError ||
-    !userId
-  ) {
-    throw new Error(
-      "No existe una sesión válida.",
-    );
-  }
+    if (
+        claimsError ||
+        !userId
+    ) {
+        throw new Error(
+            "No existe una sesión válida.",
+        );
+    }
 
-  const {
-    data,
-    error,
-  } = await supabase
-    .from("recipes")
-    .insert({
-      author_id: userId,
+    const {
+        data,
+        error,
+    } = await supabase
+        .from("recipes")
+        .insert({
+            author_id: userId,
 
-      title:
-        input.title.trim(),
+            title:
+                input.title.trim(),
 
-      slug:
-        input.slug.trim(),
+            slug:
+                input.slug.trim(),
 
-      status: "draft",
+            status: "draft",
 
-      featured: false,
-    })
-    .select(
-      `
+            featured: false,
+        })
+        .select(
+            `
         id,
         title,
         slug,
         status
       `,
-    )
-    .single();
+        )
+        .single();
 
-  if (error) {
-    throw new Error(
-      `No se pudo crear la receta: ${error.message}`,
-    );
-  }
+    if (error) {
+        throw new Error(
+            `No se pudo crear la receta: ${error.message}`,
+        );
+    }
 
-  return data;
+    return data;
 }
 
 
 export async function getAdminRecipes(): Promise<
-  AdminRecipeListItem[]
+    AdminRecipeListItem[]
 > {
-  const supabase =
-    await createClient();
+    const supabase =
+        await createClient();
 
-  const {
-    data,
-    error,
-  } = await supabase
-    .from("recipes")
-    .select(
-      `
-        id,
-        title,
-        slug,
-        status,
-        featured,
-        image_path,
-        created_at,
-        updated_at,
-        published_at
-      `,
-    )
-    .order(
-      "updated_at",
-      {
-        ascending: false,
-      },
-    );
+    const {
+        data,
+        error,
+    } = await supabase
+        .from("recipes")
+        .select(`
+      id,
+      title,
+      slug,
+      short_description,
+      status,
+      featured,
+      image_path,
+      created_at,
+      updated_at,
+      published_at
+    `)
+        .order(
+            "updated_at",
+            {
+                ascending: false,
+            },
+        );
 
-  if (error) {
-    throw new Error(
-      `No se pudieron obtener las recetas: ${error.message}`,
-    );
-  }
+    if (error) {
+        throw new Error(
+            `No se pudieron obtener las recetas: ${error.message}`,
+        );
+    }
 
-  return data ?? [];
+    return data ?? [];
 }

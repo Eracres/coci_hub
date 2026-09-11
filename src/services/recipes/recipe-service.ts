@@ -12,6 +12,74 @@ export type AdminRecipeListItem = {
   published_at: string | null;
 };
 
+export type AdminRecipe = {
+  id: string;
+  author_id: string;
+  title: string;
+  slug: string;
+  status: "draft" | "published" | "archived";
+  image_path: string | null;
+  image_alt: string | null;
+  featured: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function getAdminRecipeById(
+  recipeId: string,
+): Promise<AdminRecipe | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("recipes")
+    .select(`
+      id,
+      author_id,
+      title,
+      slug,
+      status,
+      image_path,
+      image_alt,
+      featured,
+      created_at,
+      updated_at
+    `)
+    .eq("id", recipeId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(
+      `No se pudo obtener la receta: ${error.message}`,
+    );
+  }
+
+  return data;
+}
+
+export async function updateRecipeImagePath(
+  recipeId: string,
+  imagePath: string | null,
+) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("recipes")
+    .update({
+      image_path: imagePath,
+    })
+    .eq("id", recipeId)
+    .select("id, image_path")
+    .single();
+
+  if (error) {
+    throw new Error(
+      `No se pudo actualizar la imagen de la receta: ${error.message}`,
+    );
+  }
+
+  return data;
+}
+
 type CreateRecipeDraftInput = {
   title: string;
   slug: string;

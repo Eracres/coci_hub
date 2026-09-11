@@ -7,9 +7,13 @@
 Plataforma web de recetas personales para organizar, publicar, adaptar y compartir recetas desde cualquier dispositivo.
 
 ![Estado](https://img.shields.io/badge/estado-en%20desarrollo-E5A93D?style=for-the-badge)
+
 ![Fase](https://img.shields.io/badge/fase%204-backend%20%2B%20CRUD-D95D39?style=for-the-badge)
+
 ![Next.js](https://img.shields.io/badge/Next.js-16-292522?style=for-the-badge&logo=nextdotjs)
+
 ![TypeScript](https://img.shields.io/badge/TypeScript-activo-3978A8?style=for-the-badge&logo=typescript)
+
 ![Supabase](https://img.shields.io/badge/Supabase-activo-3F7D57?style=for-the-badge&logo=supabase)
 
 </div>

@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+
+import {
+  notFound,
+} from "next/navigation";
 
 import {
   RecipeBasicInfoForm,
@@ -14,10 +17,15 @@ import {
 } from "@/components/admin/recipes/recipe-image-uploader";
 
 import {
+  RecipeServingsForm,
+} from "@/components/admin/recipes/recipe-servings-form";
+
+import {
   getAdminRecipeById,
   getRecipeClassificationOptions,
   getRecipeClassificationRelations,
 } from "@/services/recipes/recipe-service";
+
 
 type EditRecipePageProps = {
   params: Promise<{
@@ -25,33 +33,49 @@ type EditRecipePageProps = {
   }>;
 };
 
+
 export default async function EditRecipePage({
   params,
 }: EditRecipePageProps) {
-  const { id } = await params;
+  const {
+    id,
+  } =
+    await params;
 
   const [
     recipe,
     classificationOptions,
     classificationRelations,
-  ] = await Promise.all([
-    getAdminRecipeById(id),
+  ] =
+    await Promise.all([
+      getAdminRecipeById(
+        id,
+      ),
 
-    getRecipeClassificationOptions(),
+      getRecipeClassificationOptions(),
 
-    getRecipeClassificationRelations(id),
-  ]);
+      getRecipeClassificationRelations(
+        id,
+      ),
+    ]);
 
-  if (!recipe) {
+
+  if (
+    !recipe
+  ) {
     notFound();
   }
 
+
   const statusLabel =
-    recipe.status === "draft"
+    recipe.status ===
+    "draft"
       ? "Borrador"
-      : recipe.status === "published"
+      : recipe.status ===
+          "published"
         ? "Publicada"
         : "Archivada";
+
 
   return (
     <main className="mx-auto max-w-5xl p-8">
@@ -61,6 +85,7 @@ export default async function EditRecipePage({
       >
         ← Volver a recetas
       </Link>
+
 
       <header className="mt-6">
         <p className="text-sm">
@@ -72,17 +97,23 @@ export default async function EditRecipePage({
         </h1>
 
         <p className="mt-2 text-sm">
-          /recipes/{recipe.slug}
+          /recipes/
+          {recipe.slug}
         </p>
       </header>
 
+
       <div className="mt-10 space-y-8">
-        {/* =================================================
+
+        {/* =============================================
             01. INFORMACIÓN BÁSICA
-        ================================================= */}
+        ============================================= */}
 
         <RecipeBasicInfoForm
-          recipeId={recipe.id}
+          recipeId={
+            recipe.id
+          }
+
           initialValues={{
             title:
               recipe.title,
@@ -99,24 +130,29 @@ export default async function EditRecipePage({
         />
 
 
-        {/* =================================================
+        {/* =============================================
             02. IMAGEN PRINCIPAL
-        ================================================= */}
+        ============================================= */}
 
         <RecipeImageUploader
-          recipeId={recipe.id}
+          recipeId={
+            recipe.id
+          }
+
           initialImagePath={
             recipe.image_path
           }
         />
 
 
-        {/* =================================================
+        {/* =============================================
             03. CLASIFICACIÓN
-        ================================================= */}
+        ============================================= */}
 
         <RecipeClassificationForm
-          recipeId={recipe.id}
+          recipeId={
+            recipe.id
+          }
 
           recipeTypes={
             classificationOptions
@@ -152,6 +188,22 @@ export default async function EditRecipePage({
               recipe.featured,
           }}
         />
+
+
+        {/* =============================================
+            04. RACIONES
+        ============================================= */}
+
+        <RecipeServingsForm
+          recipeId={
+            recipe.id
+          }
+
+          initialValue={
+            recipe.base_servings
+          }
+        />
+
       </div>
     </main>
   );

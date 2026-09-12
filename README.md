@@ -7,13 +7,9 @@
 Plataforma web de recetas personales para organizar, publicar, adaptar y compartir recetas desde cualquier dispositivo.
 
 ![Estado](https://img.shields.io/badge/estado-en%20desarrollo-E5A93D?style=for-the-badge)
-
-![Fase](https://img.shields.io/badge/fase%204-backend%20%2B%20CRUD-D95D39?style=for-the-badge)
-
+![Fase](https://img.shields.io/badge/fase%204-CRUD%20admin-D95D39?style=for-the-badge)
 ![Next.js](https://img.shields.io/badge/Next.js-16-292522?style=for-the-badge&logo=nextdotjs)
-
 ![TypeScript](https://img.shields.io/badge/TypeScript-activo-3978A8?style=for-the-badge&logo=typescript)
-
 ![Supabase](https://img.shields.io/badge/Supabase-activo-3F7D57?style=for-the-badge&logo=supabase)
 
 </div>
@@ -22,117 +18,62 @@ Plataforma web de recetas personales para organizar, publicar, adaptar y compart
 
 ## 📌 Descripción
 
-**CociHub** nace para centralizar recetas que inicialmente se comparten con familiares, amigos y compañeros de trabajo.
+**CociHub** es una plataforma web de recetas personales creada inicialmente para compartir recetas con familiares, amigos y compañeros de trabajo.
 
-El objetivo del MVP es disponer de una aplicación web **mobile first**, rápida y sencilla, donde cualquier visitante pueda consultar recetas publicadas sin registrarse y ajustar las cantidades según el número de comensales.
+La aplicación permitirá centralizar recetas, organizarlas por tipos, categorías y etiquetas, consultarlas cómodamente desde el móvil, ajustar cantidades según el número de comensales y compartirlas mediante WhatsApp o enlace.
 
-La administración es privada. En la primera versión, **solo los administradores pueden crear y modificar recetas**. La arquitectura queda preparada para que, en una fase futura, usuarios normales puedan registrarse y publicar sus propias recetas.
+Aunque el público inicial será cercano, la arquitectura se está preparando para crecer en el futuro hacia una plataforma pública donde otros usuarios puedan registrarse y aportar sus propias recetas.
 
-CociHub también forma parte del portfolio profesional de **Sergio Cáceres**, cubriendo análisis funcional, UX/UI, frontend, backend, PostgreSQL, autenticación, seguridad, almacenamiento, validación, Git y despliegue.
+CociHub también forma parte del portfolio profesional de **Sergio Cáceres**, mostrando el desarrollo completo de una aplicación real: análisis funcional, UX/UI, frontend, backend, PostgreSQL, autenticación, seguridad, almacenamiento, validación, Git y despliegue.
 
 ---
 
-## 🚦 Estado actual
-
-### Fases
+# 🚦 Estado actual del proyecto
 
 | Fase | Estado |
 |---|---|
-| 1. Definición funcional | ✅ Completada |
-| 2. Arquitectura visual y UX | ✅ Completada |
-| 3. Design System y componentes | ✅ Completada |
-| 4. Arquitectura técnica, seguridad y CRUD | 🟡 En progreso |
-| 5. Área pública y cierre del MVP | ⬜ Pendiente |
-| 6. Despliegue, SEO y optimización | ⬜ Pendiente |
+| Fase 1 — Definición funcional | ✅ Completada |
+| Fase 2 — Arquitectura visual y UX | ✅ Completada |
+| Fase 3 — Design System y componentes | ✅ Completada |
+| Fase 4 — Arquitectura técnica + CRUD administrador | 🟡 En progreso |
+| Fase 5 — Área pública | ⬜ Pendiente |
+| Fase 6 — SEO, optimización y despliegue | ⬜ Pendiente |
 
-### Punto actual de la Fase 4
+## Punto actual
 
-Ya están implementados y probados:
-
-- ✅ Next.js + App Router + TypeScript + Tailwind.
-- ✅ React Hook Form y Zod.
-- ✅ Modelo PostgreSQL.
-- ✅ Supabase conectado.
-- ✅ Migraciones versionadas.
-- ✅ Seeds iniciales.
+- ✅ Next.js + App Router.
+- ✅ React + TypeScript.
+- ✅ Tailwind CSS.
+- ✅ React Hook Form.
+- ✅ Zod.
+- ✅ PostgreSQL.
+- ✅ Supabase.
+- ✅ Migraciones y seeds.
 - ✅ Supabase Auth.
 - ✅ `profiles` y roles.
-- ✅ Registro público desactivado para el MVP.
+- ✅ Registro público desactivado en el MVP.
 - ✅ Row Level Security.
-- ✅ Área `/admin` protegida.
 - ✅ Login y logout.
+- ✅ Protección real de `/admin`.
 - ✅ Proxy SSR y refresco de sesión.
 - ✅ Supabase Storage.
-- ✅ Políticas Storage para administradores.
-- ✅ Subida, lectura, sustitución y borrado de imágenes.
-- ✅ Creación de borradores de recetas.
+- ✅ Políticas de seguridad para Storage.
+- ✅ Subida, reemplazo y eliminación de imágenes.
+- ✅ Creación de borradores.
 - ✅ Listado administrativo de recetas.
 - ✅ Edición de recetas por ID.
-- ✅ Imagen principal vinculada a una receta real mediante `image_path`.
-- 🟡 Información básica real: implementada, en validación funcional.
-- ⬜ Clasificación.
-- ⬜ Raciones.
-- ⬜ Tiempos.
-- ⬜ Ingredientes.
-- ⬜ Elaboración.
-- ⬜ Información adicional.
-- ⬜ Alérgenos.
-- ⬜ Publicación / archivo / eliminación final.
+- ✅ Información básica real.
+- ✅ Imagen principal real.
+- ✅ Clasificación real.
+- ✅ Gestión de categorías.
+- ✅ Raciones base reales.
+- 🟡 Siguiente bloque: **Tiempos**.
 
 ---
 
-## 🎯 Alcance del MVP
+# 🛣️ Rutas
 
-### Área pública
-
-El visitante podrá:
-
-- Consultar recetas sin iniciar sesión.
-- Buscar y filtrar recetas.
-- Consultar categorías.
-- Ver el detalle completo de una receta.
-- Cambiar el número de comensales.
-- Recalcular automáticamente cantidades escalables.
-- Compartir por WhatsApp o copiar el enlace.
-- Consultar recetas relacionadas.
-- Acceder a páginas legales y página 404.
-
-### Área administrativa
-
-El administrador podrá:
-
-- Iniciar y cerrar sesión.
-- Acceder a rutas protegidas.
-- Crear borradores.
-- Editar recetas.
-- Subir y eliminar imágenes.
-- Gestionar clasificación.
-- Gestionar ingredientes y pasos.
-- Guardar borradores.
-- Publicar, despublicar y archivar.
-- Gestionar categorías y etiquetas.
-
-### Fuera del MVP inicial
-
-- Registro público.
-- Recetas creadas por usuarios normales.
-- Comentarios.
-- Valoraciones.
-- Favoritos.
-- Seguidores.
-- Mensajería.
-- Planificador de menús.
-- Lista de la compra.
-- Aplicación móvil nativa.
-- Pagos.
-
-La arquitectura sí queda preparada para incorporar cuentas de usuario y recetas propias posteriormente.
-
----
-
-## 🧭 Rutas
-
-### Públicas
+## Públicas
 
 ```text
 /
@@ -147,13 +88,13 @@ La arquitectura sí queda preparada para incorporar cuentas de usuario y recetas
 /legal-notice
 ```
 
-La búsqueda se realizará mediante:
+Búsqueda:
 
 ```text
 /recipes?search=...
 ```
 
-### Administración
+## Administración
 
 ```text
 /admin
@@ -164,7 +105,7 @@ La búsqueda se realizará mediante:
 /admin/tags
 ```
 
-### Desarrollo interno
+## Desarrollo interno
 
 ```text
 /design-system
@@ -172,11 +113,9 @@ La búsqueda se realizará mediante:
 /supabase-test
 ```
 
-Las rutas de prueba se eliminarán o deshabilitarán antes de producción.
-
 ---
 
-## 🧰 Stack tecnológico
+# 🧰 Stack tecnológico
 
 | Área | Tecnología |
 |---|---|
@@ -186,7 +125,7 @@ Las rutas de prueba se eliminarán o deshabilitarán antes de producción.
 | Estilos | Tailwind CSS |
 | Formularios | React Hook Form |
 | Validación | Zod |
-| Backend | Next.js Server Components / Server Actions |
+| Backend | Server Components + Server Actions |
 | Base de datos | PostgreSQL |
 | Plataforma de datos | Supabase |
 | Autenticación | Supabase Auth |
@@ -197,30 +136,9 @@ Las rutas de prueba se eliminarán o deshabilitarán antes de producción.
 | Control de versiones | Git + GitHub |
 | Despliegue previsto | Vercel |
 
-### Node.js
-
-Se recomienda trabajar con:
-
-```text
-Node.js >= 22
-Node.js 24 LTS recomendado
-```
-
-Si se utiliza NVM:
-
-```bash
-nvm use
-```
-
-El repositorio puede incluir un `.nvmrc` con:
-
-```text
-24
-```
-
 ---
 
-## 🔐 Seguridad
+# 🔐 Seguridad
 
 ```text
 /login
@@ -240,8 +158,6 @@ RLS
 PostgreSQL / Storage
 ```
 
-La interfaz no es la barrera de seguridad principal. Las operaciones sobre datos y archivos están protegidas también mediante **Row Level Security**.
-
 Roles preparados:
 
 ```text
@@ -250,19 +166,17 @@ editor
 user
 ```
 
-En el MVP:
+Durante el MVP:
 
 ```text
 admin → puede gestionar recetas
-user  → no puede crear ni modificar recetas
+user  → no puede modificar contenido
 anon  → solo contenido público
 ```
 
 ---
 
-## 🗃️ Modelo de datos
-
-Tablas principales:
+# 🗃️ Modelo de datos
 
 ```text
 profiles
@@ -279,7 +193,7 @@ allergens
 recipe_allergens
 ```
 
-Estados de receta:
+Estados:
 
 ```text
 draft
@@ -295,113 +209,80 @@ medium
 hard
 ```
 
-Alérgenos:
+---
+
+# 🧾 Editor de recetas
 
 ```text
-present
-possible
+01 Información básica       ✅
+02 Imagen principal         ✅
+03 Clasificación            ✅
+04 Raciones                 ✅
+05 Tiempos                  ← siguiente
+06 Ingredientes             ⬜
+07 Elaboración              ⬜
+08 Información adicional    ⬜
+09 Alérgenos                ⬜
+10 Publicación              ⬜
 ```
 
 ---
 
-## 🍽️ Cantidades y comensales
+# 🍽️ Raciones y cantidades
 
-Cada receta publicada tendrá un número de **raciones base**.
+Cada receta guarda:
 
-Las cantidades guardadas son siempre las cantidades base. El visitante podrá cambiar los comensales sin modificar PostgreSQL.
+```text
+base_servings
+```
+
+Ejemplo:
+
+```text
+Raciones base: 4
+```
+
+En el área pública:
 
 ```text
 factor = raciones seleccionadas / raciones base
 ```
 
-Cada ingrediente dispone de:
+La base de datos mantiene siempre las cantidades originales.
+
+Cada ingrediente tendrá:
 
 ```ts
-quantity: number | null
-scalable: boolean
+quantity: number | null;
+scalable: boolean;
 ```
 
-Solo se recalculan cantidades numéricas cuyo `scalable` sea `true`.
+Solo se recalcularán cantidades numéricas cuyo `scalable` sea `true`.
 
 ---
 
-## 🖼️ Imágenes
+# ⏱️ Tiempos
 
-Bucket:
+El siguiente bloque gestionará:
 
 ```text
-recipe-images
+preparation_minutes
+cooking_minutes
+additional_minutes
 ```
 
-Estructura:
+El tiempo total no se almacenará:
 
 ```text
-recipe-images/
-└── recipes/
-    └── {recipeId}/
-        ├── main.jpeg
-        └── steps/
-            ├── 01.webp
-            └── 02.webp
-```
-
-PostgreSQL guarda la ruta en:
-
-```text
-recipes.image_path
-```
-
-Formatos actuales:
-
-```text
-JPEG
-PNG
-WebP
-```
-
-Máximo:
-
-```text
-5 MB
+tiempo total =
+  preparación
+  + cocción
+  + tiempo adicional
 ```
 
 ---
 
-## 🧾 Formulario de receta
-
-Bloques previstos:
-
-```text
-01 Información básica
-02 Imagen principal
-03 Clasificación
-04 Raciones
-05 Tiempos
-06 Ingredientes
-07 Elaboración
-08 Información adicional
-09 Alérgenos
-10 Publicación
-```
-
-Actualmente:
-
-```text
-Información básica  → implementada, pendiente de validación funcional final
-Imagen principal    → funcional con Supabase Storage
-```
-
-Los strings opcionales vacíos se normalizan antes de persistir:
-
-```text
-"" → NULL
-```
-
----
-
-## 🎨 Identidad visual
-
-Paleta principal:
+# 🎨 Identidad visual
 
 | Uso | Color |
 |---|---|
@@ -423,55 +304,9 @@ Lora  → títulos y contenido editorial
 Inter → interfaz y formularios
 ```
 
-La integración visual definitiva se realizará después de completar la funcionalidad del CRUD real.
-
 ---
 
-## 📂 Estructura actual
-
-```text
-coci_hub/
-├── database/
-│   └── schema.sql
-├── docs/
-├── public/
-├── src/
-│   ├── app/
-│   │   ├── admin/
-│   │   │   ├── recipes/
-│   │   │   └── storage-test/
-│   │   ├── design-system/
-│   │   ├── login/
-│   │   └── supabase-test/
-│   ├── components/
-│   │   ├── admin/
-│   │   │   └── recipes/
-│   │   ├── layout/
-│   │   └── ui/
-│   ├── config/
-│   ├── lib/
-│   │   ├── recipes/
-│   │   └── supabase/
-│   ├── schemas/
-│   ├── services/
-│   │   ├── recipes/
-│   │   └── storage/
-│   └── types/
-├── supabase/
-│   ├── migrations/
-│   ├── config.toml
-│   └── seed.sql
-├── .env.example
-├── .env.local
-├── .gitignore
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
----
-
-## ⚙️ Desarrollo local
+# ⚙️ Desarrollo local
 
 ```bash
 npm ci
@@ -495,7 +330,7 @@ npm run build
 
 ---
 
-## 🗄️ Migraciones
+# 🗄️ Migraciones
 
 ```bash
 npx supabase migration list
@@ -503,76 +338,70 @@ npx supabase db push --dry-run
 npx supabase db push
 ```
 
-Las migraciones aplicadas no deben modificarse. Cada cambio posterior se realiza mediante una migración nueva.
+Las migraciones aplicadas no se modifican. Cada cambio posterior se realiza mediante una migración nueva.
 
 ---
 
-## 🗺️ Roadmap actualizado
+# 🗺️ Roadmap
 
-### Fase 1 — Definición funcional ✅
-
-- [x] Visión.
+## Fase 1 — Definición funcional ✅
+- [x] Visión y alcance.
 - [x] Público objetivo.
-- [x] Alcance MVP.
 - [x] Historias de usuario.
 - [x] Modelo funcional de receta.
 - [x] Modelo de datos inicial.
 - [x] Identidad visual.
 
-### Fase 2 — Arquitectura visual y UX ✅
-
+## Fase 2 — Arquitectura visual y UX ✅
 - [x] Sitemap.
 - [x] Rutas.
 - [x] Wireframes.
 - [x] Responsive.
 - [x] Flujos.
-- [x] Área pública / privada.
-- [x] Diseño del formulario.
+- [x] Área pública y privada.
 
-### Fase 3 — Design System ✅
-
-- [x] Tokens principales.
+## Fase 3 — Design System ✅
+- [x] Tokens.
 - [x] Tipografías.
-- [x] Componentes UI básicos.
-- [x] Demos de todos los bloques de receta.
-- [x] Composición `RecipeFormDemo`.
-- [x] Página `/design-system`.
+- [x] Componentes UI.
+- [x] Demos de todos los bloques.
+- [x] `RecipeFormDemo`.
+- [x] `/design-system`.
 
-### Fase 4 — Arquitectura técnica y CRUD 🟡
-
+## Fase 4 — Arquitectura técnica y CRUD 🟡
 - [x] Estructura técnica.
-- [x] TypeScript del dominio.
-- [x] Validaciones Zod.
+- [x] TypeScript.
+- [x] Zod.
 - [x] PostgreSQL.
 - [x] Supabase.
 - [x] Migraciones.
 - [x] Seeds.
 - [x] Auth.
-- [x] Profiles / roles.
+- [x] Profiles y roles.
 - [x] RLS.
-- [x] Login / logout.
-- [x] Protección de `/admin`.
+- [x] Login y logout.
+- [x] Protección `/admin`.
 - [x] Proxy SSR.
 - [x] Storage.
 - [x] Políticas Storage.
-- [x] CRUD mínimo de borradores.
-- [x] Listado administrativo.
-- [x] Edición por ID.
-- [x] Imagen principal real.
-- [ ] Validar funcionalmente Información básica.
-- [ ] Clasificación real.
-- [ ] Raciones reales.
-- [ ] Tiempos reales.
-- [ ] Ingredientes reales.
-- [ ] Elaboración real.
-- [ ] Información adicional real.
-- [ ] Alérgenos reales.
+- [x] Crear borradores.
+- [x] Listar recetas.
+- [x] Editar receta por ID.
+- [x] Información básica.
+- [x] Imagen principal.
+- [x] Clasificación.
+- [x] Categorías.
+- [x] Raciones.
+- [ ] Tiempos.
+- [ ] Ingredientes.
+- [ ] Elaboración.
+- [ ] Información adicional.
+- [ ] Alérgenos.
 - [ ] Publicación / archivo / eliminación.
-- [ ] Gestión de errores definitiva.
-- [ ] Caché y revalidación definitiva.
+- [ ] Errores definitivos.
+- [ ] Caché y revalidación definitivas.
 
-### Fase 5 — Área pública
-
+## Fase 5 — Área pública ⬜
 - [ ] Home.
 - [ ] Listado público.
 - [ ] Búsqueda.
@@ -585,8 +414,7 @@ Las migraciones aplicadas no deben modificarse. Cada cambio posterior se realiza
 - [ ] Recetas relacionadas.
 - [ ] Páginas legales.
 
-### Fase 6 — Cierre y despliegue
-
+## Fase 6 — Cierre y despliegue ⬜
 - [ ] Accesibilidad.
 - [ ] SEO.
 - [ ] Metadata / Open Graph.
@@ -596,28 +424,25 @@ Las migraciones aplicadas no deben modificarse. Cada cambio posterior se realiza
 - [ ] Pruebas finales.
 - [ ] Vercel.
 - [ ] Dominio.
-- [ ] Monitorización y mantenimiento.
+- [ ] Monitorización.
 
 ---
 
-## 🤖 Evolución futura
-
-Fuera del MVP se contempla:
+# 🤖 Evolución futura
 
 - Registro público.
 - Recetas creadas por usuarios.
-- Favoritos y valoraciones.
+- Favoritos.
+- Valoraciones.
 - Comentarios.
 - Planificador.
 - Lista de la compra.
 - Funciones sociales.
 - Importación asistida por IA.
 
-La importación con IA nunca publicará automáticamente; el contenido pasará por validación y revisión humana.
-
 ---
 
-## 👨‍💻 Autor
+# 👨‍💻 Autor
 
 **Sergio Cáceres**
 

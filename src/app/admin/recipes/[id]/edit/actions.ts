@@ -29,6 +29,12 @@ import {
 } from "@/schemas/recipe-servings-schema";
 
 import {
+  normalizeRecipeSteps,
+  recipeStepsSchema,
+  type RecipeStepsFormData,
+} from "@/schemas/recipe-steps-schema";
+
+import {
   normalizeRecipeTimes,
   recipeTimesSchema,
   type RecipeTimesFormData,
@@ -36,6 +42,7 @@ import {
 
 import {
   replaceRecipeIngredients,
+  replaceRecipeSteps,
   updateRecipeBasicInfo,
   updateRecipeClassification,
   updateRecipeImagePath,
@@ -89,24 +96,15 @@ export async function updateRecipeImageAction(
 ========================================================= */
 
 export type UpdateBasicInfoResult = {
-  success:
-    boolean;
+  success: boolean;
 
-  message?:
-    string;
+  message?: string;
 
   fieldErrors?: {
-    title?:
-      string[];
-
-    slug?:
-      string[];
-
-    shortDescription?:
-      string[];
-
-    introduction?:
-      string[];
+    title?: string[];
+    slug?: string[];
+    shortDescription?: string[];
+    introduction?: string[];
   };
 };
 
@@ -120,9 +118,7 @@ export async function updateRecipeBasicInfoAction(
       input,
     );
 
-  if (
-    !validation.success
-  ) {
+  if (!validation.success) {
     return {
       success:
         false,
@@ -219,9 +215,7 @@ export async function updateRecipeClassificationAction(
       input,
     );
 
-  if (
-    !validation.success
-  ) {
+  if (!validation.success) {
     return {
       success:
         false,
@@ -301,9 +295,7 @@ export async function updateRecipeServingsAction(
       input,
     );
 
-  if (
-    !validation.success
-  ) {
+  if (!validation.success) {
     return {
       success:
         false,
@@ -391,9 +383,7 @@ export async function updateRecipeTimesAction(
       input,
     );
 
-  if (
-    !validation.success
-  ) {
+  if (!validation.success) {
     return {
       success:
         false,
@@ -470,9 +460,7 @@ export async function updateRecipeIngredientsAction(
       input,
     );
 
-  if (
-    !validation.success
-  ) {
+  if (!validation.success) {
     console.error(
       "INGREDIENT VALIDATION ERROR:",
       validation.error.flatten(),
@@ -525,6 +513,86 @@ export async function updateRecipeIngredientsAction(
 
       message:
         "No se pudieron guardar los ingredientes.",
+    };
+  }
+}
+
+
+/* =========================================================
+   STEPS
+========================================================= */
+
+export type UpdateRecipeStepsResult = {
+  success:
+    boolean;
+
+  message?:
+    string;
+};
+
+
+export async function updateRecipeStepsAction(
+  recipeId: string,
+  input: RecipeStepsFormData,
+): Promise<UpdateRecipeStepsResult> {
+  const validation =
+    recipeStepsSchema.safeParse(
+      input,
+    );
+
+  if (!validation.success) {
+    console.error(
+      "STEP VALIDATION ERROR:",
+      validation.error.flatten(),
+    );
+
+    return {
+      success:
+        false,
+
+      message:
+        "Hay datos de elaboración que no son válidos.",
+    };
+  }
+
+  const normalized =
+    normalizeRecipeSteps(
+      validation.data,
+    );
+
+  try {
+    await replaceRecipeSteps(
+      recipeId,
+      normalized,
+    );
+
+    revalidatePath(
+      `/admin/recipes/${recipeId}/edit`,
+    );
+
+    revalidatePath(
+      "/admin/recipes",
+    );
+
+    return {
+      success:
+        true,
+
+      message:
+        "Elaboración guardada correctamente.",
+    };
+  } catch (error) {
+    console.error(
+      "UPDATE RECIPE STEPS ERROR:",
+      error,
+    );
+
+    return {
+      success:
+        false,
+
+      message:
+        "No se pudo guardar la elaboración.",
     };
   }
 }

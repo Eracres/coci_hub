@@ -25,6 +25,10 @@ import {
 } from "@/components/admin/recipes/recipe-servings-form";
 
 import {
+  RecipeStepsForm,
+} from "@/components/admin/recipes/recipe-steps-form";
+
+import {
   RecipeTimesForm,
 } from "@/components/admin/recipes/recipe-times-form";
 
@@ -33,6 +37,7 @@ import {
   getRecipeClassificationOptions,
   getRecipeClassificationRelations,
   getRecipeIngredients,
+  getRecipeSteps,
 } from "@/services/recipes/recipe-service";
 
 
@@ -57,6 +62,7 @@ export default async function EditRecipePage({
     classificationOptions,
     classificationRelations,
     ingredientGroups,
+    recipeSteps,
   ] =
     await Promise.all([
       getAdminRecipeById(
@@ -72,12 +78,14 @@ export default async function EditRecipePage({
       getRecipeIngredients(
         id,
       ),
+
+      getRecipeSteps(
+        id,
+      ),
     ]);
 
 
-  if (
-    !recipe
-  ) {
+  if (!recipe) {
     notFound();
   }
 
@@ -94,6 +102,7 @@ export default async function EditRecipePage({
 
   return (
     <main className="mx-auto max-w-5xl p-8">
+
       <Link
         href="/admin/recipes"
         className="text-sm underline"
@@ -103,6 +112,7 @@ export default async function EditRecipePage({
 
 
       <header className="mt-6">
+
         <p className="text-sm">
           {statusLabel}
         </p>
@@ -115,14 +125,13 @@ export default async function EditRecipePage({
           /recipes/
           {recipe.slug}
         </p>
+
       </header>
 
 
       <div className="mt-10 space-y-8">
 
-        {/* =============================================
-            01. INFORMACIÓN BÁSICA
-        ============================================= */}
+        {/* 01. INFORMACIÓN BÁSICA */}
 
         <RecipeBasicInfoForm
           recipeId={
@@ -145,9 +154,7 @@ export default async function EditRecipePage({
         />
 
 
-        {/* =============================================
-            02. IMAGEN PRINCIPAL
-        ============================================= */}
+        {/* 02. IMAGEN PRINCIPAL */}
 
         <RecipeImageUploader
           recipeId={
@@ -160,9 +167,7 @@ export default async function EditRecipePage({
         />
 
 
-        {/* =============================================
-            03. CLASIFICACIÓN
-        ============================================= */}
+        {/* 03. CLASIFICACIÓN */}
 
         <RecipeClassificationForm
           recipeId={
@@ -205,9 +210,7 @@ export default async function EditRecipePage({
         />
 
 
-        {/* =============================================
-            04. RACIONES
-        ============================================= */}
+        {/* 04. RACIONES */}
 
         <RecipeServingsForm
           recipeId={
@@ -220,9 +223,7 @@ export default async function EditRecipePage({
         />
 
 
-        {/* =============================================
-            05. TIEMPOS
-        ============================================= */}
+        {/* 05. TIEMPOS */}
 
         <RecipeTimesForm
           recipeId={
@@ -242,9 +243,7 @@ export default async function EditRecipePage({
         />
 
 
-        {/* =============================================
-            06. INGREDIENTES
-        ============================================= */}
+        {/* 06. INGREDIENTES */}
 
         <RecipeIngredientsForm
           recipeId={
@@ -256,7 +255,21 @@ export default async function EditRecipePage({
           }
         />
 
+
+        {/* 07. ELABORACIÓN */}
+
+        <RecipeStepsForm
+          recipeId={
+            recipe.id
+          }
+
+          initialSteps={
+            recipeSteps
+          }
+        />
+
       </div>
+
     </main>
   );
 }

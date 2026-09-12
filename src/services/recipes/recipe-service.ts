@@ -20,6 +20,11 @@ import type {
 } from "@/schemas/recipe-servings-schema";
 
 import type {
+  RecipeStepsData,
+  RecipeStepsFormData,
+} from "@/schemas/recipe-steps-schema";
+
+import type {
   RecipeTimesData,
 } from "@/schemas/recipe-times-schema";
 
@@ -38,44 +43,24 @@ export type RecipeDifficulty =
 
 export type AdminRecipeListItem = {
   id: string;
-
   title: string;
   slug: string;
-
-  short_description:
-    string | null;
-
-  status:
-    RecipeStatus;
-
-  featured:
-    boolean;
-
-  image_path:
-    string | null;
-
-  created_at:
-    string;
-
-  updated_at:
-    string;
-
-  published_at:
-    string | null;
+  short_description: string | null;
+  status: RecipeStatus;
+  featured: boolean;
+  image_path: string | null;
+  created_at: string;
+  updated_at: string;
+  published_at: string | null;
 };
 
 
 export type AdminRecipe = {
   id: string;
+  author_id: string;
 
-  author_id:
-    string;
-
-  title:
-    string;
-
-  slug:
-    string;
+  title: string;
+  slug: string;
 
   short_description:
     string | null;
@@ -440,9 +425,7 @@ Promise<RecipeClassificationOptions> {
   ] =
     await Promise.all([
       supabase
-        .from(
-          "recipe_types",
-        )
+        .from("recipe_types")
         .select(
           "id, name, slug",
         )
@@ -451,9 +434,7 @@ Promise<RecipeClassificationOptions> {
         ),
 
       supabase
-        .from(
-          "categories",
-        )
+        .from("categories")
         .select(
           "id, name, slug",
         )
@@ -462,9 +443,7 @@ Promise<RecipeClassificationOptions> {
         ),
 
       supabase
-        .from(
-          "tags",
-        )
+        .from("tags")
         .select(
           "id, name, slug",
         )
@@ -878,6 +857,110 @@ export async function replaceRecipeIngredients(
 
         p_groups:
           input.groups,
+      },
+    );
+
+  if (error) {
+    throw error;
+  }
+}
+
+
+/* =========================================================
+   GET STEPS
+========================================================= */
+
+export async function getRecipeSteps(
+  recipeId: string,
+): Promise<
+  RecipeStepsFormData["steps"]
+> {
+  const supabase =
+    await createClient();
+
+  const {
+    data,
+    error,
+  } =
+    await supabase
+      .from(
+        "recipe_steps",
+      )
+      .select(`
+        id,
+        title,
+        instructions,
+        duration_minutes,
+        tip,
+        position
+      `)
+      .eq(
+        "recipe_id",
+        recipeId,
+      )
+      .order(
+        "position",
+        {
+          ascending:
+            true,
+        },
+      );
+
+  if (error) {
+    throw new Error(
+      `No se pudieron obtener los pasos: ${error.message}`,
+    );
+  }
+
+  return (
+    data ??
+    []
+  ).map(
+    (step) => ({
+      title:
+        step.title ??
+        "",
+
+      instructions:
+        step.instructions,
+
+      durationMinutes:
+        step.duration_minutes ===
+        null
+          ? ""
+          : String(
+              step.duration_minutes,
+            ),
+
+      tip:
+        step.tip ??
+        "",
+    }),
+  );
+}
+
+/* =========================================================
+   REPLACE STEPS
+========================================================= */
+
+export async function replaceRecipeSteps(
+  recipeId: string,
+  input: RecipeStepsData,
+) {
+  const supabase =
+    await createClient();
+
+  const {
+    error,
+  } =
+    await supabase.rpc(
+      "replace_recipe_steps",
+      {
+        p_recipe_id:
+          recipeId,
+
+        p_steps:
+          input.steps,
       },
     );
 

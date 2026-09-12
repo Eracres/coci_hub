@@ -14,6 +14,10 @@ import type {
   RecipeServingsData,
 } from "@/schemas/recipe-servings-schema";
 
+import type {
+  RecipeTimesData,
+} from "@/schemas/recipe-times-schema";
+
 
 export type RecipeStatus =
   | "draft"
@@ -81,6 +85,15 @@ export type AdminRecipe = {
     RecipeDifficulty | null;
 
   base_servings:
+    number | null;
+
+  preparation_minutes:
+    number | null;
+
+  cooking_minutes:
+    number | null;
+
+  additional_minutes:
     number | null;
 
   status:
@@ -285,6 +298,9 @@ export async function getAdminRecipeById(
         recipe_type_id,
         difficulty,
         base_servings,
+        preparation_minutes,
+        cooking_minutes,
+        additional_minutes,
         status,
         image_path,
         image_alt,
@@ -635,6 +651,54 @@ export async function updateRecipeServings(
       .select(`
         id,
         base_servings,
+        updated_at
+      `)
+      .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+
+/* =========================================================
+   UPDATE TIMES
+========================================================= */
+
+export async function updateRecipeTimes(
+  recipeId: string,
+  input: RecipeTimesData,
+) {
+  const supabase =
+    await createClient();
+
+  const {
+    data,
+    error,
+  } =
+    await supabase
+      .from("recipes")
+      .update({
+        preparation_minutes:
+          input.preparationMinutes,
+
+        cooking_minutes:
+          input.cookingMinutes,
+
+        additional_minutes:
+          input.additionalMinutes,
+      })
+      .eq(
+        "id",
+        recipeId,
+      )
+      .select(`
+        id,
+        preparation_minutes,
+        cooking_minutes,
+        additional_minutes,
         updated_at
       `)
       .single();

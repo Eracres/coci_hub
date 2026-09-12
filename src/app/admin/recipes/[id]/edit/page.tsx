@@ -21,6 +21,10 @@ import {
 } from "@/components/admin/recipes/recipe-servings-form";
 
 import {
+  RecipeTimesForm,
+} from "@/components/admin/recipes/recipe-times-form";
+
+import {
   getAdminRecipeById,
   getRecipeClassificationOptions,
   getRecipeClassificationRelations,
@@ -202,6 +206,28 @@ export default async function EditRecipePage({
           initialValue={
             recipe.base_servings
           }
+        />
+
+
+        {/* =============================================
+            05. TIEMPOS
+        ============================================= */}
+
+        <RecipeTimesForm
+          recipeId={
+            recipe.id
+          }
+
+          initialValues={{
+            preparationMinutes:
+              recipe.preparation_minutes,
+
+            cookingMinutes:
+              recipe.cooking_minutes,
+
+            additionalMinutes:
+              recipe.additional_minutes,
+          }}
         />
 
       </div>

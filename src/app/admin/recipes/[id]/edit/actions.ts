@@ -23,10 +23,17 @@ import {
 } from "@/schemas/recipe-servings-schema";
 
 import {
+  normalizeRecipeTimes,
+  recipeTimesSchema,
+  type RecipeTimesFormData,
+} from "@/schemas/recipe-times-schema";
+
+import {
   updateRecipeBasicInfo,
   updateRecipeClassification,
   updateRecipeImagePath,
   updateRecipeServings,
+  updateRecipeTimes,
 } from "@/services/recipes/recipe-service";
 
 
@@ -75,15 +82,24 @@ export async function updateRecipeImageAction(
 ========================================================= */
 
 export type UpdateBasicInfoResult = {
-  success: boolean;
+  success:
+    boolean;
 
-  message?: string;
+  message?:
+    string;
 
   fieldErrors?: {
-    title?: string[];
-    slug?: string[];
-    shortDescription?: string[];
-    introduction?: string[];
+    title?:
+      string[];
+
+    slug?:
+      string[];
+
+    shortDescription?:
+      string[];
+
+    introduction?:
+      string[];
   };
 };
 
@@ -330,6 +346,96 @@ export async function updateRecipeServingsAction(
 
       message:
         "No se pudieron guardar las raciones.",
+    };
+  }
+}
+
+
+/* =========================================================
+   TIMES
+========================================================= */
+
+export type UpdateRecipeTimesResult = {
+  success:
+    boolean;
+
+  message?:
+    string;
+
+  fieldErrors?: {
+    preparationMinutes?:
+      string[];
+
+    cookingMinutes?:
+      string[];
+
+    additionalMinutes?:
+      string[];
+  };
+};
+
+
+export async function updateRecipeTimesAction(
+  recipeId: string,
+  input: RecipeTimesFormData,
+): Promise<UpdateRecipeTimesResult> {
+  const validation =
+    recipeTimesSchema.safeParse(
+      input,
+    );
+
+  if (
+    !validation.success
+  ) {
+    return {
+      success:
+        false,
+
+      fieldErrors:
+        validation.error
+          .flatten()
+          .fieldErrors,
+    };
+  }
+
+  const normalized =
+    normalizeRecipeTimes(
+      validation.data,
+    );
+
+  try {
+    await updateRecipeTimes(
+      recipeId,
+      normalized,
+    );
+
+    revalidatePath(
+      `/admin/recipes/${recipeId}/edit`,
+    );
+
+    revalidatePath(
+      "/admin/recipes",
+    );
+
+    return {
+      success:
+        true,
+
+      message:
+        "Tiempos guardados correctamente.",
+    };
+  } catch (error) {
+    console.error(
+      "UPDATE RECIPE TIMES ERROR:",
+      error,
+    );
+
+    return {
+      success:
+        false,
+
+      message:
+        "No se pudieron guardar los tiempos.",
     };
   }
 }

@@ -17,6 +17,12 @@ import {
 } from "@/schemas/recipe-classification-schema";
 
 import {
+  normalizeRecipeIngredients,
+  recipeIngredientsSchema,
+  type RecipeIngredientsFormData,
+} from "@/schemas/recipe-ingredients-schema";
+
+import {
   normalizeRecipeServings,
   recipeServingsSchema,
   type RecipeServingsFormData,
@@ -29,6 +35,7 @@ import {
 } from "@/schemas/recipe-times-schema";
 
 import {
+  replaceRecipeIngredients,
   updateRecipeBasicInfo,
   updateRecipeClassification,
   updateRecipeImagePath,
@@ -436,6 +443,88 @@ export async function updateRecipeTimesAction(
 
       message:
         "No se pudieron guardar los tiempos.",
+    };
+  }
+}
+
+
+/* =========================================================
+   INGREDIENTS
+========================================================= */
+
+export type UpdateRecipeIngredientsResult = {
+  success:
+    boolean;
+
+  message?:
+    string;
+};
+
+
+export async function updateRecipeIngredientsAction(
+  recipeId: string,
+  input: RecipeIngredientsFormData,
+): Promise<UpdateRecipeIngredientsResult> {
+  const validation =
+    recipeIngredientsSchema.safeParse(
+      input,
+    );
+
+  if (
+    !validation.success
+  ) {
+    console.error(
+      "INGREDIENT VALIDATION ERROR:",
+      validation.error.flatten(),
+    );
+
+    return {
+      success:
+        false,
+
+      message:
+        "Hay datos de ingredientes que no son válidos.",
+    };
+  }
+
+  const normalized =
+    normalizeRecipeIngredients(
+      validation.data,
+    );
+
+  try {
+    await replaceRecipeIngredients(
+      recipeId,
+      normalized,
+    );
+
+    revalidatePath(
+      `/admin/recipes/${recipeId}/edit`,
+    );
+
+    revalidatePath(
+      "/admin/recipes",
+    );
+
+    return {
+      success:
+        true,
+
+      message:
+        "Ingredientes guardados correctamente.",
+    };
+  } catch (error) {
+    console.error(
+      "UPDATE RECIPE INGREDIENTS ERROR:",
+      error,
+    );
+
+    return {
+      success:
+        false,
+
+      message:
+        "No se pudieron guardar los ingredientes.",
     };
   }
 }

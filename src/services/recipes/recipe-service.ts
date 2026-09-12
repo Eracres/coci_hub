@@ -11,6 +11,11 @@ import type {
 } from "@/schemas/recipe-classification-schema";
 
 import type {
+  RecipeIngredientsData,
+  RecipeIngredientsFormData,
+} from "@/schemas/recipe-ingredients-schema";
+
+import type {
   RecipeServingsData,
 } from "@/schemas/recipe-servings-schema";
 
@@ -708,4 +713,175 @@ export async function updateRecipeTimes(
   }
 
   return data;
+}
+
+
+/* =========================================================
+   GET INGREDIENTS
+========================================================= */
+
+export async function getRecipeIngredients(
+  recipeId: string,
+): Promise<
+  RecipeIngredientsFormData["groups"]
+> {
+  const supabase =
+    await createClient();
+
+  const {
+    data: groups,
+    error: groupsError,
+  } =
+    await supabase
+      .from(
+        "ingredient_groups",
+      )
+      .select(`
+        id,
+        name,
+        position
+      `)
+      .eq(
+        "recipe_id",
+        recipeId,
+      )
+      .order(
+        "position",
+        {
+          ascending:
+            true,
+        },
+      );
+
+  if (groupsError) {
+    throw new Error(
+      `No se pudieron obtener los grupos de ingredientes: ${groupsError.message}`,
+    );
+  }
+
+  if (
+    !groups ||
+    groups.length === 0
+  ) {
+    return [];
+  }
+
+  const groupIds =
+    groups.map(
+      (group) =>
+        group.id,
+    );
+
+  const {
+    data: ingredients,
+    error: ingredientsError,
+  } =
+    await supabase
+      .from(
+        "ingredients",
+      )
+      .select(`
+        id,
+        ingredient_group_id,
+        name,
+        quantity,
+        unit,
+        notes,
+        scalable,
+        position
+      `)
+      .in(
+        "ingredient_group_id",
+        groupIds,
+      )
+      .order(
+        "position",
+        {
+          ascending:
+            true,
+        },
+      );
+
+  if (
+    ingredientsError
+  ) {
+    throw new Error(
+      `No se pudieron obtener los ingredientes: ${ingredientsError.message}`,
+    );
+  }
+
+  return groups.map(
+    (group) => ({
+      name:
+        group.name,
+
+      ingredients:
+        (
+          ingredients ??
+          []
+        )
+          .filter(
+            (ingredient) =>
+              ingredient
+                .ingredient_group_id ===
+              group.id,
+          )
+          .map(
+            (ingredient) => ({
+              name:
+                ingredient.name,
+
+              quantity:
+                ingredient.quantity ===
+                null
+                  ? ""
+                  : String(
+                      ingredient.quantity,
+                    ),
+
+              unit:
+                ingredient.unit ??
+                "",
+
+              notes:
+                ingredient.notes ??
+                "",
+
+              scalable:
+                ingredient.scalable,
+            }),
+          ),
+    }),
+  );
+}
+
+
+/* =========================================================
+   REPLACE INGREDIENTS
+========================================================= */
+
+export async function replaceRecipeIngredients(
+  recipeId: string,
+  input: RecipeIngredientsData,
+) {
+  const supabase =
+    await createClient();
+
+  const {
+    error,
+  } =
+    await supabase.rpc(
+      "replace_recipe_ingredients",
+      {
+        p_recipe_id:
+          recipeId,
+
+        p_groups:
+          input.groups,
+      },
+    );
+
+  if (error) {
+    throw error;
+  }
 }

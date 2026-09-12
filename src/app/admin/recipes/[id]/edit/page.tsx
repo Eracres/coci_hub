@@ -17,6 +17,10 @@ import {
 } from "@/components/admin/recipes/recipe-image-uploader";
 
 import {
+  RecipeIngredientsForm,
+} from "@/components/admin/recipes/recipe-ingredients-form";
+
+import {
   RecipeServingsForm,
 } from "@/components/admin/recipes/recipe-servings-form";
 
@@ -28,6 +32,7 @@ import {
   getAdminRecipeById,
   getRecipeClassificationOptions,
   getRecipeClassificationRelations,
+  getRecipeIngredients,
 } from "@/services/recipes/recipe-service";
 
 
@@ -46,10 +51,12 @@ export default async function EditRecipePage({
   } =
     await params;
 
+
   const [
     recipe,
     classificationOptions,
     classificationRelations,
+    ingredientGroups,
   ] =
     await Promise.all([
       getAdminRecipeById(
@@ -59,6 +66,10 @@ export default async function EditRecipePage({
       getRecipeClassificationOptions(),
 
       getRecipeClassificationRelations(
+        id,
+      ),
+
+      getRecipeIngredients(
         id,
       ),
     ]);
@@ -228,6 +239,21 @@ export default async function EditRecipePage({
             additionalMinutes:
               recipe.additional_minutes,
           }}
+        />
+
+
+        {/* =============================================
+            06. INGREDIENTES
+        ============================================= */}
+
+        <RecipeIngredientsForm
+          recipeId={
+            recipe.id
+          }
+
+          initialGroups={
+            ingredientGroups
+          }
         />
 
       </div>

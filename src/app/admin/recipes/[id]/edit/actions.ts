@@ -5,6 +5,11 @@ import {
 } from "next/cache";
 
 import {
+  errorHasCode,
+  errorMessageIncludes,
+} from "@/lib/errors/supabase-error";
+
+import {
   normalizeRecipeAdditionalInfo,
   recipeAdditionalInfoSchema,
   type RecipeAdditionalInfoFormData,
@@ -80,15 +85,223 @@ function revalidateRecipeAdminPaths(
   recipeId: string,
 ) {
   revalidatePath(
+    "/admin/recipes",
+  );
+
+  revalidatePath(
     `/admin/recipes/${recipeId}/edit`,
   );
 
   revalidatePath(
     `/admin/recipes/${recipeId}/preview`,
   );
+}
 
-  revalidatePath(
-    "/admin/recipes",
+
+/* =========================================================
+   COMMON ERROR MAPPING
+========================================================= */
+
+function getCommonRecipeErrorMessage(
+  error: unknown,
+  fallback: string,
+) {
+  if (
+    errorHasCode(
+      error,
+      "42501",
+    ) ||
+    errorMessageIncludes(
+      error,
+      "not authorized",
+    )
+  ) {
+    return "No tienes permisos para realizar esta operación.";
+  }
+
+
+  if (
+    errorHasCode(
+      error,
+      "P0002",
+    ) ||
+    errorMessageIncludes(
+      error,
+      "recipe not found",
+    )
+  ) {
+    return "La receta ya no existe.";
+  }
+
+
+  return fallback;
+}
+
+
+/* =========================================================
+   PUBLICATION ERROR MAPPING
+========================================================= */
+
+function getPublicationErrorMessage(
+  error: unknown,
+) {
+  if (
+    errorMessageIncludes(
+      error,
+      "recipe title is required",
+    )
+  ) {
+    return "Falta el título de la receta.";
+  }
+
+
+  if (
+    errorMessageIncludes(
+      error,
+      "recipe slug is required",
+    )
+  ) {
+    return "Falta el slug de la receta.";
+  }
+
+
+  if (
+    errorMessageIncludes(
+      error,
+      "short description is required",
+    )
+  ) {
+    return "Falta la descripción corta de la receta.";
+  }
+
+
+  if (
+    errorMessageIncludes(
+      error,
+      "main image is required",
+    )
+  ) {
+    return "Falta la imagen principal de la receta.";
+  }
+
+
+  if (
+    errorMessageIncludes(
+      error,
+      "recipe type is required",
+    )
+  ) {
+    return "Falta seleccionar el tipo de receta.";
+  }
+
+
+  if (
+    errorMessageIncludes(
+      error,
+      "difficulty is required",
+    )
+  ) {
+    return "Falta indicar la dificultad de la receta.";
+  }
+
+
+  if (
+    errorMessageIncludes(
+      error,
+      "base servings are required",
+    )
+  ) {
+    return "Falta indicar las raciones base.";
+  }
+
+
+  if (
+    errorMessageIncludes(
+      error,
+      "preparation time must be greater than zero",
+    )
+  ) {
+    return "El tiempo de preparación debe ser mayor que cero.";
+  }
+
+
+  if (
+    errorMessageIncludes(
+      error,
+      "at least one category is required",
+    )
+  ) {
+    return "Falta al menos una categoría para poder publicar.";
+  }
+
+
+  if (
+    errorMessageIncludes(
+      error,
+      "at least one ingredient is required",
+    )
+  ) {
+    return "Falta al menos un ingrediente para poder publicar.";
+  }
+
+
+  if (
+    errorMessageIncludes(
+      error,
+      "at least one recipe step is required",
+    )
+  ) {
+    return "Falta al menos un paso de elaboración para poder publicar.";
+  }
+
+
+  if (
+    errorMessageIncludes(
+      error,
+      "invalid recipe status",
+    )
+  ) {
+    return "El estado solicitado para la receta no es válido.";
+  }
+
+
+  return getCommonRecipeErrorMessage(
+    error,
+    "No se pudo cambiar el estado de la receta.",
+  );
+}
+
+
+/* =========================================================
+   DELETE ERROR MAPPING
+========================================================= */
+
+function getDeleteRecipeErrorMessage(
+  error: unknown,
+) {
+  if (
+    errorMessageIncludes(
+      error,
+      "published recipes cannot be deleted",
+    )
+  ) {
+    return "No puedes eliminar directamente una receta publicada. Despublícala o archívala primero.";
+  }
+
+
+  if (
+    errorMessageIncludes(
+      error,
+      "recipe title confirmation does not match",
+    )
+  ) {
+    return "El título de confirmación no coincide exactamente con el título de la receta.";
+  }
+
+
+  return getCommonRecipeErrorMessage(
+    error,
+    "No se pudo eliminar la receta.",
   );
 }
 
@@ -107,6 +320,7 @@ export async function updateRecipeImageAction(
     );
   }
 
+
   if (
     imagePath !== null &&
     !imagePath.startsWith(
@@ -118,14 +332,31 @@ export async function updateRecipeImageAction(
     );
   }
 
-  await updateRecipeImagePath(
-    recipeId,
-    imagePath,
-  );
 
-  revalidateRecipeAdminPaths(
-    recipeId,
-  );
+  try {
+    await updateRecipeImagePath(
+      recipeId,
+      imagePath,
+    );
+
+
+    revalidateRecipeAdminPaths(
+      recipeId,
+    );
+  } catch (error) {
+    console.error(
+      "UPDATE RECIPE IMAGE ERROR:",
+      error,
+    );
+
+
+    throw new Error(
+      getCommonRecipeErrorMessage(
+        error,
+        "No se pudo actualizar la imagen principal.",
+      ),
+    );
+  }
 }
 
 
@@ -165,6 +396,7 @@ export async function updateRecipeBasicInfoAction(
       input,
     );
 
+
   if (
     !validation.success
   ) {
@@ -179,10 +411,12 @@ export async function updateRecipeBasicInfoAction(
     };
   }
 
+
   const normalizedData =
     normalizeRecipeBasicInfo(
       validation.data,
     );
+
 
   try {
     await updateRecipeBasicInfo(
@@ -190,9 +424,11 @@ export async function updateRecipeBasicInfoAction(
       normalizedData,
     );
 
+
     revalidateRecipeAdminPaths(
       recipeId,
     );
+
 
     return {
       success:
@@ -207,13 +443,12 @@ export async function updateRecipeBasicInfoAction(
       error,
     );
 
+
     if (
-      typeof error ===
-        "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code ===
-        "23505"
+      errorHasCode(
+        error,
+        "23505",
+      )
     ) {
       return {
         success:
@@ -227,12 +462,16 @@ export async function updateRecipeBasicInfoAction(
       };
     }
 
+
     return {
       success:
         false,
 
       message:
-        "No se pudieron guardar los cambios.",
+        getCommonRecipeErrorMessage(
+          error,
+          "No se pudieron guardar los cambios.",
+        ),
     };
   }
 }
@@ -260,6 +499,7 @@ export async function updateRecipeClassificationAction(
       input,
     );
 
+
   if (
     !validation.success
   ) {
@@ -272,10 +512,12 @@ export async function updateRecipeClassificationAction(
     };
   }
 
+
   const normalized =
     normalizeRecipeClassification(
       validation.data,
     );
+
 
   try {
     await updateRecipeClassification(
@@ -283,9 +525,11 @@ export async function updateRecipeClassificationAction(
       normalized,
     );
 
+
     revalidateRecipeAdminPaths(
       recipeId,
     );
+
 
     return {
       success:
@@ -300,12 +544,16 @@ export async function updateRecipeClassificationAction(
       error,
     );
 
+
     return {
       success:
         false,
 
       message:
-        "No se pudo guardar la clasificación.",
+        getCommonRecipeErrorMessage(
+          error,
+          "No se pudo guardar la clasificación.",
+        ),
     };
   }
 }
@@ -338,6 +586,7 @@ export async function updateRecipeServingsAction(
       input,
     );
 
+
   if (
     !validation.success
   ) {
@@ -352,10 +601,12 @@ export async function updateRecipeServingsAction(
     };
   }
 
+
   const normalized =
     normalizeRecipeServings(
       validation.data,
     );
+
 
   try {
     await updateRecipeServings(
@@ -363,9 +614,11 @@ export async function updateRecipeServingsAction(
       normalized,
     );
 
+
     revalidateRecipeAdminPaths(
       recipeId,
     );
+
 
     return {
       success:
@@ -380,12 +633,16 @@ export async function updateRecipeServingsAction(
       error,
     );
 
+
     return {
       success:
         false,
 
       message:
-        "No se pudieron guardar las raciones.",
+        getCommonRecipeErrorMessage(
+          error,
+          "No se pudieron guardar las raciones.",
+        ),
     };
   }
 }
@@ -424,6 +681,7 @@ export async function updateRecipeTimesAction(
       input,
     );
 
+
   if (
     !validation.success
   ) {
@@ -438,10 +696,12 @@ export async function updateRecipeTimesAction(
     };
   }
 
+
   const normalized =
     normalizeRecipeTimes(
       validation.data,
     );
+
 
   try {
     await updateRecipeTimes(
@@ -449,9 +709,11 @@ export async function updateRecipeTimesAction(
       normalized,
     );
 
+
     revalidateRecipeAdminPaths(
       recipeId,
     );
+
 
     return {
       success:
@@ -466,12 +728,16 @@ export async function updateRecipeTimesAction(
       error,
     );
 
+
     return {
       success:
         false,
 
       message:
-        "No se pudieron guardar los tiempos.",
+        getCommonRecipeErrorMessage(
+          error,
+          "No se pudieron guardar los tiempos.",
+        ),
     };
   }
 }
@@ -499,6 +765,7 @@ export async function updateRecipeIngredientsAction(
       input,
     );
 
+
   if (
     !validation.success
   ) {
@@ -506,6 +773,7 @@ export async function updateRecipeIngredientsAction(
       "INGREDIENT VALIDATION ERROR:",
       validation.error.flatten(),
     );
+
 
     return {
       success:
@@ -516,10 +784,12 @@ export async function updateRecipeIngredientsAction(
     };
   }
 
+
   const normalized =
     normalizeRecipeIngredients(
       validation.data,
     );
+
 
   try {
     await replaceRecipeIngredients(
@@ -527,9 +797,11 @@ export async function updateRecipeIngredientsAction(
       normalized,
     );
 
+
     revalidateRecipeAdminPaths(
       recipeId,
     );
+
 
     return {
       success:
@@ -544,12 +816,16 @@ export async function updateRecipeIngredientsAction(
       error,
     );
 
+
     return {
       success:
         false,
 
       message:
-        "No se pudieron guardar los ingredientes.",
+        getCommonRecipeErrorMessage(
+          error,
+          "No se pudieron guardar los ingredientes.",
+        ),
     };
   }
 }
@@ -577,6 +853,7 @@ export async function updateRecipeStepsAction(
       input,
     );
 
+
   if (
     !validation.success
   ) {
@@ -584,6 +861,7 @@ export async function updateRecipeStepsAction(
       "STEP VALIDATION ERROR:",
       validation.error.flatten(),
     );
+
 
     return {
       success:
@@ -594,10 +872,12 @@ export async function updateRecipeStepsAction(
     };
   }
 
+
   const normalized =
     normalizeRecipeSteps(
       validation.data,
     );
+
 
   try {
     await replaceRecipeSteps(
@@ -605,9 +885,11 @@ export async function updateRecipeStepsAction(
       normalized,
     );
 
+
     revalidateRecipeAdminPaths(
       recipeId,
     );
+
 
     return {
       success:
@@ -622,12 +904,16 @@ export async function updateRecipeStepsAction(
       error,
     );
 
+
     return {
       success:
         false,
 
       message:
-        "No se pudo guardar la elaboración.",
+        getCommonRecipeErrorMessage(
+          error,
+          "No se pudo guardar la elaboración.",
+        ),
     };
   }
 }
@@ -691,6 +977,7 @@ export async function updateRecipeAdditionalInfoAction(
       input,
     );
 
+
   if (
     !validation.success
   ) {
@@ -705,10 +992,12 @@ export async function updateRecipeAdditionalInfoAction(
     };
   }
 
+
   const normalized =
     normalizeRecipeAdditionalInfo(
       validation.data,
     );
+
 
   try {
     await updateRecipeAdditionalInfo(
@@ -716,9 +1005,11 @@ export async function updateRecipeAdditionalInfoAction(
       normalized,
     );
 
+
     revalidateRecipeAdminPaths(
       recipeId,
     );
+
 
     return {
       success:
@@ -733,12 +1024,16 @@ export async function updateRecipeAdditionalInfoAction(
       error,
     );
 
+
     return {
       success:
         false,
 
       message:
-        "No se pudo guardar la información adicional.",
+        getCommonRecipeErrorMessage(
+          error,
+          "No se pudo guardar la información adicional.",
+        ),
     };
   }
 }
@@ -766,6 +1061,7 @@ export async function updateRecipeAllergensAction(
       input,
     );
 
+
   if (
     !validation.success
   ) {
@@ -773,6 +1069,7 @@ export async function updateRecipeAllergensAction(
       "ALLERGEN VALIDATION ERROR:",
       validation.error.flatten(),
     );
+
 
     return {
       success:
@@ -783,10 +1080,12 @@ export async function updateRecipeAllergensAction(
     };
   }
 
+
   const normalized =
     normalizeRecipeAllergens(
       validation.data,
     );
+
 
   try {
     await replaceRecipeAllergens(
@@ -794,9 +1093,11 @@ export async function updateRecipeAllergensAction(
       normalized,
     );
 
+
     revalidateRecipeAdminPaths(
       recipeId,
     );
+
 
     return {
       success:
@@ -811,12 +1112,16 @@ export async function updateRecipeAllergensAction(
       error,
     );
 
+
     return {
       success:
         false,
 
       message:
-        "No se pudieron guardar los alérgenos.",
+        getCommonRecipeErrorMessage(
+          error,
+          "No se pudieron guardar los alérgenos.",
+        ),
     };
   }
 }
@@ -900,7 +1205,9 @@ export async function updateRecipeStatusAction(
         false,
 
       message:
-        "No se pudo cambiar el estado de la receta.",
+        getPublicationErrorMessage(
+          error,
+        ),
     };
   }
 }
@@ -949,6 +1256,7 @@ export async function deleteRecipeAction(
       "/admin/recipes",
     );
 
+
     revalidatePath(
       "/recipes",
     );
@@ -975,7 +1283,9 @@ export async function deleteRecipeAction(
         false,
 
       message:
-        "No se pudo eliminar la receta. Comprueba que no esté publicada y que el título de confirmación sea exacto.",
+        getDeleteRecipeErrorMessage(
+          error,
+        ),
     };
   }
 }

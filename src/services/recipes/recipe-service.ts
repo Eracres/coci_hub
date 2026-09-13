@@ -8,6 +8,11 @@ import type {
 } from "@/schemas/recipe-additional-info-schema";
 
 import type {
+  RecipeAllergensData,
+  RecipeAllergensFormData,
+} from "@/schemas/recipe-allergens-schema";
+
+import type {
   RecipeBasicInfoData,
 } from "@/schemas/recipe-basic-info-schema";
 
@@ -196,6 +201,14 @@ export type RecipeClassificationOptions = {
 
   tags:
     TagOption[];
+};
+
+
+export type AllergenOption = {
+  id: string;
+  name: string;
+  slug: string;
+  position: number;
 };
 
 
@@ -1116,4 +1129,125 @@ export async function updateRecipeAdditionalInfo(
   }
 
   return data;
+}
+
+
+/* =========================================================
+   ALLERGEN CATALOG
+========================================================= */
+
+export async function getAllergenOptions(): Promise<
+  AllergenOption[]
+> {
+  const supabase =
+    await createClient();
+
+  const {
+    data,
+    error,
+  } =
+    await supabase
+      .from("allergens")
+      .select(`
+        id,
+        name,
+        slug,
+        position
+      `)
+      .order(
+        "position",
+        {
+          ascending:
+            true,
+        },
+      );
+
+  if (error) {
+    throw new Error(
+      `No se pudo obtener el catálogo de alérgenos: ${error.message}`,
+    );
+  }
+
+  return data ?? [];
+}
+
+
+/* =========================================================
+   CURRENT RECIPE ALLERGENS
+========================================================= */
+
+export async function getRecipeAllergens(
+  recipeId: string,
+): Promise<
+  RecipeAllergensFormData["allergens"]
+> {
+  const supabase =
+    await createClient();
+
+  const {
+    data,
+    error,
+  } =
+    await supabase
+      .from(
+        "recipe_allergens",
+      )
+      .select(`
+        allergen_id,
+        presence
+      `)
+      .eq(
+        "recipe_id",
+        recipeId,
+      );
+
+  if (error) {
+    throw new Error(
+      `No se pudieron obtener los alérgenos de la receta: ${error.message}`,
+    );
+  }
+
+  return (
+    data ??
+    []
+  ).map(
+    (allergen) => ({
+      allergenId:
+        allergen.allergen_id,
+
+      presence:
+        allergen.presence,
+    }),
+  );
+}
+
+
+/* =========================================================
+   REPLACE RECIPE ALLERGENS
+========================================================= */
+
+export async function replaceRecipeAllergens(
+  recipeId: string,
+  input: RecipeAllergensData,
+) {
+  const supabase =
+    await createClient();
+
+  const {
+    error,
+  } =
+    await supabase.rpc(
+      "replace_recipe_allergens",
+      {
+        p_recipe_id:
+          recipeId,
+
+        p_allergens:
+          input.allergens,
+      },
+    );
+
+  if (error) {
+    throw error;
+  }
 }

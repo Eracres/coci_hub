@@ -9,6 +9,10 @@ import {
 } from "@/components/admin/recipes/recipe-additional-info-form";
 
 import {
+  RecipeAllergensForm,
+} from "@/components/admin/recipes/recipe-allergens-form";
+
+import {
   RecipeBasicInfoForm,
 } from "@/components/admin/recipes/recipe-basic-info-form";
 
@@ -38,6 +42,8 @@ import {
 
 import {
   getAdminRecipeById,
+  getAllergenOptions,
+  getRecipeAllergens,
   getRecipeClassificationOptions,
   getRecipeClassificationRelations,
   getRecipeIngredients,
@@ -67,6 +73,8 @@ export default async function EditRecipePage({
     classificationRelations,
     ingredientGroups,
     recipeSteps,
+    allergenOptions,
+    recipeAllergens,
   ] =
     await Promise.all([
       getAdminRecipeById(
@@ -86,10 +94,18 @@ export default async function EditRecipePage({
       getRecipeSteps(
         id,
       ),
+
+      getAllergenOptions(),
+
+      getRecipeAllergens(
+        id,
+      ),
     ]);
 
 
-  if (!recipe) {
+  if (
+    !recipe
+  ) {
     notFound();
   }
 
@@ -314,6 +330,23 @@ export default async function EditRecipePage({
             sourceNotes:
               recipe.source_notes,
           }}
+        />
+
+
+        {/* 09. ALÉRGENOS */}
+
+        <RecipeAllergensForm
+          recipeId={
+            recipe.id
+          }
+
+          allergens={
+            allergenOptions
+          }
+
+          initialValues={
+            recipeAllergens
+          }
         />
 
       </div>

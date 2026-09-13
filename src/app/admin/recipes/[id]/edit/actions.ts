@@ -11,6 +11,12 @@ import {
 } from "@/schemas/recipe-additional-info-schema";
 
 import {
+  normalizeRecipeAllergens,
+  recipeAllergensSchema,
+  type RecipeAllergensFormData,
+} from "@/schemas/recipe-allergens-schema";
+
+import {
   normalizeRecipeBasicInfo,
   recipeBasicInfoSchema,
   type RecipeBasicInfoFormData,
@@ -47,6 +53,7 @@ import {
 } from "@/schemas/recipe-times-schema";
 
 import {
+  replaceRecipeAllergens,
   replaceRecipeIngredients,
   replaceRecipeSteps,
   updateRecipeAdditionalInfo,
@@ -103,15 +110,24 @@ export async function updateRecipeImageAction(
 ========================================================= */
 
 export type UpdateBasicInfoResult = {
-  success: boolean;
+  success:
+    boolean;
 
-  message?: string;
+  message?:
+    string;
 
   fieldErrors?: {
-    title?: string[];
-    slug?: string[];
-    shortDescription?: string[];
-    introduction?: string[];
+    title?:
+      string[];
+
+    slug?:
+      string[];
+
+    shortDescription?:
+      string[];
+
+    introduction?:
+      string[];
   };
 };
 
@@ -125,7 +141,9 @@ export async function updateRecipeBasicInfoAction(
       input,
     );
 
-  if (!validation.success) {
+  if (
+    !validation.success
+  ) {
     return {
       success:
         false,
@@ -222,7 +240,9 @@ export async function updateRecipeClassificationAction(
       input,
     );
 
-  if (!validation.success) {
+  if (
+    !validation.success
+  ) {
     return {
       success:
         false,
@@ -302,7 +322,9 @@ export async function updateRecipeServingsAction(
       input,
     );
 
-  if (!validation.success) {
+  if (
+    !validation.success
+  ) {
     return {
       success:
         false,
@@ -390,7 +412,9 @@ export async function updateRecipeTimesAction(
       input,
     );
 
-  if (!validation.success) {
+  if (
+    !validation.success
+  ) {
     return {
       success:
         false,
@@ -467,7 +491,9 @@ export async function updateRecipeIngredientsAction(
       input,
     );
 
-  if (!validation.success) {
+  if (
+    !validation.success
+  ) {
     console.error(
       "INGREDIENT VALIDATION ERROR:",
       validation.error.flatten(),
@@ -547,7 +573,9 @@ export async function updateRecipeStepsAction(
       input,
     );
 
-  if (!validation.success) {
+  if (
+    !validation.success
+  ) {
     console.error(
       "STEP VALIDATION ERROR:",
       validation.error.flatten(),
@@ -663,7 +691,9 @@ export async function updateRecipeAdditionalInfoAction(
       input,
     );
 
-  if (!validation.success) {
+  if (
+    !validation.success
+  ) {
     return {
       success:
         false,
@@ -713,6 +743,88 @@ export async function updateRecipeAdditionalInfoAction(
 
       message:
         "No se pudo guardar la información adicional.",
+    };
+  }
+}
+
+
+/* =========================================================
+   ALLERGENS
+========================================================= */
+
+export type UpdateRecipeAllergensResult = {
+  success:
+    boolean;
+
+  message?:
+    string;
+};
+
+
+export async function updateRecipeAllergensAction(
+  recipeId: string,
+  input: RecipeAllergensFormData,
+): Promise<UpdateRecipeAllergensResult> {
+  const validation =
+    recipeAllergensSchema.safeParse(
+      input,
+    );
+
+  if (
+    !validation.success
+  ) {
+    console.error(
+      "ALLERGEN VALIDATION ERROR:",
+      validation.error.flatten(),
+    );
+
+    return {
+      success:
+        false,
+
+      message:
+        "Los datos de alérgenos no son válidos.",
+    };
+  }
+
+  const normalized =
+    normalizeRecipeAllergens(
+      validation.data,
+    );
+
+  try {
+    await replaceRecipeAllergens(
+      recipeId,
+      normalized,
+    );
+
+    revalidatePath(
+      `/admin/recipes/${recipeId}/edit`,
+    );
+
+    revalidatePath(
+      "/admin/recipes",
+    );
+
+    return {
+      success:
+        true,
+
+      message:
+        "Alérgenos guardados correctamente.",
+    };
+  } catch (error) {
+    console.error(
+      "UPDATE RECIPE ALLERGENS ERROR:",
+      error,
+    );
+
+    return {
+      success:
+        false,
+
+      message:
+        "No se pudieron guardar los alérgenos.",
     };
   }
 }

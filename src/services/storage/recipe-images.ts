@@ -1,8 +1,17 @@
-import { createClient } from "@/lib/supabase/client";
+import {
+  createClient,
+} from "@/lib/supabase/client";
 
-const BUCKET = "recipe-images";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const BUCKET =
+  "recipe-images";
+
+
+const MAX_FILE_SIZE =
+  5 *
+  1024 *
+  1024;
+
 
 const ALLOWED_TYPES = [
   "image/jpeg",
@@ -10,41 +19,80 @@ const ALLOWED_TYPES = [
   "image/webp",
 ];
 
+
 export async function uploadRecipeImage(
   recipeId: string,
   file: File,
 ) {
-  if (!ALLOWED_TYPES.includes(file.type)) {
+  if (
+    !ALLOWED_TYPES.includes(
+      file.type,
+    )
+  ) {
     throw new Error(
       "Formato no permitido. Utiliza JPEG, PNG o WebP.",
     );
   }
 
-  if (file.size > MAX_FILE_SIZE) {
+
+  if (
+    file.size >
+    MAX_FILE_SIZE
+  ) {
     throw new Error(
       "La imagen no puede superar los 5 MB.",
     );
   }
 
-  const supabase = createClient();
+
+  const supabase =
+    createClient();
+
 
   const extension =
     file.name
       .split(".")
       .pop()
-      ?.toLowerCase() ?? "webp";
+      ?.toLowerCase() ??
+    "webp";
+
 
   const path =
     `recipes/${recipeId}/main.${extension}`;
 
-  const { data, error } =
+
+  const {
+    data,
+    error,
+  } =
     await supabase.storage
-      .from(BUCKET)
-      .upload(path, file, {
-        upsert: true,
-        cacheControl: "3600",
-        contentType: file.type,
-      });
+      .from(
+        BUCKET,
+      )
+      .upload(
+        path,
+        file,
+        {
+          /*
+           * Permite sustituir:
+           *
+           * recipes/{id}/main.jpg
+           *
+           * por otra imagen en la misma ruta.
+           *
+           * Para ello Storage necesita policy UPDATE.
+           */
+          upsert:
+            true,
+
+          cacheControl:
+            "3600",
+
+          contentType:
+            file.type,
+        },
+      );
+
 
   if (error) {
     throw new Error(
@@ -52,31 +100,67 @@ export async function uploadRecipeImage(
     );
   }
 
+
   return data.path;
 }
 
+
 export function getRecipeImageUrl(
   path: string,
+  version?: number,
 ) {
-  const supabase = createClient();
+  const supabase =
+    createClient();
 
-  const { data } =
+
+  const {
+    data,
+  } =
     supabase.storage
-      .from(BUCKET)
-      .getPublicUrl(path);
+      .from(
+        BUCKET,
+      )
+      .getPublicUrl(
+        path,
+      );
 
-  return data.publicUrl;
+
+  /*
+   * El parámetro v evita que el navegador/CDN
+   * muestre una versión antigua cuando
+   * sustituimos un archivo manteniendo la
+   * misma ruta.
+   */
+  if (
+    version ===
+    undefined
+  ) {
+    return data.publicUrl;
+  }
+
+
+  return `${data.publicUrl}?v=${version}`;
 }
+
 
 export async function deleteRecipeImage(
   path: string,
 ) {
-  const supabase = createClient();
+  const supabase =
+    createClient();
 
-  const { error } =
+
+  const {
+    error,
+  } =
     await supabase.storage
-      .from(BUCKET)
-      .remove([path]);
+      .from(
+        BUCKET,
+      )
+      .remove([
+        path,
+      ]);
+
 
   if (error) {
     throw new Error(

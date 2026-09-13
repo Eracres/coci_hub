@@ -73,6 +73,27 @@ import {
 
 
 /* =========================================================
+   REVALIDATION
+========================================================= */
+
+function revalidateRecipeAdminPaths(
+  recipeId: string,
+) {
+  revalidatePath(
+    `/admin/recipes/${recipeId}/edit`,
+  );
+
+  revalidatePath(
+    `/admin/recipes/${recipeId}/preview`,
+  );
+
+  revalidatePath(
+    "/admin/recipes",
+  );
+}
+
+
+/* =========================================================
    IMAGE
 ========================================================= */
 
@@ -102,12 +123,8 @@ export async function updateRecipeImageAction(
     imagePath,
   );
 
-  revalidatePath(
-    `/admin/recipes/${recipeId}/edit`,
-  );
-
-  revalidatePath(
-    "/admin/recipes",
+  revalidateRecipeAdminPaths(
+    recipeId,
   );
 }
 
@@ -173,12 +190,8 @@ export async function updateRecipeBasicInfoAction(
       normalizedData,
     );
 
-    revalidatePath(
-      `/admin/recipes/${recipeId}/edit`,
-    );
-
-    revalidatePath(
-      "/admin/recipes",
+    revalidateRecipeAdminPaths(
+      recipeId,
     );
 
     return {
@@ -270,12 +283,8 @@ export async function updateRecipeClassificationAction(
       normalized,
     );
 
-    revalidatePath(
-      `/admin/recipes/${recipeId}/edit`,
-    );
-
-    revalidatePath(
-      "/admin/recipes",
+    revalidateRecipeAdminPaths(
+      recipeId,
     );
 
     return {
@@ -354,12 +363,8 @@ export async function updateRecipeServingsAction(
       normalized,
     );
 
-    revalidatePath(
-      `/admin/recipes/${recipeId}/edit`,
-    );
-
-    revalidatePath(
-      "/admin/recipes",
+    revalidateRecipeAdminPaths(
+      recipeId,
     );
 
     return {
@@ -444,12 +449,8 @@ export async function updateRecipeTimesAction(
       normalized,
     );
 
-    revalidatePath(
-      `/admin/recipes/${recipeId}/edit`,
-    );
-
-    revalidatePath(
-      "/admin/recipes",
+    revalidateRecipeAdminPaths(
+      recipeId,
     );
 
     return {
@@ -526,12 +527,8 @@ export async function updateRecipeIngredientsAction(
       normalized,
     );
 
-    revalidatePath(
-      `/admin/recipes/${recipeId}/edit`,
-    );
-
-    revalidatePath(
-      "/admin/recipes",
+    revalidateRecipeAdminPaths(
+      recipeId,
     );
 
     return {
@@ -608,12 +605,8 @@ export async function updateRecipeStepsAction(
       normalized,
     );
 
-    revalidatePath(
-      `/admin/recipes/${recipeId}/edit`,
-    );
-
-    revalidatePath(
-      "/admin/recipes",
+    revalidateRecipeAdminPaths(
+      recipeId,
     );
 
     return {
@@ -723,12 +716,8 @@ export async function updateRecipeAdditionalInfoAction(
       normalized,
     );
 
-    revalidatePath(
-      `/admin/recipes/${recipeId}/edit`,
-    );
-
-    revalidatePath(
-      "/admin/recipes",
+    revalidateRecipeAdminPaths(
+      recipeId,
     );
 
     return {
@@ -805,12 +794,8 @@ export async function updateRecipeAllergensAction(
       normalized,
     );
 
-    revalidatePath(
-      `/admin/recipes/${recipeId}/edit`,
-    );
-
-    revalidatePath(
-      "/admin/recipes",
+    revalidateRecipeAdminPaths(
+      recipeId,
     );
 
     return {
@@ -859,6 +844,7 @@ export async function updateRecipeStatusAction(
       status,
     );
 
+
   if (
     !validation.success
   ) {
@@ -871,23 +857,23 @@ export async function updateRecipeStatusAction(
     };
   }
 
+
   try {
     await updateRecipeStatus(
       recipeId,
       validation.data,
     );
 
-    revalidatePath(
-      `/admin/recipes/${recipeId}/edit`,
+
+    revalidateRecipeAdminPaths(
+      recipeId,
     );
 
-    revalidatePath(
-      "/admin/recipes",
-    );
 
     revalidatePath(
       "/recipes",
     );
+
 
     return {
       success:
@@ -907,6 +893,7 @@ export async function updateRecipeStatusAction(
       "UPDATE RECIPE STATUS ERROR:",
       error,
     );
+
 
     return {
       success:

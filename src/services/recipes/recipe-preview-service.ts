@@ -84,8 +84,31 @@ export async function getRecipePreview(
         );
 
 
+    /*
+     * Cache busting.
+     *
+     * La imagen principal mantiene normalmente
+     * una ruta estable:
+     *
+     * recipes/{recipeId}/main.jpg
+     *
+     * Si sustituimos el archivo por otro manteniendo
+     * la misma ruta, navegador/CDN podrían seguir
+     * mostrando la versión anterior.
+     *
+     * Añadimos un parámetro dinámico únicamente
+     * para la vista previa administrativa.
+     */
+    const separator =
+      data.publicUrl.includes(
+        "?",
+      )
+        ? "&"
+        : "?";
+
+
     imageUrl =
-      data.publicUrl;
+      `${data.publicUrl}${separator}v=${Date.now()}`;
   }
 
 

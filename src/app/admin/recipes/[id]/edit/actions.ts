@@ -58,6 +58,7 @@ import {
 } from "@/schemas/recipe-times-schema";
 
 import {
+  deleteRecipe,
   replaceRecipeAllergens,
   replaceRecipeIngredients,
   replaceRecipeSteps,
@@ -858,7 +859,6 @@ export async function updateRecipeStatusAction(
       status,
     );
 
-
   if (
     !validation.success
   ) {
@@ -871,13 +871,11 @@ export async function updateRecipeStatusAction(
     };
   }
 
-
   try {
     await updateRecipeStatus(
       recipeId,
       validation.data,
     );
-
 
     revalidatePath(
       `/admin/recipes/${recipeId}/edit`,
@@ -888,9 +886,8 @@ export async function updateRecipeStatusAction(
     );
 
     revalidatePath(
-      `/recipes`,
+      "/recipes",
     );
-
 
     return {
       success:
@@ -911,13 +908,87 @@ export async function updateRecipeStatusAction(
       error,
     );
 
-
     return {
       success:
         false,
 
       message:
         "No se pudo cambiar el estado de la receta.",
+    };
+  }
+}
+
+
+/* =========================================================
+   DELETE RECIPE
+========================================================= */
+
+export type DeleteRecipeResult = {
+  success:
+    boolean;
+
+  message?:
+    string;
+};
+
+
+export async function deleteRecipeAction(
+  recipeId: string,
+  confirmationTitle: string,
+): Promise<DeleteRecipeResult> {
+  if (
+    confirmationTitle.trim() ===
+    ""
+  ) {
+    return {
+      success:
+        false,
+
+      message:
+        "Debes escribir el título de la receta para confirmar.",
+    };
+  }
+
+
+  try {
+    const result =
+      await deleteRecipe(
+        recipeId,
+        confirmationTitle,
+      );
+
+
+    revalidatePath(
+      "/admin/recipes",
+    );
+
+    revalidatePath(
+      "/recipes",
+    );
+
+
+    return {
+      success:
+        true,
+
+      message:
+        result.storageCleanupWarning
+          ? "La receta se eliminó, pero no se pudo limpiar completamente su imagen de Storage."
+          : "Receta eliminada correctamente.",
+    };
+  } catch (error) {
+    console.error(
+      "DELETE RECIPE ERROR:",
+      error,
+    );
+
+
+    return {
+      success:
+        false,
+
+      message:
+        "No se pudo eliminar la receta. Comprueba que no esté publicada y que el título de confirmación sea exacto.",
     };
   }
 }

@@ -53,41 +53,22 @@ export type AdminRecipeListItem = {
   id: string;
   title: string;
   slug: string;
-
-  short_description:
-    string | null;
-
-  status:
-    RecipeStatus;
-
-  featured:
-    boolean;
-
-  image_path:
-    string | null;
-
-  created_at:
-    string;
-
-  updated_at:
-    string;
-
-  published_at:
-    string | null;
+  short_description: string | null;
+  status: RecipeStatus;
+  featured: boolean;
+  image_path: string | null;
+  created_at: string;
+  updated_at: string;
+  published_at: string | null;
 };
 
 
 export type AdminRecipe = {
   id: string;
+  author_id: string;
 
-  author_id:
-    string;
-
-  title:
-    string;
-
-  slug:
-    string;
+  title: string;
+  slug: string;
 
   short_description:
     string | null;
@@ -207,6 +188,12 @@ export type AllergenOption = {
   name: string;
   slug: string;
   position: number;
+};
+
+
+export type DeleteRecipeServiceResult = {
+  storageCleanupWarning:
+    boolean;
 };
 
 
@@ -1279,4 +1266,111 @@ export async function updateRecipeStatus(
   if (error) {
     throw error;
   }
+}
+
+
+/* =========================================================
+   DELETE RECIPE
+========================================================= */
+
+export async function deleteRecipe(
+  recipeId: string,
+  confirmationTitle: string,
+): Promise<DeleteRecipeServiceResult> {
+  const supabase =
+    await createClient();
+
+
+  /*
+   * Guardamos la ruta antes de borrar la receta.
+   * Después del DELETE ya no podremos recuperarla.
+   */
+  const {
+    data: recipe,
+    error: recipeError,
+  } =
+    await supabase
+      .from("recipes")
+      .select(`
+        id,
+        image_path
+      `)
+      .eq(
+        "id",
+        recipeId,
+      )
+      .single();
+
+
+  if (recipeError) {
+    throw new Error(
+      `No se pudo obtener la receta antes de eliminarla: ${recipeError.message}`,
+    );
+  }
+
+
+  const {
+    error: deleteError,
+  } =
+    await supabase.rpc(
+      "delete_recipe",
+      {
+        p_recipe_id:
+          recipeId,
+
+        p_confirmation_title:
+          confirmationTitle,
+      },
+    );
+
+
+  if (deleteError) {
+    throw deleteError;
+  }
+
+
+  let storageCleanupWarning =
+    false;
+
+
+  /*
+   * La eliminación de PostgreSQL ya ha terminado.
+   *
+   * Ahora limpiamos la imagen principal de Storage.
+   * Si Storage falla no restauramos la receta:
+   * simplemente registramos el fichero huérfano
+   * para poder limpiarlo posteriormente.
+   */
+  if (
+    recipe.image_path
+  ) {
+    const {
+      error: storageError,
+    } =
+      await supabase.storage
+        .from(
+          "recipe-images",
+        )
+        .remove([
+          recipe.image_path,
+        ]);
+
+
+    if (
+      storageError
+    ) {
+      storageCleanupWarning =
+        true;
+
+      console.error(
+        "DELETE RECIPE STORAGE CLEANUP ERROR:",
+        storageError,
+      );
+    }
+  }
+
+
+  return {
+    storageCleanupWarning,
+  };
 }

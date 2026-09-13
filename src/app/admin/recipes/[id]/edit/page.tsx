@@ -21,6 +21,10 @@ import {
 } from "@/components/admin/recipes/recipe-classification-form";
 
 import {
+  RecipeDeleteForm,
+} from "@/components/admin/recipes/recipe-delete-form";
+
+import {
   RecipeImageUploader,
 } from "@/components/admin/recipes/recipe-image-uploader";
 
@@ -399,6 +403,23 @@ export default async function EditRecipePage({
 
           readiness={
             publicationReadiness
+          }
+        />
+
+
+        {/* ZONA PELIGROSA */}
+
+        <RecipeDeleteForm
+          recipeId={
+            recipe.id
+          }
+
+          recipeTitle={
+            recipe.title
+          }
+
+          status={
+            recipe.status
           }
         />
 

@@ -35,6 +35,11 @@ import {
 } from "@/schemas/recipe-ingredients-schema";
 
 import {
+  recipeStatusSchema,
+  type RecipeStatus,
+} from "@/schemas/recipe-publication-schema";
+
+import {
   normalizeRecipeServings,
   recipeServingsSchema,
   type RecipeServingsFormData,
@@ -61,6 +66,7 @@ import {
   updateRecipeClassification,
   updateRecipeImagePath,
   updateRecipeServings,
+  updateRecipeStatus,
   updateRecipeTimes,
 } from "@/services/recipes/recipe-service";
 
@@ -825,6 +831,93 @@ export async function updateRecipeAllergensAction(
 
       message:
         "No se pudieron guardar los alérgenos.",
+    };
+  }
+}
+
+
+/* =========================================================
+   PUBLICATION STATUS
+========================================================= */
+
+export type UpdateRecipeStatusResult = {
+  success:
+    boolean;
+
+  message?:
+    string;
+};
+
+
+export async function updateRecipeStatusAction(
+  recipeId: string,
+  status: RecipeStatus,
+): Promise<UpdateRecipeStatusResult> {
+  const validation =
+    recipeStatusSchema.safeParse(
+      status,
+    );
+
+
+  if (
+    !validation.success
+  ) {
+    return {
+      success:
+        false,
+
+      message:
+        "El estado solicitado no es válido.",
+    };
+  }
+
+
+  try {
+    await updateRecipeStatus(
+      recipeId,
+      validation.data,
+    );
+
+
+    revalidatePath(
+      `/admin/recipes/${recipeId}/edit`,
+    );
+
+    revalidatePath(
+      "/admin/recipes",
+    );
+
+    revalidatePath(
+      `/recipes`,
+    );
+
+
+    return {
+      success:
+        true,
+
+      message:
+        validation.data ===
+        "published"
+          ? "Receta publicada correctamente."
+          : validation.data ===
+              "archived"
+            ? "Receta archivada correctamente."
+            : "La receta ha vuelto a borrador.",
+    };
+  } catch (error) {
+    console.error(
+      "UPDATE RECIPE STATUS ERROR:",
+      error,
+    );
+
+
+    return {
+      success:
+        false,
+
+      message:
+        "No se pudo cambiar el estado de la receta.",
     };
   }
 }

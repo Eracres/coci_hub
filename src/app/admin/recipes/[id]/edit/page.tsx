@@ -29,6 +29,10 @@ import {
 } from "@/components/admin/recipes/recipe-ingredients-form";
 
 import {
+  RecipePublicationForm,
+} from "@/components/admin/recipes/recipe-publication-form";
+
+import {
   RecipeServingsForm,
 } from "@/components/admin/recipes/recipe-servings-form";
 
@@ -39,6 +43,10 @@ import {
 import {
   RecipeTimesForm,
 } from "@/components/admin/recipes/recipe-times-form";
+
+import {
+  getPublicationReadiness,
+} from "@/lib/recipes/get-publication-readiness";
 
 import {
   getAdminRecipeById,
@@ -118,6 +126,34 @@ export default async function EditRecipePage({
           "published"
         ? "Publicada"
         : "Archivada";
+
+
+  const ingredientCount =
+    ingredientGroups.reduce(
+      (
+        total,
+        group,
+      ) =>
+        total +
+        group.ingredients.length,
+      0,
+    );
+
+
+  const publicationReadiness =
+    getPublicationReadiness({
+      recipe,
+
+      categoryCount:
+        classificationRelations
+          .categoryIds
+          .length,
+
+      ingredientCount,
+
+      stepCount:
+        recipeSteps.length,
+    });
 
 
   return (
@@ -346,6 +382,23 @@ export default async function EditRecipePage({
 
           initialValues={
             recipeAllergens
+          }
+        />
+
+
+        {/* 10. PUBLICACIÓN */}
+
+        <RecipePublicationForm
+          recipeId={
+            recipe.id
+          }
+
+          status={
+            recipe.status
+          }
+
+          readiness={
+            publicationReadiness
           }
         />
 

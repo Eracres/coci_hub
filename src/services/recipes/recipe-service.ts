@@ -26,6 +26,10 @@ import type {
 } from "@/schemas/recipe-ingredients-schema";
 
 import type {
+  RecipeStatus,
+} from "@/schemas/recipe-publication-schema";
+
+import type {
   RecipeServingsData,
 } from "@/schemas/recipe-servings-schema";
 
@@ -37,12 +41,6 @@ import type {
 import type {
   RecipeTimesData,
 } from "@/schemas/recipe-times-schema";
-
-
-export type RecipeStatus =
-  | "draft"
-  | "published"
-  | "archived";
 
 
 export type RecipeDifficulty =
@@ -1244,6 +1242,37 @@ export async function replaceRecipeAllergens(
 
         p_allergens:
           input.allergens,
+      },
+    );
+
+  if (error) {
+    throw error;
+  }
+}
+
+
+/* =========================================================
+   UPDATE RECIPE STATUS
+========================================================= */
+
+export async function updateRecipeStatus(
+  recipeId: string,
+  status: RecipeStatus,
+) {
+  const supabase =
+    await createClient();
+
+  const {
+    error,
+  } =
+    await supabase.rpc(
+      "set_recipe_status",
+      {
+        p_recipe_id:
+          recipeId,
+
+        p_status:
+          status,
       },
     );
 

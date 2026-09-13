@@ -163,12 +163,24 @@ export default async function EditRecipePage({
   return (
     <main className="mx-auto max-w-5xl p-8">
 
-      <Link
-        href="/admin/recipes"
-        className="text-sm underline"
-      >
-        ← Volver a recetas
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+
+        <Link
+          href="/admin/recipes"
+          className="text-sm underline"
+        >
+          ← Volver a recetas
+        </Link>
+
+
+        <Link
+          href={`/admin/recipes/${recipe.id}/preview`}
+          className="rounded-lg border px-4 py-2 text-sm font-medium"
+        >
+          Vista previa
+        </Link>
+
+      </div>
 
 
       <header className="mt-6">

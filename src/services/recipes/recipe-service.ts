@@ -3,6 +3,11 @@ import {
 } from "@/lib/supabase/server";
 
 import type {
+  RecipeAdditionalInfoData,
+  RecipeSourceType,
+} from "@/schemas/recipe-additional-info-schema";
+
+import type {
   RecipeBasicInfoData,
 } from "@/schemas/recipe-basic-info-schema";
 
@@ -45,22 +50,41 @@ export type AdminRecipeListItem = {
   id: string;
   title: string;
   slug: string;
-  short_description: string | null;
-  status: RecipeStatus;
-  featured: boolean;
-  image_path: string | null;
-  created_at: string;
-  updated_at: string;
-  published_at: string | null;
+
+  short_description:
+    string | null;
+
+  status:
+    RecipeStatus;
+
+  featured:
+    boolean;
+
+  image_path:
+    string | null;
+
+  created_at:
+    string;
+
+  updated_at:
+    string;
+
+  published_at:
+    string | null;
 };
 
 
 export type AdminRecipe = {
   id: string;
-  author_id: string;
 
-  title: string;
-  slug: string;
+  author_id:
+    string;
+
+  title:
+    string;
+
+  slug:
+    string;
 
   short_description:
     string | null;
@@ -97,6 +121,39 @@ export type AdminRecipe = {
 
   featured:
     boolean;
+
+  tips:
+    string | null;
+
+  substitutions:
+    string | null;
+
+  storage:
+    string | null;
+
+  freezing:
+    string | null;
+
+  reheating:
+    string | null;
+
+  source_type:
+    RecipeSourceType | null;
+
+  source_title:
+    string | null;
+
+  source_author:
+    string | null;
+
+  source_page:
+    string | null;
+
+  source_url:
+    string | null;
+
+  source_notes:
+    string | null;
 
   created_at:
     string;
@@ -295,6 +352,17 @@ export async function getAdminRecipeById(
         image_path,
         image_alt,
         featured,
+        tips,
+        substitutions,
+        storage,
+        freezing,
+        reheating,
+        source_type,
+        source_title,
+        source_author,
+        source_page,
+        source_url,
+        source_notes,
         created_at,
         updated_at,
         published_at
@@ -939,6 +1007,7 @@ export async function getRecipeSteps(
   );
 }
 
+
 /* =========================================================
    REPLACE STEPS
 ========================================================= */
@@ -967,4 +1036,84 @@ export async function replaceRecipeSteps(
   if (error) {
     throw error;
   }
+}
+
+
+/* =========================================================
+   UPDATE ADDITIONAL INFO
+========================================================= */
+
+export async function updateRecipeAdditionalInfo(
+  recipeId: string,
+  input: RecipeAdditionalInfoData,
+) {
+  const supabase =
+    await createClient();
+
+  const {
+    data,
+    error,
+  } =
+    await supabase
+      .from("recipes")
+      .update({
+        tips:
+          input.tips,
+
+        substitutions:
+          input.substitutions,
+
+        storage:
+          input.storage,
+
+        freezing:
+          input.freezing,
+
+        reheating:
+          input.reheating,
+
+        source_type:
+          input.sourceType,
+
+        source_title:
+          input.sourceTitle,
+
+        source_author:
+          input.sourceAuthor,
+
+        source_page:
+          input.sourcePage,
+
+        source_url:
+          input.sourceUrl,
+
+        source_notes:
+          input.sourceNotes,
+      })
+      .eq(
+        "id",
+        recipeId,
+      )
+      .select(`
+        id,
+        tips,
+        substitutions,
+        storage,
+        freezing,
+        reheating,
+        source_type,
+        source_title,
+        source_author,
+        source_page,
+        source_url,
+        source_notes,
+        updated_at
+      `)
+      .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }

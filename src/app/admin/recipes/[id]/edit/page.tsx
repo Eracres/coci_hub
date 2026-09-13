@@ -5,6 +5,10 @@ import {
 } from "next/navigation";
 
 import {
+  RecipeAdditionalInfoForm,
+} from "@/components/admin/recipes/recipe-additional-info-form";
+
+import {
   RecipeBasicInfoForm,
 } from "@/components/admin/recipes/recipe-basic-info-form";
 
@@ -266,6 +270,50 @@ export default async function EditRecipePage({
           initialSteps={
             recipeSteps
           }
+        />
+
+
+        {/* 08. INFORMACIÓN ADICIONAL */}
+
+        <RecipeAdditionalInfoForm
+          recipeId={
+            recipe.id
+          }
+
+          initialValues={{
+            tips:
+              recipe.tips,
+
+            substitutions:
+              recipe.substitutions,
+
+            storage:
+              recipe.storage,
+
+            freezing:
+              recipe.freezing,
+
+            reheating:
+              recipe.reheating,
+
+            sourceType:
+              recipe.source_type,
+
+            sourceTitle:
+              recipe.source_title,
+
+            sourceAuthor:
+              recipe.source_author,
+
+            sourcePage:
+              recipe.source_page,
+
+            sourceUrl:
+              recipe.source_url,
+
+            sourceNotes:
+              recipe.source_notes,
+          }}
         />
 
       </div>

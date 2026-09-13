@@ -5,6 +5,12 @@ import {
 } from "next/cache";
 
 import {
+  normalizeRecipeAdditionalInfo,
+  recipeAdditionalInfoSchema,
+  type RecipeAdditionalInfoFormData,
+} from "@/schemas/recipe-additional-info-schema";
+
+import {
   normalizeRecipeBasicInfo,
   recipeBasicInfoSchema,
   type RecipeBasicInfoFormData,
@@ -43,6 +49,7 @@ import {
 import {
   replaceRecipeIngredients,
   replaceRecipeSteps,
+  updateRecipeAdditionalInfo,
   updateRecipeBasicInfo,
   updateRecipeClassification,
   updateRecipeImagePath,
@@ -593,6 +600,119 @@ export async function updateRecipeStepsAction(
 
       message:
         "No se pudo guardar la elaboración.",
+    };
+  }
+}
+
+
+/* =========================================================
+   ADDITIONAL INFO
+========================================================= */
+
+export type UpdateRecipeAdditionalInfoResult = {
+  success:
+    boolean;
+
+  message?:
+    string;
+
+  fieldErrors?: {
+    tips?:
+      string[];
+
+    substitutions?:
+      string[];
+
+    storage?:
+      string[];
+
+    freezing?:
+      string[];
+
+    reheating?:
+      string[];
+
+    sourceType?:
+      string[];
+
+    sourceTitle?:
+      string[];
+
+    sourceAuthor?:
+      string[];
+
+    sourcePage?:
+      string[];
+
+    sourceUrl?:
+      string[];
+
+    sourceNotes?:
+      string[];
+  };
+};
+
+
+export async function updateRecipeAdditionalInfoAction(
+  recipeId: string,
+  input:
+    RecipeAdditionalInfoFormData,
+): Promise<UpdateRecipeAdditionalInfoResult> {
+  const validation =
+    recipeAdditionalInfoSchema.safeParse(
+      input,
+    );
+
+  if (!validation.success) {
+    return {
+      success:
+        false,
+
+      fieldErrors:
+        validation.error
+          .flatten()
+          .fieldErrors,
+    };
+  }
+
+  const normalized =
+    normalizeRecipeAdditionalInfo(
+      validation.data,
+    );
+
+  try {
+    await updateRecipeAdditionalInfo(
+      recipeId,
+      normalized,
+    );
+
+    revalidatePath(
+      `/admin/recipes/${recipeId}/edit`,
+    );
+
+    revalidatePath(
+      "/admin/recipes",
+    );
+
+    return {
+      success:
+        true,
+
+      message:
+        "Información adicional guardada correctamente.",
+    };
+  } catch (error) {
+    console.error(
+      "UPDATE RECIPE ADDITIONAL INFO ERROR:",
+      error,
+    );
+
+    return {
+      success:
+        false,
+
+      message:
+        "No se pudo guardar la información adicional.",
     };
   }
 }

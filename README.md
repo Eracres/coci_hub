@@ -4,18 +4,20 @@
 
 Aplicación web full stack de recetas personales para organizar, publicar, adaptar y compartir recetas desde cualquier dispositivo.
 
-## Estado actual
+---
+
+## 📌 Estado actual
 
 | Fase | Estado |
 |---|---|
 | Fase 1 — Definición funcional | ✅ Completada |
 | Fase 2 — Arquitectura visual y UX | ✅ Completada |
 | Fase 3 — Design System y prototipos | ✅ Completada |
-| Fase 4 — Arquitectura técnica + CRUD administrador | 🟡 En progreso |
-| Fase 5 — Área pública | ⬜ Pendiente |
+| Fase 4 — Arquitectura técnica + CRUD administrador | ✅ Completada |
+| Fase 5 — Área pública | ⏭️ Siguiente fase |
 | Fase 6 — SEO, optimización y despliegue | ⬜ Pendiente |
 
-### Editor de recetas
+### 🧩 Editor de recetas
 
 ```text
 01 Información básica       ✅
@@ -30,13 +32,26 @@ Aplicación web full stack de recetas personales para organizar, publicar, adapt
 10 Publicación              ✅
 ```
 
-Los **10 bloques funcionales del editor administrativo de recetas están completados**. La Fase 4 entra ahora en su tramo final: revisión técnica, eliminación segura, previsualización, limpieza de rutas/componentes temporales y comprobación global antes de comenzar el área pública.
+Los **10 bloques funcionales del editor administrativo de recetas están completados**.
+
+La **Fase 4 queda oficialmente cerrada** tras completar también:
+
+- Eliminación segura de recetas.
+- Previsualización administrativa.
+- Revisión global de errores y mensajes.
+- Revalidación y sincronización de caché.
+- Auditoría RLS y permisos.
+- Hardening de RPC administrativas.
+- Limpieza de rutas y componentes temporales.
+- Limpieza de policies duplicadas de Storage.
+- Pruebas de regresión completas.
+- Build de producción correcto.
 
 ---
 
-## Funcionalidades implementadas
+## ✅ Funcionalidades implementadas
 
-### Base técnica
+### ⚙️ Base técnica
 
 - Next.js 16 con App Router.
 - React.
@@ -54,7 +69,7 @@ Los **10 bloques funcionales del editor administrativo de recetas están complet
 - Seeds.
 - Git y GitHub.
 
-### Autenticación y seguridad
+### 🔐 Autenticación y seguridad
 
 - Supabase Auth.
 - Login y logout administrativo.
@@ -66,8 +81,32 @@ Los **10 bloques funcionales del editor administrativo de recetas están complet
 - Row Level Security.
 - Políticas de lectura/escritura.
 - Policies específicas para Storage.
+- Auditoría real de permisos con roles `anon`, `authenticated` y `admin`.
+- Hardening de funciones RPC.
+- `anon` no puede ejecutar RPC administrativas.
+- Usuarios autenticados sin rol admin reciben `Not authorized`.
+- Lectura pública limitada a recetas `published`.
+- Borradores y archivadas no son visibles públicamente.
 
-### Storage
+Flujo de seguridad:
+
+```text
+Supabase Auth
+      ↓
+profiles.role
+      ↓
+Protección de rutas
+      ↓
+RLS
+      ↓
+Permisos RPC
+      ↓
+public.is_admin()
+      ↓
+PostgreSQL / Storage
+```
+
+### 🖼️ Storage
 
 Bucket:
 
@@ -88,6 +127,11 @@ Ya funciona:
 - Eliminación.
 - URL pública.
 - Persistencia de `image_path`.
+- Sustitución JPG → JPG.
+- Sustitución JPG → WebP.
+- Limpieza de la imagen anterior al cambiar de extensión.
+- Cache busting para evitar mostrar imágenes antiguas en preview.
+- Sincronización inmediata de la vista previa.
 
 Formatos:
 
@@ -103,7 +147,26 @@ Máximo actual:
 5 MB
 ```
 
-### Gestión administrativa de recetas
+Policies definitivas:
+
+```text
+SELECT
+INSERT
+UPDATE
+DELETE
+```
+
+Todas restringidas a:
+
+```text
+authenticated
++
+public.is_admin()
+```
+
+Las policies antiguas duplicadas fueron eliminadas mediante migración.
+
+### 🛠️ Gestión administrativa de recetas
 
 Ya funciona:
 
@@ -143,10 +206,14 @@ Ya funciona:
 - Archivado.
 - Restauración de recetas archivadas a borrador.
 - Validación de publicación tanto en aplicación como en PostgreSQL.
+- Vista previa administrativa.
+- Eliminación segura.
+- Limpieza de imagen asociada al eliminar.
+- Revalidación del listado, editor y preview.
 
 ---
 
-## Modelo funcional de receta
+## 🧱 Modelo funcional de receta
 
 Campos principales:
 
@@ -183,7 +250,7 @@ medium
 hard
 ```
 
-### Clasificación
+### 🗂️ Clasificación
 
 ```text
 1 tipo principal
@@ -191,7 +258,7 @@ hard
 0 o más etiquetas
 ```
 
-### Tiempos
+### ⏱️ Tiempos
 
 Se almacenan:
 
@@ -210,7 +277,7 @@ total =
   + additional_minutes
 ```
 
-### Raciones
+### 👥 Raciones
 
 ```text
 base_servings
@@ -228,7 +295,7 @@ Las cantidades originales de la receta nunca se modifican al cambiar raciones en
 
 ---
 
-## Ingredientes y escalado
+## 🥕 Ingredientes y escalado
 
 Estructura:
 
@@ -272,7 +339,7 @@ replace_recipe_ingredients(...)
 
 ---
 
-## Elaboración
+## 👨‍🍳 Elaboración
 
 Tabla:
 
@@ -302,7 +369,7 @@ Las imágenes por paso quedan para una evolución posterior.
 
 ---
 
-## Información adicional
+## 📝 Información adicional
 
 Campos:
 
@@ -340,7 +407,7 @@ Los campos opcionales vacíos se normalizan:
 
 ---
 
-## Alérgenos
+## ⚠️ Alérgenos
 
 Estados:
 
@@ -381,9 +448,9 @@ replace_recipe_allergens(...)
 
 ---
 
-## Publicación
+## 🚦 Publicación
 
-El bloque de publicación completa el editor administrativo y controla el ciclo de vida de una receta.
+El bloque de publicación controla el ciclo de vida de una receta.
 
 Estados:
 
@@ -412,7 +479,7 @@ published → archived
 archived  → draft
 ```
 
-### Requisitos mínimos para publicar
+### ✅ Requisitos mínimos para publicar
 
 Una receta debe disponer de:
 
@@ -430,7 +497,7 @@ Una receta debe disponer de:
 
 El panel muestra un checklist de preparación antes de habilitar la publicación.
 
-La validación se realiza en dos niveles:
+La validación se realiza en varios niveles:
 
 ```text
 Interfaz / aplicación
@@ -438,6 +505,8 @@ Interfaz / aplicación
 checklist de preparación
         ↓
 Server Action
+        ↓
+Servicio
         ↓
 PostgreSQL
         ↓
@@ -470,7 +539,66 @@ Este diseño evita que una manipulación del frontend permita publicar una recet
 
 ---
 
-## Modelo de datos
+## 👁️ Previsualización administrativa
+
+Ruta:
+
+```text
+/admin/recipes/[id]/preview
+```
+
+La preview permite visualizar una receta aunque todavía esté en borrador.
+
+Incluye:
+
+```text
+Estado
+Destacada
+Imagen
+Título
+Descripción
+Tipo
+Categorías
+Tags
+Raciones
+Tiempos
+Dificultad
+Introducción
+Ingredientes
+Elaboración
+Información adicional
+Alérgenos
+Fuente
+```
+
+La revalidación del editor invalida también la ruta de preview.
+
+Las imágenes utilizan cache busting para evitar versiones antiguas tras una sustitución.
+
+---
+
+## 🗑️ Eliminación segura
+
+Una receta publicada no puede eliminarse directamente.
+
+Para eliminar una receta es necesario:
+
+```text
+1. Que no esté publicada.
+2. Introducir exactamente su título.
+3. Confirmar la operación.
+```
+
+La eliminación:
+
+- Borra la receta de PostgreSQL.
+- Elimina relaciones dependientes mediante las reglas `ON DELETE CASCADE`.
+- Elimina también la imagen principal de Supabase Storage.
+- Devuelve un warning si falla la limpieza de Storage después de eliminar correctamente la receta.
+
+---
+
+## 🗃️ Modelo de datos
 
 Tablas principales:
 
@@ -505,45 +633,41 @@ profiles
 
 ---
 
-## Seguridad
+## 🛡️ Seguridad y auditoría
 
-Flujo:
-
-```text
-/login
-   ↓
-Supabase Auth
-   ↓
-Sesión
-   ↓
-Proxy SSR
-   ↓
-/admin
-   ↓
-profiles.role = admin
-   ↓
-RLS
-   ↓
-PostgreSQL / Storage
-```
-
-Las operaciones sensibles no dependen únicamente del frontend:
+Resultado validado durante la Fase 4:
 
 ```text
-Interfaz
-   ↓
-Server Action
-   ↓
-Service
-   ↓
-Supabase Auth
-   ↓
-RLS / funciones PostgreSQL
+ANON
+├── /admin                    ❌
+├── editar recipes            ❌
+├── ejecutar RPC admin        ❌
+├── modificar Storage         ❌
+├── leer draft                ❌
+├── leer archived             ❌
+└── leer published            ✅
+
+AUTHENTICATED USER
+├── /admin                    ❌
+├── editar recipes            ❌
+├── RPC admin                 ❌ por is_admin()
+├── modificar Storage         ❌
+└── leer published            ✅
+
+ADMIN
+├── /admin                    ✅
+├── CRUD recipes              ✅
+├── RPC                       ✅
+├── Storage                   ✅
+├── Preview drafts            ✅
+└── eliminación segura        ✅
 ```
+
+RLS está habilitado en las tablas principales del esquema `public`.
 
 ---
 
-## Rutas
+## 🌐 Rutas
 
 ### Públicas previstas
 
@@ -573,23 +697,22 @@ Búsqueda:
 /admin/recipes
 /admin/recipes/new
 /admin/recipes/[id]/edit
+/admin/recipes/[id]/preview
 /admin/categories
 /admin/tags
 ```
 
-### Temporales de desarrollo
+### 🧹 Rutas temporales eliminadas
 
 ```text
-/design-system
-/supabase-test
-/admin/storage-test
+/design-system              ✅ eliminada
+/supabase-test              ✅ eliminada
+/admin/storage-test         ✅ eliminada
 ```
-
-Se revisarán antes de producción.
 
 ---
 
-## Stack
+## 🧰 Stack
 
 | Área | Tecnología |
 |---|---|
@@ -618,7 +741,7 @@ Node.js 22 o superior
 
 ---
 
-## Identidad visual
+## 🎨 Identidad visual
 
 | Uso | Color |
 |---|---|
@@ -641,11 +764,13 @@ Lora  → títulos
 Inter → interfaz y formularios
 ```
 
-La prioridad actual sigue siendo la funcionalidad; el pulido visual definitivo del panel se hará después de cerrar el CRUD.
+La prioridad de la Fase 4 fue la funcionalidad, la seguridad y la estabilidad.
+
+El área pública y el pulido visual definitivo continúan durante la Fase 5.
 
 ---
 
-## Estructura
+## 📁 Estructura
 
 ```text
 coci_hub/
@@ -655,9 +780,7 @@ coci_hub/
 ├── src/
 │   ├── app/
 │   │   ├── admin/
-│   │   ├── design-system/
-│   │   ├── login/
-│   │   └── supabase-test/
+│   │   └── login/
 │   ├── components/
 │   │   ├── admin/
 │   │   ├── layout/
@@ -673,14 +796,18 @@ coci_hub/
 │   └── seed.sql
 ├── .env.example
 ├── .env.local
+├── .nvmrc
 ├── package.json
+├── package-lock.json
 ├── tsconfig.json
 └── README.md
 ```
 
+> `.env.local` no se versiona.
+
 ---
 
-## Migraciones
+## 🧬 Migraciones
 
 Se conservan en:
 
@@ -698,11 +825,91 @@ npx supabase db push
 
 Una migración aplicada no se modifica: se crea una nueva migración para corregir o evolucionar el esquema.
 
+Durante el cierre de la Fase 4 se añadieron migraciones específicas para:
+
+- Hardening de permisos de RPC administrativas.
+- Corrección de policies de imágenes.
+- Limpieza de policies duplicadas de Storage.
+
 ---
 
-## Comprobaciones antes de commit
+## 🧹 Limpieza técnica completada
+
+Durante el cierre de la Fase 4 se eliminaron:
+
+```text
+/design-system
+/supabase-test
+/admin/storage-test
+*-demo.tsx
+```
+
+También se revisó el código buscando:
+
+```text
+console.log
+TODO
+FIXME
+HACK
+image_url
+```
+
+sin quedar residuos relevantes en `src`.
+
+Además:
+
+- Se eliminaron policies duplicadas de Storage.
+- Se regeneró `.next` tras eliminar rutas antiguas.
+- Se comprobaron imports y referencias.
+- Se confirmó que no quedaban rutas eliminadas referenciadas.
+
+---
+
+## 🧪 Regresión completa de Fase 4
+
+La regresión comprobó:
+
+```text
+Autenticación
+Protección de /admin
+Creación de borrador
+Información básica
+Subida de imagen
+Sustitución JPG → JPG
+Sustitución JPG → WebP
+Eliminación de imagen
+Clasificación
+Raciones
+Tiempos
+Ingredientes
+Edición y reordenación de ingredientes
+Pasos
+Edición y reordenación de pasos
+Información adicional
+Alérgenos
+Validación previa a publicación
+Publicación
+Despublicación
+Archivado
+Restauración
+Vista previa administrativa
+Lectura pública mediante RLS
+Eliminación segura
+Limpieza de Storage
+```
+
+Resultado:
+
+```text
+✅ REGRESIÓN COMPLETADA
+```
+
+---
+
+## ✅ Comprobaciones antes de commit
 
 ```bash
+rm -rf .next
 npx tsc --noEmit
 npm run lint
 npm run build
@@ -716,27 +923,35 @@ npx supabase db push
 npx supabase migration list
 ```
 
----
-
-## Limpieza técnica pendiente
-
-Los componentes `*-demo.tsx` siguen existiendo porque `/design-system` todavía puede utilizarlos.
-
-Antes del área pública se revisarán:
+Resultado al cierre de la Fase 4:
 
 ```text
-componentes demo sin uso
-/design-system
-/supabase-test
-/admin/storage-test
-código muerto
-imports sobrantes
-dependencias no utilizadas
+TypeScript   → 0 errores
+ESLint       → 0 errores
+Build        → correcto
 ```
+
+Warnings conocidos:
+
+```text
+recipe-basic-info-form.tsx
+recipe-times-form.tsx
+```
+
+Ambos proceden del uso de `watch()` de React Hook Form y del React Compiler.
+
+Estado:
+
+```text
+2 warnings
+0 errors
+```
+
+No afectan al funcionamiento actual ni bloquean el build.
 
 ---
 
-# Roadmap
+# 🗺️ Roadmap
 
 ## Fase 1 — Definición funcional ✅
 
@@ -766,8 +981,9 @@ dependencias no utilizadas
 - [x] Prototipos administrativos.
 - [x] `RecipeFormDemo`.
 - [x] `/design-system`.
+- [x] Retirada posterior de demos y ruta temporal tras cumplir su función.
 
-## Fase 4 — Arquitectura técnica y CRUD administrador 🟡
+## Fase 4 — Arquitectura técnica y CRUD administrador ✅
 
 ### Infraestructura
 
@@ -789,6 +1005,10 @@ dependencias no utilizadas
 - [x] Protección `/admin`.
 - [x] RLS.
 - [x] Storage seguro.
+- [x] Auditoría de permisos.
+- [x] Hardening de RPC.
+- [x] Restricción de `anon`.
+- [x] Verificación de lectura pública solo para recetas publicadas.
 
 ### CRUD
 
@@ -811,25 +1031,32 @@ dependencias no utilizadas
 - [x] Restauración a borrador.
 - [x] Checklist de requisitos de publicación.
 - [x] Validación final de publicación en PostgreSQL.
-- [ ] Eliminación segura.
-- [ ] Previsualización.
-- [ ] Revisión global de errores.
-- [ ] Limpieza técnica final.
+- [x] Eliminación segura.
+- [x] Previsualización administrativa.
+- [x] Revisión global de errores.
+- [x] Revalidación y caché.
+- [x] Limpieza técnica final.
+- [x] Pruebas de regresión.
+- [x] Build de producción.
 
-## Fase 5 — Área pública ⬜
+## Fase 5 — Área pública ⏭️
 
-- [ ] Home.
+- [ ] Home definitiva.
 - [ ] Listado.
 - [ ] Búsqueda.
 - [ ] Filtros.
+- [ ] Ordenación.
 - [ ] Categorías.
-- [ ] Detalle.
+- [ ] Tags.
+- [ ] Detalle público.
 - [ ] Selector de comensales.
 - [ ] Recalculado de ingredientes.
 - [ ] Redondeo legible.
+- [ ] Información de alérgenos.
 - [ ] WhatsApp.
 - [ ] Copiar enlace.
 - [ ] Recetas relacionadas.
+- [ ] Responsive público.
 - [ ] Páginas legales.
 
 ## Fase 6 — Cierre y despliegue ⬜
@@ -847,7 +1074,88 @@ dependencias no utilizadas
 
 ---
 
-# Siguiente paso
+# 🚀 Siguiente paso
+
+## Fase 5 — Área pública
+
+Con la **Fase 4 completada**, el siguiente objetivo es construir la experiencia pública de CociHub.
+
+Flujo principal previsto:
+
+```text
+Home
+  ↓
+Listado de recetas
+  ↓
+Búsqueda / filtros / categorías
+  ↓
+Detalle de receta
+  ↓
+Selector de comensales
+  ↓
+Recalculado de ingredientes
+  ↓
+Compartir
+```
+
+Objetivos inmediatos:
+
+- Crear la Home definitiva.
+- Implementar `/recipes`.
+- Crear búsqueda, filtros y ordenación.
+- Crear `/recipes/[slug]`.
+- Mostrar únicamente recetas `published`.
+- Implementar selector de raciones.
+- Recalcular ingredientes escalables.
+- Mostrar categorías, tags y alérgenos.
+- Añadir recetas relacionadas.
+- Añadir WhatsApp y copiar enlace.
+- Completar el responsive público.
+- Preparar las páginas legales.
+
+---
+
+## 🤖 Evolución futura
+
+- Registro público.
+- Recetas de usuarios.
+- Favoritos.
+- Valoraciones.
+- Comentarios.
+- Seguidores.
+- Planificador.
+- Lista de compra.
+- Funciones sociales.
+- Imágenes por paso.
+- Importación asistida por IA.
+
+La futura importación con IA seguirá un flujo controlado:
+
+```text
+texto / imagen
+      ↓
+extracción
+      ↓
+JSON estructurado
+      ↓
+validación Zod
+      ↓
+revisión humana
+      ↓
+borrador
+```
+
+Nunca se publicará automáticamente contenido interpretado por IA.
+
+---
+
+## 👨‍💻 Autor
+
+**Sergio Cáceres**
+
+Desarrollador web full stack.
+
+CociHub se desarrolla como aplicación real y proyecto de portfolio, documentando el proceso completo desde la idea inicial hasta el despliegue.
 
 ## Cierre técnico de la Fase 4
 

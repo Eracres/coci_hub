@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Container } from "@/components/layout/container";
 
 export default function HomePage() {
@@ -22,13 +21,6 @@ export default function HomePage() {
             Plataforma de recetas personales diseñada para consultar,
             organizar, adaptar y compartir recetas desde cualquier dispositivo.
           </p>
-
-          <Link
-            href="/design-system"
-            className="mt-8 inline-flex min-h-11 items-center justify-center rounded-md bg-brand px-5 font-semibold text-inverse transition-colors hover:bg-brand-hover"
-          >
-            Ver sistema de diseño
-          </Link>
         </div>
       </Container>
     </main>

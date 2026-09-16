@@ -1,3 +1,7 @@
+import type {
+  Metadata,
+} from "next";
+
 import {
   RecipeCard,
 } from "@/components/recipes/recipe-card";
@@ -11,9 +15,9 @@ import {
 } from "@/services/recipes/public-recipe-service";
 
 
-export const metadata = {
+export const metadata: Metadata = {
   title:
-    "Recetas | CociHub",
+    "Recetas",
 
   description:
     "Descubre las recetas publicadas en CociHub.",

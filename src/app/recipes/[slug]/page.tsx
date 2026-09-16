@@ -30,6 +30,10 @@ import {
 } from "@/components/layout/container";
 
 import {
+  RecipeIngredients,
+} from "@/components/recipes/recipe-ingredients";
+
+import {
   getPublishedRecipeBySlug,
 } from "@/services/recipes/public-recipe-service";
 
@@ -135,30 +139,6 @@ function formatMinutes(
 
 
   return `${hours} h ${remainingMinutes} min`;
-}
-
-
-function formatQuantity(
-  quantity:
-    number | null,
-) {
-  if (
-    quantity ===
-    null
-  ) {
-    return null;
-  }
-
-
-  return new Intl.NumberFormat(
-    "es-ES",
-    {
-      maximumFractionDigits:
-        2,
-    },
-  ).format(
-    quantity,
-  );
 }
 
 
@@ -438,95 +418,14 @@ export default async function RecipePage({
                 </div>
 
 
-                {recipe.ingredientGroups.length >
-                0 ? (
-                  <div className="mt-6 space-y-8">
-                    {recipe.ingredientGroups.map(
-                      (
-                        group,
-                      ) => (
-                        <div
-                          key={
-                            group.id
-                          }
-                        >
-                          {group.name ? (
-                            <h3 className="font-serif text-xl font-bold text-foreground">
-                              {
-                                group.name
-                              }
-                            </h3>
-                          ) : null}
-
-
-                          <ul className="mt-3 divide-y divide-border rounded-2xl border border-border bg-white px-5">
-                            {group.ingredients.map(
-                              (
-                                ingredient,
-                              ) => {
-                                const quantity =
-                                  formatQuantity(
-                                    ingredient.quantity,
-                                  );
-
-
-                                return (
-                                  <li
-                                    key={
-                                      ingredient.id
-                                    }
-                                    className="flex gap-3 py-4"
-                                  >
-                                    <div className="min-w-[90px] font-semibold text-foreground">
-                                      {quantity ? (
-                                        <>
-                                          {
-                                            quantity
-                                          }
-
-                                          {ingredient.unit
-                                            ? ` ${ingredient.unit}`
-                                            : ""}
-                                        </>
-                                      ) : (
-                                        <span className="text-muted-foreground">
-                                          —
-                                        </span>
-                                      )}
-                                    </div>
-
-
-                                    <div>
-                                      <span className="text-foreground">
-                                        {
-                                          ingredient.name
-                                        }
-                                      </span>
-
-
-                                      {ingredient.notes ? (
-                                        <span className="ml-2 text-sm text-muted-foreground">
-                                          —{" "}
-                                          {
-                                            ingredient.notes
-                                          }
-                                        </span>
-                                      ) : null}
-                                    </div>
-                                  </li>
-                                );
-                              },
-                            )}
-                          </ul>
-                        </div>
-                      ),
-                    )}
-                  </div>
-                ) : (
-                  <p className="mt-5 text-muted-foreground">
-                    No hay ingredientes disponibles.
-                  </p>
-                )}
+                <RecipeIngredients
+                  baseServings={
+                    recipe.baseServings
+                  }
+                  ingredientGroups={
+                    recipe.ingredientGroups
+                  }
+                />
               </section>
 
 

@@ -3,16 +3,30 @@ import type {
 } from "next";
 
 import {
-  RecipeCard,
-} from "@/components/recipes/recipe-card";
-
-import {
   Container,
 } from "@/components/layout/container";
 
 import {
-  getPublishedRecipes,
-} from "@/services/recipes/public-recipe-service";
+  RecipeCard,
+} from "@/components/recipes/recipe-card";
+
+import {
+  RecipeFilters,
+} from "@/components/recipes/recipe-filters";
+
+import {
+  getPublicRecipeFilterOptions,
+  searchPublishedRecipes,
+} from "@/services/recipes/public-recipe-list-service";
+
+import type {
+  PublicRecipeDifficulty,
+} from "@/types/public-recipe";
+
+import type {
+  PublicRecipeFilters,
+  PublicRecipeOrder,
+} from "@/types/public-recipe-filters";
 
 
 export const metadata: Metadata = {
@@ -24,9 +38,174 @@ export const metadata: Metadata = {
 };
 
 
-export default async function RecipesPage() {
-  const recipes =
-    await getPublishedRecipes();
+type RecipesPageProps = {
+  searchParams:
+    Promise<{
+      search?:
+        string | string[];
+
+      category?:
+        string | string[];
+
+      type?:
+        string | string[];
+
+      difficulty?:
+        string | string[];
+
+      tag?:
+        string | string[];
+
+      order?:
+        string | string[];
+    }>;
+};
+
+
+function getFirstParam(
+  value:
+    string |
+    string[] |
+    undefined,
+) {
+  if (
+    Array.isArray(
+      value,
+    )
+  ) {
+    return (
+      value[0] ??
+      ""
+    );
+  }
+
+
+  return (
+    value ??
+    ""
+  );
+}
+
+
+function parseDifficulty(
+  value: string,
+): PublicRecipeDifficulty | "" {
+  if (
+    value ===
+      "easy" ||
+    value ===
+      "medium" ||
+    value ===
+      "hard"
+  ) {
+    return value;
+  }
+
+
+  return "";
+}
+
+
+function parseOrder(
+  value: string,
+): PublicRecipeOrder {
+  const validOrders:
+    PublicRecipeOrder[] =
+    [
+      "featured",
+      "newest",
+      "oldest",
+      "title-asc",
+      "title-desc",
+      "time-asc",
+      "time-desc",
+    ];
+
+
+  if (
+    validOrders.includes(
+      value as PublicRecipeOrder,
+    )
+  ) {
+    return (
+      value as PublicRecipeOrder
+    );
+  }
+
+
+  return "featured";
+}
+
+
+export default async function RecipesPage({
+  searchParams,
+}: RecipesPageProps) {
+  const params =
+    await searchParams;
+
+
+  const filters:
+    PublicRecipeFilters =
+    {
+      search:
+        getFirstParam(
+          params.search,
+        ).trim(),
+
+      category:
+        getFirstParam(
+          params.category,
+        ),
+
+      recipeType:
+        getFirstParam(
+          params.type,
+        ),
+
+      difficulty:
+        parseDifficulty(
+          getFirstParam(
+            params.difficulty,
+          ),
+        ),
+
+      tag:
+        getFirstParam(
+          params.tag,
+        ),
+
+      order:
+        parseOrder(
+          getFirstParam(
+            params.order,
+          ),
+        ),
+    };
+
+
+  const [
+    result,
+    filterOptions,
+  ] =
+    await Promise.all([
+      searchPublishedRecipes(
+        filters,
+      ),
+
+      getPublicRecipeFilterOptions(),
+    ]);
+
+
+  const hasActiveFilters =
+    Boolean(
+      filters.search ||
+        filters.category ||
+        filters.recipeType ||
+        filters.difficulty ||
+        filters.tag ||
+        filters.order !==
+          "featured",
+    );
 
 
   return (
@@ -53,13 +232,40 @@ export default async function RecipesPage() {
         </header>
 
 
-        {recipes.length >
+        <RecipeFilters
+          filters={
+            filters
+          }
+          options={
+            filterOptions
+          }
+        />
+
+
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            {result.total ===
+            1
+              ? "1 receta encontrada"
+              : `${result.total} recetas encontradas`}
+          </p>
+
+
+          {hasActiveFilters ? (
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-brand">
+              Filtros activos
+            </p>
+          ) : null}
+        </div>
+
+
+        {result.recipes.length >
         0 ? (
           <section
             aria-label="Listado de recetas"
-            className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3"
+            className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3"
           >
-            {recipes.map(
+            {result.recipes.map(
               (
                 recipe,
               ) => (
@@ -75,17 +281,18 @@ export default async function RecipesPage() {
             )}
           </section>
         ) : (
-          <section className="mt-10 rounded-2xl border border-dashed border-border bg-secondary/40 px-6 py-16 text-center">
+          <section className="mt-6 rounded-2xl border border-dashed border-border bg-secondary/40 px-6 py-16 text-center">
             <h2 className="font-serif text-2xl font-bold text-foreground">
-              Todavía no hay
-              recetas publicadas
+              {hasActiveFilters
+                ? "No encontramos recetas"
+                : "Todavía no hay recetas publicadas"}
             </h2>
 
 
             <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
-              En cuanto haya
-              recetas disponibles,
-              aparecerán aquí.
+              {hasActiveFilters
+                ? "Prueba a cambiar o eliminar alguno de los filtros."
+                : "En cuanto haya recetas disponibles, aparecerán aquí."}
             </p>
           </section>
         )}

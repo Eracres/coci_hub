@@ -30,8 +30,20 @@ import {
 } from "@/components/layout/container";
 
 import {
+  RecipeCard,
+} from "@/components/recipes/recipe-card";
+
+import {
   RecipeIngredients,
 } from "@/components/recipes/recipe-ingredients";
+
+import {
+  RecipeShareActions,
+} from "@/components/recipes/recipe-share-actions";
+
+import {
+  getRelatedPublishedRecipes,
+} from "@/services/recipes/public-related-recipe-service";
 
 import {
   getPublishedRecipeBySlug,
@@ -225,6 +237,13 @@ export default async function RecipePage({
   }
 
 
+  const relatedRecipes =
+    await getRelatedPublishedRecipes(
+      recipe,
+      3,
+    );
+
+
   const difficultyLabel =
     getDifficultyLabel(
       recipe.difficulty,
@@ -369,6 +388,13 @@ export default async function RecipePage({
                 </span>
               ) : null}
             </div>
+
+
+            <RecipeShareActions
+              title={
+                recipe.title
+              }
+            />
           </header>
 
 
@@ -877,6 +903,50 @@ export default async function RecipePage({
             </aside>
           </div>
         </article>
+
+
+        {relatedRecipes.length >
+        0 ? (
+          <section className="mx-auto mt-20 max-w-5xl border-t border-border pt-14">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-brand">
+                  Sigue cocinando
+                </p>
+
+                <h2 className="mt-2 font-serif text-3xl font-bold text-foreground md:text-4xl">
+                  También te puede gustar
+                </h2>
+              </div>
+
+
+              <Link
+                href="/recipes"
+                className="text-sm font-semibold text-brand transition-colors hover:text-brand-hover"
+              >
+                Ver todas las recetas →
+              </Link>
+            </div>
+
+
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {relatedRecipes.map(
+                (
+                  relatedRecipe,
+                ) => (
+                  <RecipeCard
+                    key={
+                      relatedRecipe.id
+                    }
+                    recipe={
+                      relatedRecipe
+                    }
+                  />
+                ),
+              )}
+            </div>
+          </section>
+        ) : null}
       </Container>
     </main>
   );

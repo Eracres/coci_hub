@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 
 import {
-  useEffect,
   useState,
 } from "react";
 
@@ -37,28 +36,6 @@ export function RecipeShareActions({
     useState<CopyStatus>(
       "idle",
     );
-
-
-  const [
-    canUseNativeShare,
-    setCanUseNativeShare,
-  ] =
-    useState(
-      false,
-    );
-
-
-  useEffect(
-    () => {
-      setCanUseNativeShare(
-        typeof navigator !==
-          "undefined" &&
-          typeof navigator.share ===
-            "function",
-      );
-    },
-    [],
-  );
 
 
   function getCurrentUrl() {
@@ -137,47 +114,6 @@ export function RecipeShareActions({
   }
 
 
-  async function shareNative() {
-    if (
-      !navigator.share
-    ) {
-      return;
-    }
-
-
-    try {
-      await navigator.share(
-        {
-          title:
-            `${title} | CociHub`,
-
-          text:
-            getShareText(),
-
-          url:
-            getCurrentUrl(),
-        },
-      );
-    } catch (
-      error
-    ) {
-      if (
-        error instanceof DOMException &&
-        error.name ===
-          "AbortError"
-      ) {
-        return;
-      }
-
-
-      console.error(
-        "NATIVE SHARE ERROR:",
-        error,
-      );
-    }
-  }
-
-
   async function copyRecipeLink() {
     try {
       await navigator.clipboard.writeText(
@@ -224,6 +160,50 @@ export function RecipeShareActions({
   }
 
 
+  async function shareNative() {
+    if (
+      typeof navigator.share !==
+      "function"
+    ) {
+      await copyRecipeLink();
+
+      return;
+    }
+
+
+    try {
+      await navigator.share(
+        {
+          title:
+            `${title} | CociHub`,
+
+          text:
+            getShareText(),
+
+          url:
+            getCurrentUrl(),
+        },
+      );
+    } catch (
+      error
+    ) {
+      if (
+        error instanceof DOMException &&
+        error.name ===
+          "AbortError"
+      ) {
+        return;
+      }
+
+
+      console.error(
+        "NATIVE SHARE ERROR:",
+        error,
+      );
+    }
+  }
+
+
   return (
     <div className="mt-7">
       <p className="text-sm font-semibold text-foreground">
@@ -232,22 +212,20 @@ export function RecipeShareActions({
 
 
       <div className="mt-3 flex flex-wrap gap-3">
-        {canUseNativeShare ? (
-          <button
-            type="button"
-            onClick={
-              shareNative
-            }
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-semibold text-inverse transition-colors hover:bg-brand-hover"
-          >
-            <Share2
-              className="h-4 w-4"
-              aria-hidden="true"
-            />
+        <button
+          type="button"
+          onClick={
+            shareNative
+          }
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-semibold text-inverse transition-colors hover:bg-brand-hover"
+        >
+          <Share2
+            className="h-4 w-4"
+            aria-hidden="true"
+          />
 
-            Más opciones
-          </button>
-        ) : null}
+          Compartir
+        </button>
 
 
         <button

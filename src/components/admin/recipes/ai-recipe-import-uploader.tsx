@@ -2,7 +2,6 @@
 
 import {
   Bot,
-  CheckCircle2,
   FileImage,
   ImagePlus,
   Loader2,
@@ -19,6 +18,10 @@ import {
   useRef,
   useState,
 } from "react";
+
+import {
+  AiRecipeImportReview,
+} from "@/components/admin/recipes/ai-recipe-import-review";
 
 import type {
   AiRecipeImport,
@@ -131,43 +134,6 @@ function formatFileSize(
   return `${Math.round(
     kilobytes,
   )} KB`;
-}
-
-
-function getConfidenceLabel(
-  confidence:
-    AiRecipeImport["confidence"],
-) {
-  switch (
-    confidence
-  ) {
-    case "high":
-      return "Alta";
-
-    case "medium":
-      return "Media";
-
-    case "low":
-      return "Baja";
-  }
-}
-
-
-function countIngredients(
-  recipe:
-    AiRecipeImport,
-) {
-  return recipe
-    .ingredientGroups
-    .reduce(
-      (
-        total,
-        group,
-      ) =>
-        total +
-        group.ingredients.length,
-      0,
-    );
 }
 
 
@@ -787,155 +753,14 @@ export function AiRecipeImportUploader() {
 
 
           {analysisResult ? (
-            <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
-              <div className="flex items-start gap-3">
-                <CheckCircle2
-                  className="mt-1 h-6 w-6 shrink-0 text-brand"
-                  aria-hidden="true"
-                />
-
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand">
-                    Análisis completado
-                  </p>
-
-
-                  <h3 className="mt-1 font-serif text-3xl font-bold text-foreground">
-                    {analysisResult.title ??
-                      "Título no detectado"}
-                  </h3>
-                </div>
-              </div>
-
-
-              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-xl bg-secondary/40 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    Confianza
-                  </p>
-
-                  <p className="mt-2 font-semibold text-foreground">
-                    {getConfidenceLabel(
-                      analysisResult.confidence,
-                    )}
-                  </p>
-                </div>
-
-
-                <div className="rounded-xl bg-secondary/40 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    Raciones
-                  </p>
-
-                  <p className="mt-2 font-semibold text-foreground">
-                    {analysisResult.baseServings ??
-                      "No detectadas"}
-                  </p>
-                </div>
-
-
-                <div className="rounded-xl bg-secondary/40 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    Ingredientes
-                  </p>
-
-                  <p className="mt-2 font-semibold text-foreground">
-                    {countIngredients(
-                      analysisResult,
-                    )}
-                  </p>
-                </div>
-
-
-                <div className="rounded-xl bg-secondary/40 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    Pasos
-                  </p>
-
-                  <p className="mt-2 font-semibold text-foreground">
-                    {
-                      analysisResult
-                        .steps.length
-                    }
-                  </p>
-                </div>
-              </div>
-
-
-              {analysisResult.uncertainFields.length >
-              0 ? (
-                <div className="mt-6 rounded-xl border border-border bg-secondary/30 p-5">
-                  <div className="flex items-center gap-2 font-semibold text-foreground">
-                    <TriangleAlert
-                      className="h-5 w-5 text-brand"
-                      aria-hidden="true"
-                    />
-
-                    Campos que necesitan revisión
-                  </div>
-
-
-                  <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
-                    {analysisResult.uncertainFields.map(
-                      (
-                        field,
-                      ) => (
-                        <li
-                          key={
-                            field
-                          }
-                        >
-                          •{" "}
-                          {
-                            field
-                          }
-                        </li>
-                      ),
-                    )}
-                  </ul>
-                </div>
-              ) : null}
-
-
-              {analysisResult.warnings.length >
-              0 ? (
-                <div className="mt-4 rounded-xl border border-border bg-secondary/30 p-5">
-                  <p className="font-semibold text-foreground">
-                    Advertencias
-                  </p>
-
-
-                  <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                    {analysisResult.warnings.map(
-                      (
-                        warning,
-                      ) => (
-                        <li
-                          key={
-                            warning
-                          }
-                        >
-                          •{" "}
-                          {
-                            warning
-                          }
-                        </li>
-                      ),
-                    )}
-                  </ul>
-                </div>
-              ) : null}
-
-
-              <p className="mt-6 text-sm leading-6 text-muted-foreground">
-                En el siguiente
-                bloque convertiremos
-                este resultado en una
-                pantalla de revisión
-                completa antes de
-                crear el borrador.
-              </p>
-            </section>
+            <AiRecipeImportReview
+              recipe={
+                analysisResult
+              }
+              onChange={
+                setAnalysisResult
+              }
+            />
           ) : null}
         </>
       )}

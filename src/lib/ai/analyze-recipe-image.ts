@@ -1,10 +1,8 @@
 import "server-only";
 
-import OpenAI from "openai";
-
 import {
-  zodTextFormat,
-} from "openai/helpers/zod";
+  GoogleGenAI,
+} from "@google/genai";
 
 import {
   parseAiRecipeImport,
@@ -15,163 +13,173 @@ import {
 } from "@/lib/ai/recipe-import-instructions";
 
 import {
-  aiRecipeImportSchema,
-} from "@/schemas/ai-recipe-import-schema";
+  getGeminiApiKey,
+  getRecipeImportModel,
+} from "@/lib/ai/recipe-import-config";
+
+import {
+  RECIPE_IMPORT_RESPONSE_SCHEMA,
+} from "@/lib/ai/recipe-import-response-schema";
 
 import type {
   AiRecipeImport,
 } from "@/schemas/ai-recipe-import-schema";
 
 
-const DEFAULT_RECIPE_IMPORT_MODEL =
-  "gpt-5.6-luna";
+type AnalyzeRecipeImageInput = {
+  imageBuffer:
+    Buffer;
+
+  mimeType:
+    string;
+
+  fileName?:
+    string | null;
+};
 
 
-function getOpenAiClient() {
-  const apiKey =
-    process.env.OPENAI_API_KEY;
+const RECIPE_ANALYSIS_PROMPT =
+  `
+Analiza esta imagen como una posible receta de cocina.
 
+Extrae únicamente la información visible o inequívocamente identificable.
 
-  if (
-    !apiKey
-  ) {
-    throw new Error(
-      "OPENAI_API_KEY_NOT_CONFIGURED",
-    );
-  }
+Debes devolver todos los campos definidos por el esquema de CociHub.
 
+Cuando un campo no aparezca en la imagen:
 
-  return new OpenAI({
-    apiKey,
-  });
-}
+- utiliza null si el campo admite null;
+- utiliza [] para listas sin información;
+- nunca omitas un campo obligatorio;
+- nunca inventes información para rellenarlo.
 
+Ejemplos:
 
-function getRecipeImportModel() {
-  const configuredModel =
-    process.env
-      .OPENAI_RECIPE_IMPORT_MODEL
-      ?.trim();
+Si no aparece la dificultad:
+"difficulty": null
 
+Si no aparecen categorías:
+"categories": []
 
-  return (
-    configuredModel ||
-    DEFAULT_RECIPE_IMPORT_MODEL
-  );
-}
+Si no aparecen alérgenos explícitos:
+"allergens": []
 
+Si no aparece una fuente:
+rellena todos los campos de source con null.
 
-function fileToDataUrl(
-  file:
-    File,
+version siempre debe ser 1.
 
-  base64:
-    string,
-) {
-  return `data:${file.type};base64,${base64}`;
-}
+No añadas propiedades distintas de las definidas en el esquema.
+`.trim();
 
 
 export async function analyzeRecipeImage(
-  file:
-    File,
+  input:
+    AnalyzeRecipeImageInput,
 ): Promise<
   AiRecipeImport
 > {
   const client =
-    getOpenAiClient();
-
-
-  const buffer =
-    Buffer.from(
-      await file.arrayBuffer(),
+    new GoogleGenAI(
+      {
+        apiKey:
+          getGeminiApiKey(),
+      },
     );
 
 
-  const imageDataUrl =
-    fileToDataUrl(
-      file,
-      buffer.toString(
-        "base64",
-      ),
+  const base64Image =
+    input.imageBuffer.toString(
+      "base64",
     );
 
 
   const response =
-    await client.responses.parse(
+    await client.models.generateContent(
       {
         model:
           getRecipeImportModel(),
 
-        instructions:
-          RECIPE_IMPORT_INSTRUCTIONS,
-
-        input: [
+        contents: [
           {
-            role:
-              "user",
+            inlineData: {
+              mimeType:
+                input.mimeType,
 
-            content: [
-              {
-                type:
-                  "input_text",
+              data:
+                base64Image,
+            },
+          },
 
-                text:
-                  "Analiza esta imagen como una posible receta de cocina. Extrae únicamente la información visible o inequívocamente identificable y devuelve la estructura CociHub solicitada.",
-              },
-
-              {
-                type:
-                  "input_image",
-
-                image_url:
-                  imageDataUrl,
-
-                detail:
-                  "high",
-              },
-            ],
+          {
+            text:
+              RECIPE_ANALYSIS_PROMPT,
           },
         ],
 
-        text: {
-          format:
-            zodTextFormat(
-              aiRecipeImportSchema,
-              "cocihub_recipe_import",
-            ),
+        config: {
+          systemInstruction:
+            RECIPE_IMPORT_INSTRUCTIONS,
+
+          responseMimeType:
+            "application/json",
+
+          responseJsonSchema:
+            RECIPE_IMPORT_RESPONSE_SCHEMA,
+
+          temperature:
+            0.1,
         },
       },
     );
 
 
+  const rawText =
+    response.text?.trim();
+
+
   if (
-    response.status !==
-    "completed"
+    !rawText
   ) {
     throw new Error(
-      "AI_RESPONSE_NOT_COMPLETED",
+      "Gemini no devolvió contenido al analizar la receta.",
     );
   }
 
 
-  if (
-    !response.output_parsed
+  let parsed:
+    unknown;
+
+
+  try {
+    parsed =
+      JSON.parse(
+        rawText,
+      );
+  } catch (
+    error
   ) {
+    console.error(
+      "GEMINI RECIPE JSON PARSE ERROR:",
+      error,
+    );
+
+
+    console.error(
+      "GEMINI RAW RESPONSE:",
+      rawText,
+    );
+
+
     throw new Error(
-      "AI_RESPONSE_NOT_PARSED",
+      "Gemini devolvió una respuesta que no es JSON válido.",
     );
   }
 
 
-  /*
-   * responses.parse() ya valida contra Zod,
-   * pero mantenemos nuestra propia frontera
-   * de validación de CociHub.
-   */
   const validation =
     parseAiRecipeImport(
-      response.output_parsed,
+      parsed,
     );
 
 
@@ -179,13 +187,23 @@ export async function analyzeRecipeImage(
     !validation.success
   ) {
     console.error(
-      "COCIHUB AI RECIPE VALIDATION ERROR:",
+      "GEMINI RECIPE VALIDATION ERROR:",
       validation.errors,
     );
 
 
+    console.error(
+      "GEMINI RECIPE RECEIVED:",
+      JSON.stringify(
+        parsed,
+        null,
+        2,
+      ),
+    );
+
+
     throw new Error(
-      "AI_RESPONSE_INVALID",
+      "La respuesta de Gemini no cumple el formato esperado por CociHub.",
     );
   }
 

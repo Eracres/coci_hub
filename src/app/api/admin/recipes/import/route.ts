@@ -202,9 +202,23 @@ export async function POST(
 
 
   try {
+    const imageArrayBuffer =
+      await image.arrayBuffer();
+
+    const imageBuffer =
+      Buffer.from(
+        imageArrayBuffer,
+      );
+
     const recipe =
       await analyzeRecipeImage(
-        image,
+        {
+          imageBuffer,
+          mimeType:
+            image.type,
+          fileName:
+            image.name,
+        },
       );
 
 
@@ -233,17 +247,19 @@ export async function POST(
     if (
       error instanceof Error &&
       error.message ===
-        "OPENAI_API_KEY_NOT_CONFIGURED"
+        "Falta GEMINI_API_KEY en las variables de entorno."
     ) {
       return jsonError(
-        "La integración de IA todavía no está configurada en el servidor.",
+        "La integración de Gemini no está configurada en el servidor.",
         503,
       );
     }
 
 
     return jsonError(
-      "No se pudo analizar la receta. Revisa la imagen e inténtalo de nuevo.",
+      error instanceof Error
+        ? error.message
+        : "No se pudo analizar la receta. Revisa la imagen e inténtalo de nuevo.",
       502,
     );
   }

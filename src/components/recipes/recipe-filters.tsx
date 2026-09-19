@@ -51,21 +51,45 @@ export function RecipeFilters({
     <form
       action="/recipes"
       method="get"
-      className="mt-10 rounded-2xl border border-border bg-white p-5 md:p-6"
+      className="rounded-3xl border border-border bg-surface p-5 shadow-sm md:p-7"
     >
-      <div className="flex items-center gap-2">
-        <SlidersHorizontal
-          className="h-5 w-5 text-brand"
-          aria-hidden="true"
-        />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
+            <SlidersHorizontal
+              className="size-5"
+              aria-hidden="true"
+            />
+          </span>
 
-        <h2 className="font-serif text-xl font-bold text-foreground">
-          Buscar y filtrar
-        </h2>
+          <div>
+            <h2 className="font-serif text-xl font-bold text-foreground md:text-2xl">
+              Buscar y filtrar
+            </h2>
+
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Combina distintos
+              criterios para encontrar
+              la receta que necesitas.
+            </p>
+          </div>
+        </div>
+
+
+        {activeFilters ? (
+          <span className="inline-flex items-center gap-2 rounded-full bg-brand/10 px-3 py-1.5 text-xs font-semibold text-brand">
+            <SlidersHorizontal
+              className="size-3.5"
+              aria-hidden="true"
+            />
+
+            Filtros aplicados
+          </span>
+        ) : null}
       </div>
 
 
-      <div className="mt-5">
+      <div className="mt-7">
         <label
           htmlFor="recipe-search"
           className="text-sm font-semibold text-foreground"
@@ -76,7 +100,7 @@ export function RecipeFilters({
 
         <div className="relative mt-2">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground"
             aria-hidden="true"
           />
 
@@ -88,13 +112,13 @@ export function RecipeFilters({
               filters.search
             }
             placeholder="Ej. macarrones, tortilla, pollo..."
-            className="min-h-11 w-full rounded-xl border border-border bg-white py-2 pl-10 pr-4 text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+            className="min-h-12 w-full rounded-xl border border-border bg-page py-2 pl-12 pr-4 text-foreground outline-none transition duration-200 placeholder:text-disabled focus:border-brand focus:bg-surface focus:ring-2 focus:ring-brand/20"
           />
         </div>
       </div>
 
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <div>
           <label
             htmlFor="recipe-category"
@@ -109,7 +133,7 @@ export function RecipeFilters({
             defaultValue={
               filters.category
             }
-            className="mt-2 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+            className="mt-2 min-h-12 w-full rounded-xl border border-border bg-page px-3 text-foreground outline-none transition duration-200 focus:border-brand focus:bg-surface focus:ring-2 focus:ring-brand/20"
           >
             <option value="">
               Todas
@@ -151,7 +175,7 @@ export function RecipeFilters({
             defaultValue={
               filters.recipeType
             }
-            className="mt-2 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+            className="mt-2 min-h-12 w-full rounded-xl border border-border bg-page px-3 text-foreground outline-none transition duration-200 focus:border-brand focus:bg-surface focus:ring-2 focus:ring-brand/20"
           >
             <option value="">
               Todos
@@ -193,7 +217,7 @@ export function RecipeFilters({
             defaultValue={
               filters.difficulty
             }
-            className="mt-2 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+            className="mt-2 min-h-12 w-full rounded-xl border border-border bg-page px-3 text-foreground outline-none transition duration-200 focus:border-brand focus:bg-surface focus:ring-2 focus:ring-brand/20"
           >
             <option value="">
               Todas
@@ -228,7 +252,7 @@ export function RecipeFilters({
             defaultValue={
               filters.tag
             }
-            className="mt-2 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+            className="mt-2 min-h-12 w-full rounded-xl border border-border bg-page px-3 text-foreground outline-none transition duration-200 focus:border-brand focus:bg-surface focus:ring-2 focus:ring-brand/20"
           >
             <option value="">
               Todas
@@ -270,7 +294,7 @@ export function RecipeFilters({
             defaultValue={
               filters.order
             }
-            className="mt-2 min-h-11 w-full rounded-xl border border-border bg-white px-3 text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+            className="mt-2 min-h-12 w-full rounded-xl border border-border bg-page px-3 text-foreground outline-none transition duration-200 focus:border-brand focus:bg-surface focus:ring-2 focus:ring-brand/20"
           >
             <option value="featured">
               Destacadas primero
@@ -304,11 +328,16 @@ export function RecipeFilters({
       </div>
 
 
-      <div className="mt-6 flex flex-wrap gap-3">
+      <div className="mt-7 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:flex-wrap">
         <button
           type="submit"
-          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand px-5 font-semibold text-inverse transition-colors hover:bg-brand-hover"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-5 font-semibold text-inverse shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-md"
         >
+          <Search
+            className="size-4"
+            aria-hidden="true"
+          />
+
           Aplicar filtros
         </button>
 
@@ -316,14 +345,14 @@ export function RecipeFilters({
         {activeFilters ? (
           <Link
             href="/recipes"
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-white px-5 font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-5 font-semibold text-muted-foreground transition duration-200 hover:border-secondary hover:bg-page-muted hover:text-foreground"
           >
             <X
-              className="h-4 w-4"
+              className="size-4"
               aria-hidden="true"
             />
 
-            Limpiar
+            Limpiar filtros
           </Link>
         ) : null}
       </div>

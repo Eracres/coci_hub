@@ -20,6 +20,10 @@ import {
 } from "react";
 
 import {
+  AiRecipeImportDraftActions,
+} from "@/components/admin/recipes/ai-recipe-import-draft-actions";
+
+import {
   AiRecipeImportReview,
 } from "@/components/admin/recipes/ai-recipe-import-review";
 
@@ -144,6 +148,12 @@ export function AiRecipeImportUploader() {
     );
 
 
+  const previewUrlRef =
+    useRef<string | null>(
+      null,
+    );
+
+
   const [
     selectedFile,
     setSelectedFile,
@@ -200,37 +210,17 @@ export function AiRecipeImportUploader() {
 
   useEffect(
     () => {
-      if (
-        !selectedFile
-      ) {
-        setPreviewUrl(
-          null,
-        );
-
-        return;
-      }
-
-
-      const objectUrl =
-        URL.createObjectURL(
-          selectedFile,
-        );
-
-
-      setPreviewUrl(
-        objectUrl,
-      );
-
-
       return () => {
-        URL.revokeObjectURL(
-          objectUrl,
-        );
+        if (
+          previewUrlRef.current
+        ) {
+          URL.revokeObjectURL(
+            previewUrlRef.current,
+          );
+        }
       };
     },
-    [
-      selectedFile,
-    ],
+    [],
   );
 
 
@@ -261,6 +251,29 @@ export function AiRecipeImportUploader() {
       return;
     }
 
+
+    if (
+      previewUrlRef.current
+    ) {
+      URL.revokeObjectURL(
+        previewUrlRef.current,
+      );
+    }
+
+
+    const objectUrl =
+      URL.createObjectURL(
+        file,
+      );
+
+
+    previewUrlRef.current =
+      objectUrl;
+
+
+    setPreviewUrl(
+      objectUrl,
+    );
 
     setError(
       null,
@@ -341,6 +354,22 @@ export function AiRecipeImportUploader() {
 
 
   function removeFile() {
+    if (
+      previewUrlRef.current
+    ) {
+      URL.revokeObjectURL(
+        previewUrlRef.current,
+      );
+
+      previewUrlRef.current =
+        null;
+    }
+
+
+    setPreviewUrl(
+      null,
+    );
+
     setSelectedFile(
       null,
     );
@@ -753,14 +782,23 @@ export function AiRecipeImportUploader() {
 
 
           {analysisResult ? (
-            <AiRecipeImportReview
-              recipe={
-                analysisResult
-              }
-              onChange={
-                setAnalysisResult
-              }
-            />
+            <>
+              <AiRecipeImportReview
+                recipe={
+                  analysisResult
+                }
+                onChange={
+                  setAnalysisResult
+                }
+              />
+
+
+              <AiRecipeImportDraftActions
+                recipe={
+                  analysisResult
+                }
+              />
+            </>
           ) : null}
         </>
       )}

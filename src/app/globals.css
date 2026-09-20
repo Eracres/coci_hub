@@ -134,6 +134,60 @@ a {
   background: rgb(217 93 57 / 22%);
 }
 
+/*
+ * ==========================================================
+ * PUBLICATION CHECKLIST TARGETS
+ * ==========================================================
+ *
+ * Los requisitos pendientes del editor enlazan directamente
+ * con estos campos/bloques mediante fragmentos de URL.
+ *
+ * Ejemplo:
+ *
+ * #title
+ * #publication-main-image
+ *
+ * :target permite resaltar temporalmente el lugar que
+ * necesita atención sin añadir estado adicional a cada
+ * formulario.
+ */
+
+#title,
+#slug,
+#shortDescription,
+#recipeTypeId,
+#difficulty,
+#baseServings,
+#preparationMinutes,
+#publication-main-image,
+#publication-category,
+#publication-ingredient,
+#publication-step {
+  scroll-margin-top: 7rem;
+  transition:
+    border-color var(--duration-normal) var(--ease-default),
+    background-color var(--duration-normal) var(--ease-default),
+    box-shadow var(--duration-normal) var(--ease-default);
+}
+
+#title:target,
+#slug:target,
+#shortDescription:target,
+#recipeTypeId:target,
+#difficulty:target,
+#baseServings:target,
+#preparationMinutes:target,
+#publication-main-image:target,
+#publication-category:target,
+#publication-ingredient:target,
+#publication-step:target {
+  border-color: var(--color-error);
+  background-color: rgb(200 69 69 / 6%);
+  box-shadow:
+    0 0 0 4px rgb(200 69 69 / 15%),
+    0 8px 24px rgb(200 69 69 / 8%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

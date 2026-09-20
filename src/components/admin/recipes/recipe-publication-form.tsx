@@ -1,6 +1,13 @@
 "use client";
 
 import {
+  ArrowRight,
+  Check,
+  X,
+} from "lucide-react";
+
+import {
+  useEffect,
   useState,
 } from "react";
 
@@ -33,8 +40,46 @@ type RecipePublicationFormProps = {
 };
 
 
+const requirementTargets:
+Record<string, string> = {
+  title:
+    "title",
+
+  slug:
+    "slug",
+
+  "short-description":
+    "shortDescription",
+
+  "main-image":
+    "publication-main-image",
+
+  "recipe-type":
+    "recipeTypeId",
+
+  difficulty:
+    "difficulty",
+
+  "base-servings":
+    "baseServings",
+
+  "preparation-time":
+    "preparationMinutes",
+
+  category:
+    "publication-category",
+
+  ingredient:
+    "publication-ingredient",
+
+  step:
+    "publication-step",
+};
+
+
 function getStatusLabel(
-  status: RecipeStatus,
+  status:
+    RecipeStatus,
 ) {
   if (
     status ===
@@ -43,12 +88,14 @@ function getStatusLabel(
     return "Publicada";
   }
 
+
   if (
     status ===
     "archived"
   ) {
     return "Archivada";
   }
+
 
   return "Borrador";
 }
@@ -79,6 +126,57 @@ export function RecipePublicationForm({
     useState<string | null>(
       null,
     );
+
+
+  /*
+   * Si el usuario corrige un requisito,
+   * guarda el formulario y el servidor
+   * actualiza readiness, quitamos el hash
+   * anterior para que un campo ya válido
+   * no siga apareciendo resaltado en rojo.
+   */
+  useEffect(() => {
+    const currentTarget =
+      window.location.hash.replace(
+        "#",
+        "",
+      );
+
+
+    if (
+      !currentTarget
+    ) {
+      return;
+    }
+
+
+    const targetRequirement =
+      readiness.requirements.find(
+        (
+          requirement,
+        ) =>
+          requirementTargets[
+            requirement.key
+          ] ===
+          currentTarget,
+      );
+
+
+    if (
+      !targetRequirement?.valid
+    ) {
+      return;
+    }
+
+
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}`,
+    );
+  }, [
+    readiness,
+  ]);
 
 
   async function changeStatus(
@@ -123,21 +221,24 @@ export function RecipePublicationForm({
 
   const missingCount =
     readiness.requirements.filter(
-      (requirement) =>
+      (
+        requirement,
+      ) =>
         !requirement.valid,
     ).length;
 
 
   return (
     <section className="rounded-xl border p-6">
-
       <div>
         <h2 className="text-xl font-semibold">
           Publicación
         </h2>
 
         <p className="mt-1 text-sm">
-          Revisa que la receta esté completa antes de hacerla pública.
+          Revisa que la receta esté
+          completa antes de hacerla
+          pública.
         </p>
       </div>
 
@@ -147,7 +248,6 @@ export function RecipePublicationForm({
       ============================================= */}
 
       <div className="mt-6 rounded-lg border p-4">
-
         <p className="text-sm">
           Estado actual
         </p>
@@ -157,7 +257,6 @@ export function RecipePublicationForm({
             status,
           )}
         </p>
-
       </div>
 
 
@@ -166,47 +265,109 @@ export function RecipePublicationForm({
       ============================================= */}
 
       <div className="mt-6">
-
         <h3 className="font-semibold">
           Requisitos para publicar
         </h3>
 
 
-        <div className="mt-4 space-y-2">
+        <p className="mt-1 text-sm text-muted-foreground">
+          Los requisitos pendientes
+          pueden pulsarse para ir
+          directamente al campo que
+          debes completar.
+        </p>
 
+
+        <div className="mt-4 space-y-2">
           {readiness.requirements.map(
             (
               requirement,
-            ) => (
-              <div
-                key={
+            ) => {
+              const targetId =
+                requirementTargets[
                   requirement.key
-                }
-                className="flex items-center gap-3 rounded-lg border px-4 py-3"
-              >
-
-                <span
-                  aria-hidden="true"
-                  className="font-semibold"
-                >
-                  {requirement.valid
-                    ? "✓"
-                    : "✕"}
-                </span>
+                ];
 
 
-                <span>
-                  {
-                    requirement.label
+              if (
+                requirement.valid
+              ) {
+                return (
+                  <div
+                    key={
+                      requirement.key
+                    }
+                    className="flex items-center gap-3 rounded-xl border border-success bg-success/5 px-4 py-3"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-success/10 text-success"
+                    >
+                      <Check
+                        className="size-4"
+                        strokeWidth={
+                          3
+                        }
+                      />
+                    </span>
+
+
+                    <span className="font-medium text-foreground">
+                      {
+                        requirement.label
+                      }
+                    </span>
+                  </div>
+                );
+              }
+
+
+              return (
+                <a
+                  key={
+                    requirement.key
                   }
-                </span>
+                  href={
+                    targetId
+                      ? `#${targetId}`
+                      : "#"
+                  }
+                  className="group flex items-center gap-3 rounded-xl border border-error bg-error/5 px-4 py-3 transition hover:bg-error/10"
+                  aria-label={`Corregir: ${requirement.label}`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="flex size-7 shrink-0 items-center justify-center rounded-full bg-error/10 text-error"
+                  >
+                    <X
+                      className="size-4"
+                      strokeWidth={
+                        3
+                      }
+                    />
+                  </span>
 
-              </div>
-            ),
+
+                  <span className="min-w-0 flex-1 font-medium text-foreground">
+                    {
+                      requirement.label
+                    }
+                  </span>
+
+
+                  <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-error">
+                    Corregir
+
+                    <ArrowRight
+                      className="size-4 transition-transform group-hover:translate-x-1"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </a>
+              );
+            },
           )}
-
         </div>
-
       </div>
 
 
@@ -214,36 +375,69 @@ export function RecipePublicationForm({
           READINESS MESSAGE
       ============================================= */}
 
-      <div className="mt-6 rounded-lg border p-4">
-
+      <div
+        className={
+          readiness.canPublish
+            ? "mt-6 rounded-xl border border-success bg-success/5 p-4"
+            : "mt-6 rounded-xl border border-error bg-error/5 p-4"
+        }
+      >
         {readiness.canPublish ? (
-          <>
-            <p className="font-semibold">
-              La receta está lista para publicarse.
-            </p>
+          <div className="flex gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success/10 text-success">
+              <Check
+                className="size-4"
+                strokeWidth={
+                  3
+                }
+                aria-hidden="true"
+              />
+            </span>
 
-            <p className="mt-1 text-sm">
-              Todos los requisitos obligatorios están completos.
-            </p>
-          </>
+            <div>
+              <p className="font-semibold text-success">
+                La receta está lista
+                para publicarse.
+              </p>
+
+              <p className="mt-1 text-sm text-muted-foreground">
+                Todos los requisitos
+                obligatorios están
+                completos.
+              </p>
+            </div>
+          </div>
         ) : (
-          <>
-            <p className="font-semibold">
-              La receta todavía no puede publicarse.
-            </p>
+          <div className="flex gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-error/10 text-error">
+              <X
+                className="size-4"
+                strokeWidth={
+                  3
+                }
+                aria-hidden="true"
+              />
+            </span>
 
-            <p className="mt-1 text-sm">
-              Faltan{" "}
-              {missingCount}{" "}
-              requisito
-              {missingCount ===
-              1
-                ? ""
-                : "s"}.
-            </p>
-          </>
+            <div>
+              <p className="font-semibold text-error">
+                La receta todavía no
+                puede publicarse.
+              </p>
+
+              <p className="mt-1 text-sm text-muted-foreground">
+                Faltan{" "}
+                {missingCount}{" "}
+                requisito
+                {missingCount ===
+                1
+                  ? ""
+                  : "s"}
+                .
+              </p>
+            </div>
+          </div>
         )}
-
       </div>
 
 
@@ -252,7 +446,6 @@ export function RecipePublicationForm({
       ============================================= */}
 
       <div className="mt-6 flex flex-wrap gap-3">
-
         {status ===
           "draft" && (
           <>
@@ -347,7 +540,6 @@ export function RecipePublicationForm({
             Restaurar como borrador
           </button>
         )}
-
       </div>
 
 
@@ -362,13 +554,13 @@ export function RecipePublicationForm({
 
 
       <div className="mt-6 rounded-lg border p-4">
-
         <p className="text-sm">
-          Los campos de información adicional y alérgenos son opcionales y no bloquean la publicación.
+          Los campos de información
+          adicional y alérgenos son
+          opcionales y no bloquean la
+          publicación.
         </p>
-
       </div>
-
     </section>
   );
 }

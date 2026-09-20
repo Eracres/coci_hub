@@ -4,6 +4,7 @@ import {
 
 import {
   analyzeRecipeImage,
+  RecipeAiError,
 } from "@/lib/ai/analyze-recipe-image";
 
 import {
@@ -205,17 +206,21 @@ export async function POST(
     const imageArrayBuffer =
       await image.arrayBuffer();
 
+
     const imageBuffer =
       Buffer.from(
         imageArrayBuffer,
       );
 
+
     const recipe =
       await analyzeRecipeImage(
         {
           imageBuffer,
+
           mimeType:
             image.type,
+
           fileName:
             image.name,
         },
@@ -244,23 +249,84 @@ export async function POST(
     );
 
 
+    /*
+     * =====================================================
+     * CONFIGURATION
+     * =====================================================
+     */
+
     if (
-      error instanceof Error &&
+      error instanceof
+        Error &&
       error.message ===
         "Falta GEMINI_API_KEY en las variables de entorno."
     ) {
       return jsonError(
-        "La integración de Gemini no está configurada en el servidor.",
+        "El servicio de análisis con IA no está disponible en este momento.",
         503,
       );
     }
 
 
+    /*
+     * =====================================================
+     * KNOWN AI ERRORS
+     * =====================================================
+     */
+
+    if (
+      error instanceof
+      RecipeAiError
+    ) {
+      if (
+        error.code ===
+        "rate-limit"
+      ) {
+        return jsonError(
+          "Has alcanzado temporalmente el límite de análisis con IA. Inténtalo de nuevo más tarde.",
+          429,
+        );
+      }
+
+
+      if (
+        error.code ===
+        "unavailable"
+      ) {
+        return jsonError(
+          "El servicio de análisis con IA está temporalmente saturado. Espera unos instantes y vuelve a intentarlo.",
+          503,
+        );
+      }
+
+
+      if (
+        error.code ===
+        "invalid-response"
+      ) {
+        return jsonError(
+          "La IA no pudo interpretar correctamente la receta. Prueba con una imagen más clara o completa.",
+          502,
+        );
+      }
+
+
+      return jsonError(
+        "No se pudo completar el análisis con IA en este momento. Inténtalo de nuevo más tarde.",
+        502,
+      );
+    }
+
+
+    /*
+     * =====================================================
+     * UNKNOWN ERROR
+     * =====================================================
+     */
+
     return jsonError(
-      error instanceof Error
-        ? error.message
-        : "No se pudo analizar la receta. Revisa la imagen e inténtalo de nuevo.",
-      502,
+      "No se pudo analizar la receta en este momento. Inténtalo de nuevo más tarde.",
+      500,
     );
   }
 }

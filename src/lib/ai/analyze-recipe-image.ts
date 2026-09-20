@@ -5,6 +5,10 @@ import {
 } from "@google/genai";
 
 import {
+  normalizeAiRecipeImport,
+} from "@/lib/ai/normalize-ai-recipe-import";
+
+import {
   parseAiRecipeImport,
 } from "@/lib/ai/parse-ai-recipe-import";
 
@@ -36,6 +40,38 @@ type AnalyzeRecipeImageInput = {
   fileName?:
     string | null;
 };
+
+
+export type RecipeAiErrorCode =
+  | "rate-limit"
+  | "unavailable"
+  | "invalid-response"
+  | "provider-error";
+
+
+export class RecipeAiError extends Error {
+  readonly code:
+    RecipeAiErrorCode;
+
+
+  constructor(
+    code:
+      RecipeAiErrorCode,
+
+    message:
+      string,
+  ) {
+    super(
+      message,
+    );
+
+    this.name =
+      "RecipeAiError";
+
+    this.code =
+      code;
+  }
+}
 
 
 const RECIPE_ANALYSIS_PROMPT =
@@ -73,6 +109,155 @@ No añadas propiedades distintas de las definidas en el esquema.
 `.trim();
 
 
+function getProviderErrorText(
+  error:
+    unknown,
+) {
+  if (
+    error instanceof
+    Error
+  ) {
+    return error.message;
+  }
+
+
+  try {
+    return JSON.stringify(
+      error,
+    );
+  } catch {
+    return String(
+      error,
+    );
+  }
+}
+
+
+function getProviderStatus(
+  error:
+    unknown,
+) {
+  if (
+    typeof error !==
+      "object" ||
+    error ===
+      null
+  ) {
+    return null;
+  }
+
+
+  const candidate =
+    error as {
+      status?:
+        unknown;
+
+      code?:
+        unknown;
+    };
+
+
+  if (
+    typeof candidate.status ===
+      "number"
+  ) {
+    return candidate.status;
+  }
+
+
+  if (
+    typeof candidate.code ===
+      "number"
+  ) {
+    return candidate.code;
+  }
+
+
+  return null;
+}
+
+
+function normalizeProviderError(
+  error:
+    unknown,
+): RecipeAiError {
+  const status =
+    getProviderStatus(
+      error,
+    );
+
+
+  const errorText =
+    getProviderErrorText(
+      error,
+    );
+
+
+  const normalizedText =
+    errorText.toLowerCase();
+
+
+  const isRateLimit =
+    status ===
+      429 ||
+    normalizedText.includes(
+      "resource_exhausted",
+    ) ||
+    normalizedText.includes(
+      "quota exceeded",
+    ) ||
+    normalizedText.includes(
+      "rate limit",
+    ) ||
+    normalizedText.includes(
+      "too many requests",
+    );
+
+
+  if (
+    isRateLimit
+  ) {
+    return new RecipeAiError(
+      "rate-limit",
+      "Se ha alcanzado temporalmente el límite de uso del servicio de IA.",
+    );
+  }
+
+
+  const isUnavailable =
+    status ===
+      503 ||
+    normalizedText.includes(
+      "unavailable",
+    ) ||
+    normalizedText.includes(
+      "high demand",
+    ) ||
+    normalizedText.includes(
+      "temporarily unavailable",
+    ) ||
+    normalizedText.includes(
+      "service unavailable",
+    );
+
+
+  if (
+    isUnavailable
+  ) {
+    return new RecipeAiError(
+      "unavailable",
+      "El servicio de IA está temporalmente saturado.",
+    );
+  }
+
+
+  return new RecipeAiError(
+    "provider-error",
+    "No se pudo completar el análisis con el servicio de IA.",
+  );
+}
+
+
 export async function analyzeRecipeImage(
   input:
     AnalyzeRecipeImageInput,
@@ -94,44 +279,66 @@ export async function analyzeRecipeImage(
     );
 
 
-  const response =
-    await client.models.generateContent(
-      {
-        model:
-          getRecipeImportModel(),
+  let response:
+    Awaited<
+      ReturnType<
+        typeof client.models.generateContent
+      >
+    >;
 
-        contents: [
-          {
-            inlineData: {
-              mimeType:
-                input.mimeType,
 
-              data:
-                base64Image,
+  try {
+    response =
+      await client.models.generateContent(
+        {
+          model:
+            getRecipeImportModel(),
+
+          contents: [
+            {
+              inlineData: {
+                mimeType:
+                  input.mimeType,
+
+                data:
+                  base64Image,
+              },
             },
+
+            {
+              text:
+                RECIPE_ANALYSIS_PROMPT,
+            },
+          ],
+
+          config: {
+            systemInstruction:
+              RECIPE_IMPORT_INSTRUCTIONS,
+
+            responseMimeType:
+              "application/json",
+
+            responseJsonSchema:
+              RECIPE_IMPORT_RESPONSE_SCHEMA,
+
+            temperature:
+              0.1,
           },
-
-          {
-            text:
-              RECIPE_ANALYSIS_PROMPT,
-          },
-        ],
-
-        config: {
-          systemInstruction:
-            RECIPE_IMPORT_INSTRUCTIONS,
-
-          responseMimeType:
-            "application/json",
-
-          responseJsonSchema:
-            RECIPE_IMPORT_RESPONSE_SCHEMA,
-
-          temperature:
-            0.1,
         },
-      },
+      );
+  } catch (
+    error
+  ) {
+    console.error(
+      "GEMINI PROVIDER ERROR:",
+      error,
     );
+
+
+    throw normalizeProviderError(
+      error,
+    );
+  }
 
 
   const rawText =
@@ -141,8 +348,22 @@ export async function analyzeRecipeImage(
   if (
     !rawText
   ) {
-    throw new Error(
-      "Gemini no devolvió contenido al analizar la receta.",
+    console.error(
+      "GEMINI EMPTY RESPONSE",
+      {
+        fileName:
+          input.fileName ??
+          null,
+
+        mimeType:
+          input.mimeType,
+      },
+    );
+
+
+    throw new RecipeAiError(
+      "invalid-response",
+      "La IA no devolvió contenido utilizable.",
     );
   }
 
@@ -171,8 +392,9 @@ export async function analyzeRecipeImage(
     );
 
 
-    throw new Error(
-      "Gemini devolvió una respuesta que no es JSON válido.",
+    throw new RecipeAiError(
+      "invalid-response",
+      "La IA devolvió una respuesta que CociHub no pudo interpretar.",
     );
   }
 
@@ -202,11 +424,22 @@ export async function analyzeRecipeImage(
     );
 
 
-    throw new Error(
-      "La respuesta de Gemini no cumple el formato esperado por CociHub.",
+    throw new RecipeAiError(
+      "invalid-response",
+      "La respuesta de la IA no cumple el formato esperado por CociHub.",
     );
   }
 
 
-  return validation.data;
+  /*
+   * Gemini extrae el contenido.
+   *
+   * A partir de aquí CociHub impone
+   * su propia normalización visual y
+   * ortotipográfica antes de mostrar
+   * los datos al administrador.
+   */
+  return normalizeAiRecipeImport(
+    validation.data,
+  );
 }

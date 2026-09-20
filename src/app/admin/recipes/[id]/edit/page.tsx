@@ -64,9 +64,11 @@ import {
 
 
 type EditRecipePageProps = {
-  params: Promise<{
-    id: string;
-  }>;
+  params:
+    Promise<{
+      id:
+        string;
+    }>;
 };
 
 
@@ -162,9 +164,7 @@ export default async function EditRecipePage({
 
   return (
     <main className="mx-auto max-w-5xl p-8">
-
       <div className="flex flex-wrap items-center justify-between gap-4">
-
         <Link
           href="/admin/recipes"
           className="text-sm underline"
@@ -179,30 +179,32 @@ export default async function EditRecipePage({
         >
           Vista previa
         </Link>
-
       </div>
 
 
       <header className="mt-6">
-
         <p className="text-sm">
-          {statusLabel}
+          {
+            statusLabel
+          }
         </p>
 
         <h1 className="mt-2 text-3xl font-bold">
-          {recipe.title}
+          {
+            recipe.title
+          }
         </h1>
 
         <p className="mt-2 text-sm">
           /recipes/
-          {recipe.slug}
+          {
+            recipe.slug
+          }
         </p>
-
       </header>
 
 
       <div className="mt-10 space-y-8">
-
         {/* 01. INFORMACIÓN BÁSICA */}
 
         <RecipeBasicInfoForm
@@ -228,15 +230,20 @@ export default async function EditRecipePage({
 
         {/* 02. IMAGEN PRINCIPAL */}
 
-        <RecipeImageUploader
-          recipeId={
-            recipe.id
-          }
+        <div
+          id="publication-main-image"
+          className="rounded-xl"
+        >
+          <RecipeImageUploader
+            recipeId={
+              recipe.id
+            }
 
-          initialImagePath={
-            recipe.image_path
-          }
-        />
+            initialImagePath={
+              recipe.image_path
+            }
+          />
+        </div>
 
 
         {/* 03. CLASIFICACIÓN */}
@@ -317,28 +324,38 @@ export default async function EditRecipePage({
 
         {/* 06. INGREDIENTES */}
 
-        <RecipeIngredientsForm
-          recipeId={
-            recipe.id
-          }
+        <div
+          id="publication-ingredient"
+          className="rounded-xl"
+        >
+          <RecipeIngredientsForm
+            recipeId={
+              recipe.id
+            }
 
-          initialGroups={
-            ingredientGroups
-          }
-        />
+            initialGroups={
+              ingredientGroups
+            }
+          />
+        </div>
 
 
         {/* 07. ELABORACIÓN */}
 
-        <RecipeStepsForm
-          recipeId={
-            recipe.id
-          }
+        <div
+          id="publication-step"
+          className="rounded-xl"
+        >
+          <RecipeStepsForm
+            recipeId={
+              recipe.id
+            }
 
-          initialSteps={
-            recipeSteps
-          }
-        />
+            initialSteps={
+              recipeSteps
+            }
+          />
+        </div>
 
 
         {/* 08. INFORMACIÓN ADICIONAL */}
@@ -434,9 +451,7 @@ export default async function EditRecipePage({
             recipe.status
           }
         />
-
       </div>
-
     </main>
   );
 }

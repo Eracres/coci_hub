@@ -27,8 +27,10 @@ import type {
   TagOption,
 } from "@/services/recipes/recipe-service";
 
+
 type RecipeClassificationFormProps = {
-  recipeId: string;
+  recipeId:
+    string;
 
   recipeTypes:
     RecipeTypeOption[];
@@ -60,6 +62,7 @@ type RecipeClassificationFormProps = {
   };
 };
 
+
 export function RecipeClassificationForm({
   recipeId,
   recipeTypes,
@@ -67,10 +70,14 @@ export function RecipeClassificationForm({
   tags,
   initialValues,
 }: RecipeClassificationFormProps) {
-  const [message, setMessage] =
+  const [
+    message,
+    setMessage,
+  ] =
     useState<string | null>(
       null,
     );
+
 
   const {
     register,
@@ -118,13 +125,17 @@ export function RecipeClassificationForm({
     values:
       RecipeClassificationFormData,
   ) {
-    setMessage(null);
+    setMessage(
+      null,
+    );
+
 
     const result =
       await updateRecipeClassificationAction(
         recipeId,
         values,
       );
+
 
     setMessage(
       result.message ??
@@ -141,9 +152,12 @@ export function RecipeClassificationForm({
         </h2>
 
         <p className="mt-1 text-sm">
-          Organiza la receta para facilitar su búsqueda y navegación.
+          Organiza la receta para
+          facilitar su búsqueda y
+          navegación.
         </p>
       </div>
+
 
       <form
         onSubmit={
@@ -153,7 +167,6 @@ export function RecipeClassificationForm({
         }
         className="mt-6 space-y-8"
       >
-
         {/* TYPE */}
 
         <div>
@@ -176,12 +189,20 @@ export function RecipeClassificationForm({
             </option>
 
             {recipeTypes.map(
-              (type) => (
+              (
+                type,
+              ) => (
                 <option
-                  key={type.id}
-                  value={type.id}
+                  key={
+                    type.id
+                  }
+                  value={
+                    type.id
+                  }
                 >
-                  {type.name}
+                  {
+                    type.name
+                  }
                 </option>
               ),
             )}
@@ -237,19 +258,26 @@ export function RecipeClassificationForm({
 
         {/* CATEGORIES */}
 
-        <fieldset>
+        <fieldset
+          id="publication-category"
+          className="rounded-xl"
+        >
           <legend className="font-medium">
             Categorías
           </legend>
 
-          {categories.length === 0 ? (
+          {categories.length ===
+          0 ? (
             <p className="mt-3 text-sm">
-              Todavía no hay categorías creadas.
+              Todavía no hay
+              categorías creadas.
             </p>
           ) : (
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {categories.map(
-                (category) => (
+                (
+                  category,
+                ) => (
                   <label
                     key={
                       category.id
@@ -266,7 +294,9 @@ export function RecipeClassificationForm({
                       )}
                     />
 
-                    {category.name}
+                    {
+                      category.name
+                    }
                   </label>
                 ),
               )}
@@ -282,27 +312,37 @@ export function RecipeClassificationForm({
             Etiquetas
           </legend>
 
-          {tags.length === 0 ? (
+          {tags.length ===
+          0 ? (
             <p className="mt-3 text-sm">
-              Todavía no hay etiquetas creadas.
+              Todavía no hay
+              etiquetas creadas.
             </p>
           ) : (
             <div className="mt-3 flex flex-wrap gap-3">
               {tags.map(
-                (tag) => (
+                (
+                  tag,
+                ) => (
                   <label
-                    key={tag.id}
+                    key={
+                      tag.id
+                    }
                     className="flex items-center gap-2 rounded-lg border px-3 py-2"
                   >
                     <input
                       type="checkbox"
-                      value={tag.id}
+                      value={
+                        tag.id
+                      }
                       {...register(
                         "tagIds",
                       )}
                     />
 
-                    {tag.name}
+                    {
+                      tag.name
+                    }
                   </label>
                 ),
               )}
@@ -322,7 +362,8 @@ export function RecipeClassificationForm({
           />
 
           <span>
-            Marcar como receta destacada
+            Marcar como receta
+            destacada
           </span>
         </label>
 

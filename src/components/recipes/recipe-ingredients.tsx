@@ -25,12 +25,16 @@ type RecipeIngredientsProps = {
 };
 
 
-const MIN_SERVINGS = 1;
-const MAX_SERVINGS = 20;
+const MIN_SERVINGS =
+  1;
+
+const MAX_SERVINGS =
+  20;
 
 
 function clampServings(
-  servings: number,
+  servings:
+    number,
 ) {
   return Math.min(
     MAX_SERVINGS,
@@ -175,130 +179,142 @@ export function RecipeIngredients({
     0
   ) {
     return (
-      <p className="mt-5 text-muted-foreground">
-        No hay ingredientes
-        disponibles.
-      </p>
+      <div className="mt-6 rounded-2xl border border-dashed border-border bg-page-muted/50 px-5 py-10 text-center">
+        <p className="text-sm text-muted-foreground">
+          No hay ingredientes
+          disponibles.
+        </p>
+      </div>
     );
   }
 
 
   return (
-    <div className="mt-6">
+    <div className="mt-7">
       {canScale ? (
-        <div className="mb-8 rounded-2xl border border-border bg-secondary/40 p-5">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center gap-2 font-semibold text-foreground">
-                <Users
-                  className="h-5 w-5 text-brand"
-                  aria-hidden="true"
-                />
+        <div className="mb-8 overflow-hidden rounded-2xl border border-secondary/25 bg-secondary/10">
+          <div className="p-5 md:p-6">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div className="max-w-md">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-secondary/20 text-secondary-hover">
+                    <Users
+                      className="size-5"
+                      aria-hidden="true"
+                    />
+                  </span>
 
-                Ajustar raciones
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      Ajustar raciones
+                    </p>
+
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      Recalculamos las
+                      cantidades
+                      escalables por ti.
+                    </p>
+                  </div>
+                </div>
               </div>
 
 
-              <p className="mt-1 text-sm text-muted-foreground">
-                Las cantidades
-                escalables se
-                recalculan
-                automáticamente.
-              </p>
-            </div>
-
-
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="inline-flex items-center overflow-hidden rounded-xl border border-border bg-white">
-                <button
-                  type="button"
-                  onClick={
-                    decreaseServings
-                  }
-                  disabled={
-                    selectedServings <=
-                    MIN_SERVINGS
-                  }
-                  aria-label="Reducir una ración"
-                  className="flex h-11 w-11 items-center justify-center text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <Minus
-                    className="h-4 w-4"
-                    aria-hidden="true"
-                  />
-                </button>
-
-
-                <div
-                  className="min-w-20 border-x border-border px-4 text-center"
-                  aria-live="polite"
-                >
-                  <span className="text-lg font-bold text-foreground">
-                    {
-                      selectedServings
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="inline-flex w-fit items-center overflow-hidden rounded-xl border border-border bg-surface shadow-xs">
+                  <button
+                    type="button"
+                    onClick={
+                      decreaseServings
                     }
-                  </span>
+                    disabled={
+                      selectedServings <=
+                      MIN_SERVINGS
+                    }
+                    aria-label="Reducir una ración"
+                    className="flex size-11 items-center justify-center text-foreground transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-35"
+                  >
+                    <Minus
+                      className="size-4"
+                      aria-hidden="true"
+                    />
+                  </button>
 
-                  <span className="ml-1 text-sm text-muted-foreground">
-                    {selectedServings ===
-                    1
-                      ? "ración"
-                      : "raciones"}
-                  </span>
+
+                  <div
+                    className="min-w-24 border-x border-border px-4 text-center"
+                    aria-live="polite"
+                  >
+                    <span className="text-lg font-bold text-foreground">
+                      {
+                        selectedServings
+                      }
+                    </span>
+
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      {selectedServings ===
+                      1
+                        ? "ración"
+                        : "raciones"}
+                    </span>
+                  </div>
+
+
+                  <button
+                    type="button"
+                    onClick={
+                      increaseServings
+                    }
+                    disabled={
+                      selectedServings >=
+                      MAX_SERVINGS
+                    }
+                    aria-label="Añadir una ración"
+                    className="flex size-11 items-center justify-center text-foreground transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-35"
+                  >
+                    <Plus
+                      className="size-4"
+                      aria-hidden="true"
+                    />
+                  </button>
                 </div>
 
 
-                <button
-                  type="button"
-                  onClick={
-                    increaseServings
-                  }
-                  disabled={
-                    selectedServings >=
-                    MAX_SERVINGS
-                  }
-                  aria-label="Añadir una ración"
-                  className="flex h-11 w-11 items-center justify-center text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <Plus
-                    className="h-4 w-4"
-                    aria-hidden="true"
-                  />
-                </button>
+                {selectedServings !==
+                validBaseServings ? (
+                  <button
+                    type="button"
+                    onClick={
+                      resetServings
+                    }
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-muted-foreground transition hover:bg-page-muted hover:text-foreground"
+                  >
+                    <RotateCcw
+                      className="size-4"
+                      aria-hidden="true"
+                    />
+
+                    Restablecer
+                  </button>
+                ) : null}
               </div>
-
-
-              {selectedServings !==
-              validBaseServings ? (
-                <button
-                  type="button"
-                  onClick={
-                    resetServings
-                  }
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-white px-4 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                >
-                  <RotateCcw
-                    className="h-4 w-4"
-                    aria-hidden="true"
-                  />
-
-                  Restablecer
-                </button>
-              ) : null}
             </div>
           </div>
 
 
-          <p className="mt-4 text-xs text-muted-foreground">
-            Receta original para{" "}
-            {
-              validBaseServings
-            }{" "}
-            {validBaseServings ===
-            1
-              ? "ración"
-              : "raciones"}.
-          </p>
+          <div className="border-t border-secondary/20 bg-surface/50 px-5 py-3 text-xs text-muted-foreground md:px-6">
+            Receta original
+            calculada para{" "}
+            <strong className="font-semibold text-foreground">
+              {
+                validBaseServings
+              }{" "}
+              {validBaseServings ===
+              1
+                ? "ración"
+                : "raciones"}
+            </strong>
+            .
+          </div>
         </div>
       ) : null}
 
@@ -308,7 +324,7 @@ export function RecipeIngredients({
           (
             group,
           ) => (
-            <div
+            <section
               key={
                 group.id
               }
@@ -322,7 +338,7 @@ export function RecipeIngredients({
               ) : null}
 
 
-              <ul className="mt-3 divide-y divide-border rounded-2xl border border-border bg-white px-5">
+              <ul className="mt-3 overflow-hidden rounded-2xl border border-border bg-page/40">
                 {group.ingredients.map(
                   (
                     ingredient,
@@ -340,11 +356,11 @@ export function RecipeIngredients({
                         key={
                           ingredient.id
                         }
-                        className="flex gap-3 py-4"
+                        className="grid grid-cols-[minmax(78px,auto)_minmax(0,1fr)] gap-4 border-b border-border px-4 py-4 last:border-b-0 sm:px-5"
                       >
-                        <div className="min-w-[90px] font-semibold text-foreground">
+                        <div>
                           {quantity ? (
-                            <>
+                            <span className="inline-flex min-w-16 justify-center rounded-lg bg-brand/10 px-2.5 py-1.5 text-sm font-bold text-brand">
                               {
                                 quantity
                               }
@@ -352,17 +368,17 @@ export function RecipeIngredients({
                               {ingredient.unit
                                 ? ` ${ingredient.unit}`
                                 : ""}
-                            </>
+                            </span>
                           ) : (
-                            <span className="text-muted-foreground">
+                            <span className="inline-flex min-w-16 justify-center rounded-lg bg-page-muted px-2.5 py-1.5 text-sm font-medium text-muted-foreground">
                               —
                             </span>
                           )}
                         </div>
 
 
-                        <div>
-                          <span className="text-foreground">
+                        <div className="min-w-0 pt-1">
+                          <span className="font-medium text-foreground">
                             {
                               ingredient.name
                             }
@@ -370,12 +386,11 @@ export function RecipeIngredients({
 
 
                           {ingredient.notes ? (
-                            <span className="ml-2 text-sm text-muted-foreground">
-                              —{" "}
+                            <p className="mt-1 text-sm leading-5 text-muted-foreground">
                               {
                                 ingredient.notes
                               }
-                            </span>
+                            </p>
                           ) : null}
                         </div>
                       </li>
@@ -383,7 +398,7 @@ export function RecipeIngredients({
                   },
                 )}
               </ul>
-            </div>
+            </section>
           ),
         )}
       </div>

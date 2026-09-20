@@ -16,7 +16,8 @@ import {
 
 
 type RecipeShareActionsProps = {
-  title: string;
+  title:
+    string;
 };
 
 
@@ -205,22 +206,29 @@ export function RecipeShareActions({
 
 
   return (
-    <div className="mt-7">
-      <p className="text-sm font-semibold text-foreground">
-        Compartir receta
-      </p>
+    <div className="mt-7 border-t border-border pt-6">
+      <div className="flex items-center gap-2">
+        <Share2
+          className="size-4 text-brand"
+          aria-hidden="true"
+        />
+
+        <p className="text-sm font-semibold text-foreground">
+          Compartir esta receta
+        </p>
+      </div>
 
 
-      <div className="mt-3 flex flex-wrap gap-3">
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
         <button
           type="button"
           onClick={
             shareNative
           }
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-semibold text-inverse transition-colors hover:bg-brand-hover"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-semibold text-inverse shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-brand-hover"
         >
           <Share2
-            className="h-4 w-4"
+            className="size-4"
             aria-hidden="true"
           />
 
@@ -233,10 +241,10 @@ export function RecipeShareActions({
           onClick={
             shareOnWhatsApp
           }
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground transition duration-200 hover:border-secondary hover:bg-page-muted"
         >
           <MessageCircle
-            className="h-4 w-4 text-brand"
+            className="size-4 text-secondary-hover"
             aria-hidden="true"
           />
 
@@ -249,10 +257,10 @@ export function RecipeShareActions({
           onClick={
             shareOnTelegram
           }
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground transition duration-200 hover:border-secondary hover:bg-page-muted"
         >
           <Send
-            className="h-4 w-4 text-brand"
+            className="size-4 text-secondary-hover"
             aria-hidden="true"
           />
 
@@ -265,10 +273,10 @@ export function RecipeShareActions({
           onClick={
             shareByEmail
           }
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground transition duration-200 hover:border-secondary hover:bg-page-muted"
         >
           <Mail
-            className="h-4 w-4 text-brand"
+            className="size-4 text-secondary-hover"
             aria-hidden="true"
           />
 
@@ -281,23 +289,23 @@ export function RecipeShareActions({
           onClick={
             copyRecipeLink
           }
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+          className="col-span-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground transition duration-200 hover:border-brand/30 hover:bg-brand/5 sm:col-span-1"
         >
           {copyStatus ===
           "copied" ? (
             <Check
-              className="h-4 w-4 text-brand"
+              className="size-4 text-success"
               aria-hidden="true"
             />
           ) : copyStatus ===
             "error" ? (
             <TriangleAlert
-              className="h-4 w-4 text-brand"
+              className="size-4 text-error"
               aria-hidden="true"
             />
           ) : (
             <Copy
-              className="h-4 w-4 text-brand"
+              className="size-4 text-brand"
               aria-hidden="true"
             />
           )}

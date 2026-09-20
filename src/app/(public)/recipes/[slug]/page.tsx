@@ -12,6 +12,7 @@ import {
 
 import {
   ArrowLeft,
+  ArrowRight,
   BookOpen,
   ChefHat,
   Clock3,
@@ -136,6 +137,7 @@ function formatMinutes(
       minutes /
         60,
     );
+
 
   const remainingMinutes =
     minutes %
@@ -269,178 +271,231 @@ export default async function RecipePage({
 
 
   return (
-    <main className="min-h-screen pb-20 pt-8 md:pb-24 md:pt-10">
-      <Container>
-        <Link
-          href="/recipes"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-brand transition-colors hover:text-brand-hover"
-        >
-          <ArrowLeft
-            className="h-4 w-4"
-            aria-hidden="true"
-          />
+    <main className="pb-20 md:pb-24">
+      <section className="border-b border-border bg-page-muted/40">
+        <Container className="py-8 md:py-10">
+          <Link
+            href="/recipes"
+            className="inline-flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-brand transition hover:bg-brand/10 hover:text-brand-hover"
+          >
+            <ArrowLeft
+              className="size-4"
+              aria-hidden="true"
+            />
 
-          Volver a recetas
-        </Link>
+            Volver a recetas
+          </Link>
 
 
-        <article className="mt-8">
-          <header className="mx-auto max-w-5xl">
-            <div className="flex flex-wrap items-center gap-2">
-              {recipe.featured ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-semibold text-brand">
-                  <Star
-                    className="h-4 w-4"
-                    aria-hidden="true"
+          <article className="mt-5">
+            <header className="grid overflow-hidden rounded-3xl border border-border bg-surface shadow-lg lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+              <div className="relative min-h-[300px] overflow-hidden bg-page-muted sm:min-h-[400px] lg:min-h-[520px]">
+                {recipe.imageUrl ? (
+                  <img
+                    src={
+                      recipe.imageUrl
+                    }
+                    alt={
+                      recipe.imageAlt ??
+                      recipe.title
+                    }
+                    className="absolute inset-0 h-full w-full object-cover"
                   />
+                ) : (
+                  <div className="flex h-full min-h-[300px] items-center justify-center p-8 text-center">
+                    <div>
+                      <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-brand/10 text-brand">
+                        <ChefHat
+                          className="size-8"
+                          aria-hidden="true"
+                        />
+                      </span>
 
-                  Destacada
-                </span>
-              ) : null}
+                      <p className="mt-4 text-sm text-muted-foreground">
+                        Imagen no
+                        disponible
+                      </p>
+                    </div>
+                  </div>
+                )}
 
 
-              {recipe.recipeType ? (
-                <span className="rounded-full border border-border bg-white px-3 py-1.5 text-sm font-medium text-foreground">
+                {recipe.featured ? (
+                  <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-surface/95 px-3 py-1.5 text-xs font-semibold text-brand shadow-sm backdrop-blur-sm">
+                    <Star
+                      className="size-3.5 fill-accent text-accent"
+                      aria-hidden="true"
+                    />
+
+                    Destacada
+                  </div>
+                ) : null}
+              </div>
+
+
+              <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
+                <div className="flex flex-wrap items-center gap-2">
+                  {recipe.recipeType ? (
+                    <span className="rounded-full bg-secondary/20 px-3 py-1.5 text-xs font-semibold text-secondary-hover">
+                      {
+                        recipe.recipeType
+                          .name
+                      }
+                    </span>
+                  ) : null}
+
+
+                  {recipe.categories.map(
+                    (
+                      category,
+                    ) => (
+                      <span
+                        key={
+                          category.id
+                        }
+                        className="rounded-full border border-border bg-page px-3 py-1.5 text-xs font-medium text-muted-foreground"
+                      >
+                        {
+                          category.name
+                        }
+                      </span>
+                    ),
+                  )}
+                </div>
+
+
+                <h1 className="mt-5 font-serif text-4xl font-bold leading-[1.08] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
                   {
-                    recipe.recipeType
-                      .name
+                    recipe.title
                   }
-                </span>
-              ) : null}
+                </h1>
 
 
-              {recipe.categories.map(
-                (
-                  category,
-                ) => (
-                  <span
-                    key={
-                      category.id
-                    }
-                    className="rounded-full border border-border bg-white px-3 py-1.5 text-sm text-muted-foreground"
-                  >
+                {recipe.shortDescription ? (
+                  <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
                     {
-                      category.name
+                      recipe.shortDescription
                     }
-                  </span>
-                ),
-              )}
-            </div>
+                  </p>
+                ) : null}
 
 
-            <h1 className="mt-5 font-serif text-4xl font-bold leading-tight tracking-tight text-foreground md:text-6xl">
-              {
-                recipe.title
-              }
-            </h1>
+                <div className="mt-7 grid gap-3 sm:grid-cols-3">
+                  {recipe.totalMinutes >
+                  0 ? (
+                    <div className="rounded-2xl bg-page-muted p-4">
+                      <Clock3
+                        className="size-5 text-brand"
+                        aria-hidden="true"
+                      />
+
+                      <p className="mt-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Tiempo
+                      </p>
+
+                      <p className="mt-1 font-semibold text-foreground">
+                        {formatMinutes(
+                          recipe.totalMinutes,
+                        )}
+                      </p>
+                    </div>
+                  ) : null}
 
 
-            {recipe.shortDescription ? (
-              <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground md:text-xl">
+                  {recipe.baseServings ? (
+                    <div className="rounded-2xl bg-page-muted p-4">
+                      <Users
+                        className="size-5 text-secondary-hover"
+                        aria-hidden="true"
+                      />
+
+                      <p className="mt-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Raciones
+                      </p>
+
+                      <p className="mt-1 font-semibold text-foreground">
+                        {
+                          recipe.baseServings
+                        }
+                      </p>
+                    </div>
+                  ) : null}
+
+
+                  {difficultyLabel ? (
+                    <div className="rounded-2xl bg-page-muted p-4">
+                      <ChefHat
+                        className="size-5 text-accent"
+                        aria-hidden="true"
+                      />
+
+                      <p className="mt-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Dificultad
+                      </p>
+
+                      <p className="mt-1 font-semibold text-foreground">
+                        {
+                          difficultyLabel
+                        }
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+
+
+                <RecipeShareActions
+                  title={
+                    recipe.title
+                  }
+                />
+              </div>
+            </header>
+          </article>
+        </Container>
+      </section>
+
+
+      <Container className="pt-12 md:pt-16">
+        <div className="mx-auto max-w-6xl">
+          {recipe.introduction ? (
+            <section className="rounded-3xl border border-border bg-surface p-6 shadow-sm md:p-8">
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-brand">
+                Antes de empezar
+              </p>
+
+              <h2 className="mt-2 font-serif text-3xl font-bold text-foreground">
+                Sobre esta receta
+              </h2>
+
+              <p className="mt-5 max-w-4xl whitespace-pre-line text-base leading-8 text-muted-foreground">
                 {
-                  recipe.shortDescription
+                  recipe.introduction
                 }
               </p>
-            ) : null}
-
-
-            <div className="mt-7 flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground">
-              {recipe.totalMinutes >
-              0 ? (
-                <span className="inline-flex items-center gap-2">
-                  <Clock3
-                    className="h-5 w-5 text-brand"
-                    aria-hidden="true"
-                  />
-
-                  {formatMinutes(
-                    recipe.totalMinutes,
-                  )}
-                </span>
-              ) : null}
-
-
-              {recipe.baseServings ? (
-                <span className="inline-flex items-center gap-2">
-                  <Users
-                    className="h-5 w-5 text-brand"
-                    aria-hidden="true"
-                  />
-
-                  {
-                    recipe.baseServings
-                  }{" "}
-                  raciones
-                </span>
-              ) : null}
-
-
-              {difficultyLabel ? (
-                <span className="inline-flex items-center gap-2">
-                  <ChefHat
-                    className="h-5 w-5 text-brand"
-                    aria-hidden="true"
-                  />
-
-                  {
-                    difficultyLabel
-                  }
-                </span>
-              ) : null}
-            </div>
-
-
-            <RecipeShareActions
-              title={
-                recipe.title
-              }
-            />
-          </header>
-
-
-          {recipe.imageUrl ? (
-            <div className="mx-auto mt-10 max-w-5xl overflow-hidden rounded-3xl border border-border bg-secondary">
-              <img
-                src={
-                  recipe.imageUrl
-                }
-                alt={
-                  recipe.imageAlt ??
-                  recipe.title
-                }
-                className="max-h-[680px] w-full object-cover"
-              />
-            </div>
+            </section>
           ) : null}
 
 
-          <div className="mx-auto mt-12 grid max-w-5xl gap-12 lg:grid-cols-[minmax(0,1fr)_280px]">
-            <div className="space-y-14">
-              {recipe.introduction ? (
-                <section>
-                  <h2 className="font-serif text-3xl font-bold text-foreground">
-                    Sobre esta receta
-                  </h2>
-
-                  <p className="mt-4 whitespace-pre-line leading-8 text-muted-foreground">
-                    {
-                      recipe.introduction
-                    }
-                  </p>
-                </section>
-              ) : null}
-
-
-              <section>
+          <div className="mt-10 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
+            <div className="space-y-10">
+              <section className="rounded-3xl border border-border bg-surface p-6 shadow-sm md:p-8">
                 <div className="flex items-center gap-3">
-                  <ChefHat
-                    className="h-6 w-6 text-brand"
-                    aria-hidden="true"
-                  />
+                  <span className="flex size-11 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                    <ChefHat
+                      className="size-5"
+                      aria-hidden="true"
+                    />
+                  </span>
 
-                  <h2 className="font-serif text-3xl font-bold text-foreground">
-                    Ingredientes
-                  </h2>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
+                      Preparación
+                    </p>
+
+                    <h2 className="mt-1 font-serif text-3xl font-bold text-foreground">
+                      Ingredientes
+                    </h2>
+                  </div>
                 </div>
 
 
@@ -455,22 +510,30 @@ export default async function RecipePage({
               </section>
 
 
-              <section>
+              <section className="rounded-3xl border border-border bg-surface p-6 shadow-sm md:p-8">
                 <div className="flex items-center gap-3">
-                  <Flame
-                    className="h-6 w-6 text-brand"
-                    aria-hidden="true"
-                  />
+                  <span className="flex size-11 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                    <Flame
+                      className="size-5"
+                      aria-hidden="true"
+                    />
+                  </span>
 
-                  <h2 className="font-serif text-3xl font-bold text-foreground">
-                    Elaboración
-                  </h2>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
+                      Paso a paso
+                    </p>
+
+                    <h2 className="mt-1 font-serif text-3xl font-bold text-foreground">
+                      Elaboración
+                    </h2>
+                  </div>
                 </div>
 
 
                 {recipe.steps.length >
                 0 ? (
-                  <ol className="mt-7 space-y-8">
+                  <ol className="mt-8 space-y-8">
                     {recipe.steps.map(
                       (
                         step,
@@ -480,9 +543,19 @@ export default async function RecipePage({
                           key={
                             step.id
                           }
-                          className="grid grid-cols-[44px_minmax(0,1fr)] gap-4"
+                          className="relative grid grid-cols-[44px_minmax(0,1fr)] gap-4 md:grid-cols-[52px_minmax(0,1fr)] md:gap-5"
                         >
-                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand font-semibold text-inverse">
+                          {index <
+                          recipe.steps.length -
+                            1 ? (
+                            <div
+                              className="absolute bottom-[-2rem] left-[21px] top-11 w-px bg-border md:left-[25px] md:top-13"
+                              aria-hidden="true"
+                            />
+                          ) : null}
+
+
+                          <div className="relative z-10 flex size-11 items-center justify-center rounded-full bg-brand font-semibold text-inverse shadow-sm md:size-13">
                             {
                               index +
                               1
@@ -490,9 +563,9 @@ export default async function RecipePage({
                           </div>
 
 
-                          <div className="pt-1">
+                          <div className="pb-1 pt-1">
                             {step.title ? (
-                              <h3 className="font-serif text-xl font-bold text-foreground">
+                              <h3 className="font-serif text-xl font-bold text-foreground md:text-2xl">
                                 {
                                   step.title
                                 }
@@ -508,32 +581,40 @@ export default async function RecipePage({
 
 
                             {step.durationMinutes ? (
-                              <p className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                <Timer
-                                  className="h-4 w-4 text-brand"
-                                  aria-hidden="true"
-                                />
+                              <div className="mt-4">
+                                <span className="inline-flex items-center gap-2 rounded-full bg-page-muted px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+                                  <Timer
+                                    className="size-4 text-brand"
+                                    aria-hidden="true"
+                                  />
 
-                                {
-                                  step.durationMinutes
-                                }{" "}
-                                min
-                              </p>
+                                  {
+                                    step.durationMinutes
+                                  }{" "}
+                                  min
+                                </span>
+                              </div>
                             ) : null}
 
 
                             {step.tip ? (
-                              <div className="mt-4 flex gap-3 rounded-xl bg-secondary/60 p-4">
+                              <div className="mt-4 flex gap-3 rounded-2xl border border-accent/25 bg-accent/10 p-4">
                                 <Lightbulb
-                                  className="mt-0.5 h-5 w-5 shrink-0 text-brand"
+                                  className="mt-0.5 size-5 shrink-0 text-warning"
                                   aria-hidden="true"
                                 />
 
-                                <p className="text-sm leading-6 text-muted-foreground">
-                                  {
-                                    step.tip
-                                  }
-                                </p>
+                                <div>
+                                  <p className="text-xs font-semibold uppercase tracking-wider text-warning">
+                                    Consejo
+                                  </p>
+
+                                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                                    {
+                                      step.tip
+                                    }
+                                  </p>
+                                </div>
                               </div>
                             ) : null}
                           </div>
@@ -542,8 +623,10 @@ export default async function RecipePage({
                     )}
                   </ol>
                 ) : (
-                  <p className="mt-5 text-muted-foreground">
-                    No hay pasos de elaboración disponibles.
+                  <p className="mt-6 text-muted-foreground">
+                    No hay pasos de
+                    elaboración
+                    disponibles.
                   </p>
                 )}
               </section>
@@ -551,22 +634,31 @@ export default async function RecipePage({
 
               {additionalInfo ? (
                 <section>
-                  <h2 className="font-serif text-3xl font-bold text-foreground">
-                    Información útil
-                  </h2>
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-secondary-hover">
+                      Para tener en
+                      cuenta
+                    </p>
+
+                    <h2 className="mt-2 font-serif text-3xl font-bold text-foreground">
+                      Información útil
+                    </h2>
+                  </div>
 
 
                   <div className="mt-6 grid gap-4 sm:grid-cols-2">
                     {recipe.tips ? (
-                      <div className="rounded-2xl border border-border bg-white p-5">
-                        <div className="flex items-center gap-2 font-semibold text-foreground">
+                      <div className="rounded-3xl border border-border bg-surface p-5 shadow-sm">
+                        <span className="flex size-10 items-center justify-center rounded-xl bg-accent/15 text-warning">
                           <Lightbulb
-                            className="h-5 w-5 text-brand"
+                            className="size-5"
                             aria-hidden="true"
                           />
+                        </span>
 
+                        <h3 className="mt-4 font-serif text-xl font-bold text-foreground">
                           Consejos
-                        </div>
+                        </h3>
 
                         <p className="mt-3 whitespace-pre-line text-sm leading-6 text-muted-foreground">
                           {
@@ -578,15 +670,17 @@ export default async function RecipePage({
 
 
                     {recipe.substitutions ? (
-                      <div className="rounded-2xl border border-border bg-white p-5">
-                        <div className="flex items-center gap-2 font-semibold text-foreground">
+                      <div className="rounded-3xl border border-border bg-surface p-5 shadow-sm">
+                        <span className="flex size-10 items-center justify-center rounded-xl bg-secondary/20 text-secondary-hover">
                           <Tag
-                            className="h-5 w-5 text-brand"
+                            className="size-5"
                             aria-hidden="true"
                           />
+                        </span>
 
+                        <h3 className="mt-4 font-serif text-xl font-bold text-foreground">
                           Sustituciones
-                        </div>
+                        </h3>
 
                         <p className="mt-3 whitespace-pre-line text-sm leading-6 text-muted-foreground">
                           {
@@ -598,10 +692,17 @@ export default async function RecipePage({
 
 
                     {recipe.storage ? (
-                      <div className="rounded-2xl border border-border bg-white p-5">
-                        <div className="font-semibold text-foreground">
+                      <div className="rounded-3xl border border-border bg-surface p-5 shadow-sm">
+                        <span className="flex size-10 items-center justify-center rounded-xl bg-page-muted text-brand">
+                          <BookOpen
+                            className="size-5"
+                            aria-hidden="true"
+                          />
+                        </span>
+
+                        <h3 className="mt-4 font-serif text-xl font-bold text-foreground">
                           Conservación
-                        </div>
+                        </h3>
 
                         <p className="mt-3 whitespace-pre-line text-sm leading-6 text-muted-foreground">
                           {
@@ -613,15 +714,17 @@ export default async function RecipePage({
 
 
                     {recipe.freezing ? (
-                      <div className="rounded-2xl border border-border bg-white p-5">
-                        <div className="flex items-center gap-2 font-semibold text-foreground">
+                      <div className="rounded-3xl border border-border bg-surface p-5 shadow-sm">
+                        <span className="flex size-10 items-center justify-center rounded-xl bg-info/10 text-info">
                           <Snowflake
-                            className="h-5 w-5 text-brand"
+                            className="size-5"
                             aria-hidden="true"
                           />
+                        </span>
 
+                        <h3 className="mt-4 font-serif text-xl font-bold text-foreground">
                           Congelación
-                        </div>
+                        </h3>
 
                         <p className="mt-3 whitespace-pre-line text-sm leading-6 text-muted-foreground">
                           {
@@ -633,15 +736,17 @@ export default async function RecipePage({
 
 
                     {recipe.reheating ? (
-                      <div className="rounded-2xl border border-border bg-white p-5">
-                        <div className="flex items-center gap-2 font-semibold text-foreground">
+                      <div className="rounded-3xl border border-border bg-surface p-5 shadow-sm">
+                        <span className="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
                           <Flame
-                            className="h-5 w-5 text-brand"
+                            className="size-5"
                             aria-hidden="true"
                           />
+                        </span>
 
+                        <h3 className="mt-4 font-serif text-xl font-bold text-foreground">
                           Recalentado
-                        </div>
+                        </h3>
 
                         <p className="mt-3 whitespace-pre-line text-sm leading-6 text-muted-foreground">
                           {
@@ -656,20 +761,28 @@ export default async function RecipePage({
 
 
               {sourceAvailable ? (
-                <section>
+                <section className="rounded-3xl border border-border bg-page-muted/50 p-6 md:p-8">
                   <div className="flex items-center gap-3">
-                    <BookOpen
-                      className="h-6 w-6 text-brand"
-                      aria-hidden="true"
-                    />
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-secondary/20 text-secondary-hover">
+                      <BookOpen
+                        className="size-5"
+                        aria-hidden="true"
+                      />
+                    </span>
 
-                    <h2 className="font-serif text-3xl font-bold text-foreground">
-                      Fuente
-                    </h2>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-secondary-hover">
+                        Procedencia
+                      </p>
+
+                      <h2 className="mt-1 font-serif text-2xl font-bold text-foreground">
+                        Fuente
+                      </h2>
+                    </div>
                   </div>
 
 
-                  <div className="mt-5 rounded-2xl border border-border bg-white p-5">
+                  <div className="mt-5">
                     {sourceTypeLabel ? (
                       <p className="font-semibold text-foreground">
                         {
@@ -715,15 +828,20 @@ export default async function RecipePage({
                         }
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-3 inline-block text-sm font-semibold text-brand hover:text-brand-hover"
+                        className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand transition hover:text-brand-hover"
                       >
-                        Consultar fuente ↗
+                        Consultar fuente
+
+                        <ArrowRight
+                          className="size-4 -rotate-45"
+                          aria-hidden="true"
+                        />
                       </a>
                     ) : null}
 
 
                     {recipe.sourceNotes ? (
-                      <p className="mt-3 whitespace-pre-line text-sm leading-6 text-muted-foreground">
+                      <p className="mt-4 whitespace-pre-line text-sm leading-6 text-muted-foreground">
                         {
                           recipe.sourceNotes
                         }
@@ -735,16 +853,20 @@ export default async function RecipePage({
             </div>
 
 
-            <aside className="space-y-6">
-              <div className="rounded-2xl border border-border bg-white p-5">
-                <h2 className="font-serif text-xl font-bold text-foreground">
+            <aside className="space-y-5 lg:sticky lg:top-24">
+              <div className="rounded-3xl border border-border bg-surface p-5 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
+                  De un vistazo
+                </p>
+
+                <h2 className="mt-2 font-serif text-2xl font-bold text-foreground">
                   Resumen
                 </h2>
 
 
-                <dl className="mt-5 space-y-4 text-sm">
+                <dl className="mt-5 divide-y divide-border text-sm">
                   {recipe.preparationMinutes ? (
-                    <div className="flex justify-between gap-4">
+                    <div className="flex justify-between gap-4 py-3 first:pt-0">
                       <dt className="text-muted-foreground">
                         Preparación
                       </dt>
@@ -760,7 +882,7 @@ export default async function RecipePage({
 
 
                   {recipe.cookingMinutes ? (
-                    <div className="flex justify-between gap-4">
+                    <div className="flex justify-between gap-4 py-3">
                       <dt className="text-muted-foreground">
                         Cocción
                       </dt>
@@ -776,7 +898,7 @@ export default async function RecipePage({
 
 
                   {recipe.additionalMinutes ? (
-                    <div className="flex justify-between gap-4">
+                    <div className="flex justify-between gap-4 py-3">
                       <dt className="text-muted-foreground">
                         Adicional
                       </dt>
@@ -793,12 +915,12 @@ export default async function RecipePage({
 
                   {recipe.totalMinutes >
                   0 ? (
-                    <div className="flex justify-between gap-4 border-t border-border pt-4">
+                    <div className="flex justify-between gap-4 pt-4">
                       <dt className="font-semibold text-foreground">
-                        Total
+                        Tiempo total
                       </dt>
 
-                      <dd className="font-semibold text-brand">
+                      <dd className="font-bold text-brand">
                         {formatMinutes(
                           recipe.totalMinutes,
                         )}
@@ -811,10 +933,10 @@ export default async function RecipePage({
 
               {recipe.allergens.length >
               0 ? (
-                <div className="rounded-2xl border border-border bg-white p-5">
+                <div className="rounded-3xl border border-warning/25 bg-warning/5 p-5">
                   <div className="flex items-center gap-2">
                     <TriangleAlert
-                      className="h-5 w-5 text-brand"
+                      className="size-5 text-warning"
                       aria-hidden="true"
                     />
 
@@ -833,7 +955,7 @@ export default async function RecipePage({
                           key={
                             allergen.id
                           }
-                          className="text-sm"
+                          className="rounded-xl bg-surface/80 px-3 py-2.5 text-sm"
                         >
                           <span className="font-semibold text-foreground">
                             {
@@ -841,7 +963,7 @@ export default async function RecipePage({
                             }
                           </span>
 
-                          <span className="ml-2 text-muted-foreground">
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
                             {allergen.presence ===
                             "present"
                               ? "Contiene"
@@ -867,10 +989,10 @@ export default async function RecipePage({
 
               {recipe.tags.length >
               0 ? (
-                <div className="rounded-2xl border border-border bg-white p-5">
+                <div className="rounded-3xl border border-border bg-surface p-5 shadow-sm">
                   <div className="flex items-center gap-2">
                     <Tag
-                      className="h-5 w-5 text-brand"
+                      className="size-5 text-secondary-hover"
                       aria-hidden="true"
                     />
 
@@ -889,7 +1011,7 @@ export default async function RecipePage({
                           key={
                             tag.id
                           }
-                          className="rounded-full bg-secondary px-3 py-1.5 text-xs font-medium text-foreground"
+                          className="rounded-full bg-secondary/15 px-3 py-1.5 text-xs font-semibold text-secondary-hover"
                         >
                           {
                             tag.name
@@ -902,51 +1024,65 @@ export default async function RecipePage({
               ) : null}
             </aside>
           </div>
-        </article>
 
 
-        {relatedRecipes.length >
-        0 ? (
-          <section className="mx-auto mt-20 max-w-5xl border-t border-border pt-14">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-brand">
-                  Sigue cocinando
-                </p>
+          {relatedRecipes.length >
+          0 ? (
+            <section className="mt-20 border-t border-border pt-14">
+              <div className="flex flex-wrap items-end justify-between gap-5">
+                <div className="max-w-2xl">
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-brand">
+                    Sigue cocinando
+                  </p>
 
-                <h2 className="mt-2 font-serif text-3xl font-bold text-foreground md:text-4xl">
-                  También te puede gustar
-                </h2>
+                  <h2 className="mt-2 font-serif text-3xl font-bold text-foreground md:text-4xl">
+                    También te puede
+                    gustar
+                  </h2>
+
+                  <p className="mt-3 leading-7 text-muted-foreground">
+                    Más ideas
+                    relacionadas con
+                    esta receta para
+                    seguir explorando
+                    CociHub.
+                  </p>
+                </div>
+
+
+                <Link
+                  href="/recipes"
+                  className="inline-flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-brand transition hover:bg-brand/10 hover:text-brand-hover"
+                >
+                  Ver todas las recetas
+
+                  <ArrowRight
+                    className="size-4"
+                    aria-hidden="true"
+                  />
+                </Link>
               </div>
 
 
-              <Link
-                href="/recipes"
-                className="text-sm font-semibold text-brand transition-colors hover:text-brand-hover"
-              >
-                Ver todas las recetas →
-              </Link>
-            </div>
-
-
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {relatedRecipes.map(
-                (
-                  relatedRecipe,
-                ) => (
-                  <RecipeCard
-                    key={
-                      relatedRecipe.id
-                    }
-                    recipe={
-                      relatedRecipe
-                    }
-                  />
-                ),
-              )}
-            </div>
-          </section>
-        ) : null}
+              <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {relatedRecipes.map(
+                  (
+                    relatedRecipe,
+                  ) => (
+                    <RecipeCard
+                      key={
+                        relatedRecipe.id
+                      }
+                      recipe={
+                        relatedRecipe
+                      }
+                    />
+                  ),
+                )}
+              </div>
+            </section>
+          ) : null}
+        </div>
       </Container>
     </main>
   );

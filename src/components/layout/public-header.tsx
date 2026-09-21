@@ -2,26 +2,36 @@ import {
   ChefHat,
   Menu,
 } from "lucide-react";
+
 import Link from "next/link";
 
 import {
   Container,
 } from "@/components/layout/container";
 
+
 const navigationItems = [
   {
     href: "/",
     label: "Inicio",
   },
+
   {
     href: "/recipes",
     label: "Recetas",
   },
+
   {
     href: "/categories",
     label: "Categorías",
   },
+
+  {
+    href: "/about",
+    label: "Sobre CociHub",
+  },
 ] as const;
+
 
 export function PublicHeader() {
   return (
@@ -50,6 +60,7 @@ export function PublicHeader() {
           </span>
         </Link>
 
+
         <nav
           className="hidden items-center gap-1 md:flex"
           aria-label="Navegación principal"
@@ -59,14 +70,21 @@ export function PublicHeader() {
               item,
             ) => (
               <Link
-                key={item.href}
-                href={item.href}
+                key={
+                  item.href
+                }
+                href={
+                  item.href
+                }
                 className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-page-muted hover:text-foreground"
               >
-                {item.label}
+                {
+                  item.label
+                }
               </Link>
             ),
           )}
+
 
           <Link
             href="/recipes"
@@ -76,10 +94,12 @@ export function PublicHeader() {
           </Link>
         </nav>
 
+
         <details className="group relative md:hidden">
           <summary className="flex cursor-pointer list-none items-center justify-center rounded-xl border border-border bg-surface p-2.5 text-foreground shadow-xs transition hover:bg-page-muted [&::-webkit-details-marker]:hidden">
             <span className="sr-only">
-              Abrir menú de navegación
+              Abrir menú de
+              navegación
             </span>
 
             <Menu
@@ -87,6 +107,7 @@ export function PublicHeader() {
               aria-hidden="true"
             />
           </summary>
+
 
           <div className="absolute right-0 top-full mt-3 w-64 overflow-hidden rounded-xl border border-border bg-surface p-2 shadow-lg">
             <nav
@@ -98,16 +119,24 @@ export function PublicHeader() {
                   item,
                 ) => (
                   <Link
-                    key={item.href}
-                    href={item.href}
+                    key={
+                      item.href
+                    }
+                    href={
+                      item.href
+                    }
                     className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition hover:bg-page-muted hover:text-foreground"
                   >
-                    {item.label}
+                    {
+                      item.label
+                    }
                   </Link>
                 ),
               )}
 
+
               <div className="my-2 border-t border-border" />
+
 
               <Link
                 href="/recipes"

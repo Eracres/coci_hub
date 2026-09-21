@@ -86,6 +86,37 @@ export const metadata:
     telephone:
       false,
   },
+
+  openGraph: {
+    type:
+      "website",
+
+    locale:
+      siteConfig.locale,
+
+    siteName:
+      siteConfig.name,
+
+    title:
+      siteConfig.name,
+
+    description:
+      siteConfig.description,
+
+    url:
+      siteConfig.url,
+  },
+
+  twitter: {
+    card:
+      "summary_large_image",
+
+    title:
+      siteConfig.name,
+
+    description:
+      siteConfig.description,
+  },
 };
 
 

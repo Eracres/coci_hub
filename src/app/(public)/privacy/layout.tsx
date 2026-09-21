@@ -10,24 +10,24 @@ import {
 export const metadata =
   createStaticPageMetadata({
     title:
-      "Recetas",
+      "Política de privacidad",
 
     description:
-      "Explora las recetas publicadas en CociHub y encuentra nuevas ideas para cocinar.",
+      "Información sobre privacidad y tratamiento de datos personales en CociHub.",
 
     path:
-      "/recipes",
+      "/privacy",
   });
 
 
-type RecipesLayoutProps = {
+type PrivacyLayoutProps = {
   children:
     ReactNode;
 };
 
 
-export default function RecipesLayout({
+export default function PrivacyLayout({
   children,
-}: RecipesLayoutProps) {
+}: PrivacyLayoutProps) {
   return children;
 }

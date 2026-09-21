@@ -1,4 +1,8 @@
 import type {
+  Metadata,
+} from "next";
+
+import type {
   ReactNode,
 } from "react";
 
@@ -11,10 +15,20 @@ import {
 } from "@/components/layout/public-header";
 
 
-type PublicLayoutProps = Readonly<{
-  children:
-    ReactNode;
-}>;
+export const metadata:
+  Metadata = {
+  alternates: {
+    canonical:
+      "/",
+  },
+};
+
+
+type PublicLayoutProps =
+  Readonly<{
+    children:
+      ReactNode;
+  }>;
 
 
 export default function PublicLayout({

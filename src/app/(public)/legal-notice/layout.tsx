@@ -10,24 +10,24 @@ import {
 export const metadata =
   createStaticPageMetadata({
     title:
-      "Recetas",
+      "Aviso legal",
 
     description:
-      "Explora las recetas publicadas en CociHub y encuentra nuevas ideas para cocinar.",
+      "Información legal relativa al acceso y utilización de CociHub.",
 
     path:
-      "/recipes",
+      "/legal-notice",
   });
 
 
-type RecipesLayoutProps = {
+type LegalNoticeLayoutProps = {
   children:
     ReactNode;
 };
 
 
-export default function RecipesLayout({
+export default function LegalNoticeLayout({
   children,
-}: RecipesLayoutProps) {
+}: LegalNoticeLayoutProps) {
   return children;
 }

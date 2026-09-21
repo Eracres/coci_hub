@@ -10,24 +10,24 @@ import {
 export const metadata =
   createStaticPageMetadata({
     title:
-      "Recetas",
+      "Política de cookies",
 
     description:
-      "Explora las recetas publicadas en CociHub y encuentra nuevas ideas para cocinar.",
+      "Información sobre el uso de cookies y tecnologías similares en CociHub.",
 
     path:
-      "/recipes",
+      "/cookies",
   });
 
 
-type RecipesLayoutProps = {
+type CookiesLayoutProps = {
   children:
     ReactNode;
 };
 
 
-export default function RecipesLayout({
+export default function CookiesLayout({
   children,
-}: RecipesLayoutProps) {
+}: CookiesLayoutProps) {
   return children;
 }

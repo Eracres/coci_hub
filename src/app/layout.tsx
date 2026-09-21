@@ -1,36 +1,109 @@
-import type { Metadata } from "next";
-import { Inter, Lora } from "next/font/google";
+import type {
+  Metadata,
+} from "next";
+
+import {
+  Inter,
+  Lora,
+} from "next/font/google";
+
+import {
+  siteConfig,
+} from "@/config/site";
+
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
 
-const lora = Lora({
-  variable: "--font-lora",
-  subsets: ["latin"],
-  display: "swap",
-});
+const inter =
+  Inter({
+    variable:
+      "--font-inter",
 
-export const metadata: Metadata = {
+    subsets: [
+      "latin",
+    ],
+
+    display:
+      "swap",
+  });
+
+
+const lora =
+  Lora({
+    variable:
+      "--font-lora",
+
+    subsets: [
+      "latin",
+    ],
+
+    display:
+      "swap",
+  });
+
+
+export const metadata:
+  Metadata = {
+  metadataBase:
+    new URL(
+      siteConfig.url,
+    ),
+
+  applicationName:
+    siteConfig.name,
+
   title: {
-    default: "CociHub",
-    template: "%s | CociHub",
+    default:
+      siteConfig.name,
+
+    template:
+      `%s | ${siteConfig.name}`,
   },
+
   description:
-    "Recetas caseras explicadas paso a paso para cocinar, compartir y disfrutar.",
+    siteConfig.description,
+
+  icons: {
+    icon:
+      "/favicon.ico",
+  },
+
+  robots: {
+    index:
+      true,
+
+    follow:
+      true,
+  },
+
+  formatDetection: {
+    email:
+      false,
+
+    address:
+      false,
+
+    telephone:
+      false,
+  },
 };
 
-type RootLayoutProps = Readonly<{
-  children: React.ReactNode;
-}>;
 
-export default function RootLayout({ children }: RootLayoutProps) {
+type RootLayoutProps =
+  Readonly<{
+    children:
+      React.ReactNode;
+  }>;
+
+
+export default function RootLayout({
+  children,
+}: RootLayoutProps) {
   return (
     <html lang="es">
-      <body className={`${inter.variable} ${lora.variable}`}>
+      <body
+        className={`${inter.variable} ${lora.variable}`}
+      >
         {children}
       </body>
     </html>

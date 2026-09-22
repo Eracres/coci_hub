@@ -1,454 +1,152 @@
+<div align="center">
+
 # 🍳 CociHub
 
-> **Comer es un placer, cocinar un privilegio, enseñar una responsabilidad.**
+### Comer es un placer, cocinar un privilegio, enseñar una responsabilidad.
 
-Aplicación web full stack de recetas personales para organizar, publicar, adaptar y compartir recetas desde cualquier dispositivo.
+Plataforma web de recetas personales para consultar, organizar, adaptar y compartir recetas desde cualquier dispositivo.
 
----
+![Estado](https://img.shields.io/badge/estado-preproducci%C3%B3n-E5A93D?style=for-the-badge)
+![Release](https://img.shields.io/badge/release-v1.0.0--rc.1-D95D39?style=for-the-badge)
+![Next.js](https://img.shields.io/badge/Next.js-16.2.12-292522?style=for-the-badge&logo=nextdotjs)
+![React](https://img.shields.io/badge/React-19.2.4-3978A8?style=for-the-badge&logo=react)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL%20%2B%20Auth%20%2B%20Storage-3F7D57?style=for-the-badge&logo=supabase)
 
-## Estado actual
-
-| Fase | Estado |
-|---|---|
-| Fase 1 — Definición funcional | ✅ Completada |
-| Fase 2 — Arquitectura visual y UX | ✅ Completada |
-| Fase 3 — Design System y prototipos | ✅ Completada |
-| Fase 4 — Arquitectura técnica + CRUD administrador | ✅ Completada |
-| Fase 5 — Área pública | 🟡 En cierre |
-| Extensión — Importación asistida por IA | ✅ Completada |
-| Fase 6 — Pulido, SEO, optimización y despliegue | ⬜ Pendiente |
-
-CociHub ya dispone de un flujo administrativo completo, área pública funcional e importación de recetas desde imagen mediante IA con revisión humana obligatoria.
-
-La prioridad actual es **cerrar el producto**, no añadir nuevas funcionalidades. Las mejoras funcionales futuras se estudiarán después del despliegue inicial y de realizar un backup estable del proyecto.
+</div>
 
 ---
 
-## Funcionalidades implementadas
+## 📖 Índice
 
-### Base técnica
-
-- Next.js 16 con App Router.
-- React.
-- TypeScript.
-- Tailwind CSS.
-- Zod.
-- React Hook Form.
-- Server Components.
-- Client Components cuando la interacción lo requiere.
-- Server Actions.
-- Route Handlers para endpoints internos.
-- PostgreSQL.
-- Supabase.
-- Supabase CLI.
-- Migraciones SQL versionadas.
-- Seeds.
-- Git y GitHub.
-- Node.js 22 o superior recomendado.
-- `.nvmrc` para fijar la versión de Node del proyecto.
+- [Descripción](#-descripción)
+- [Estado actual](#-estado-actual)
+- [Funcionalidades](#-funcionalidades)
+- [Arquitectura](#-arquitectura)
+- [Rutas](#-rutas)
+- [Stack tecnológico](#-stack-tecnológico)
+- [Base de datos y seguridad](#-base-de-datos-y-seguridad)
+- [Importación con IA](#-importación-con-ia)
+- [SEO y rendimiento](#-seo-y-rendimiento)
+- [Identidad visual](#-identidad-visual)
+- [Variables de entorno](#-variables-de-entorno)
+- [Instalación local](#-instalación-local)
+- [Comprobaciones](#-comprobaciones)
+- [Despliegue previsto](#-despliegue-previsto)
+- [Roadmap](#-roadmap)
+- [Mejoras posteriores](#-mejoras-posteriores)
+- [Versionado](#-versionado)
+- [Autor](#-autor)
 
 ---
 
-## Autenticación y seguridad
+# 📌 Descripción
 
-- Supabase Auth.
-- Login y logout administrativo.
-- Tabla `profiles`.
-- Roles preparados: `admin`, `editor`, `user`.
-- MVP restringido a administradores.
-- Protección de `/admin`.
-- Proxy SSR y refresco de sesión.
-- Row Level Security.
-- Políticas de lectura y escritura.
-- Policies específicas para Storage.
-- Comprobación de rol administrativo en operaciones sensibles.
-- Validación tanto en aplicación como en PostgreSQL.
-- Variables de entorno privadas para claves y configuración.
-- `.env.local` excluido de Git.
+**CociHub** es una aplicación web de recetas personales creada inicialmente para compartir recetas con familiares, amigos y compañeros de trabajo.
 
-Flujo general de seguridad:
+El proyecto centraliza recetas que antes podían quedar dispersas en mensajes, fotografías o estados de WhatsApp y las convierte en contenido estructurado, buscable, adaptable y compartible.
 
-```text
-/login
-   ↓
-Supabase Auth
-   ↓
-Sesión
-   ↓
-Proxy SSR
-   ↓
-/admin
-   ↓
-profiles.role = admin
-   ↓
-RLS
-   ↓
-PostgreSQL / Storage
-```
+Los visitantes pueden consultar recetas sin registrarse, buscar y filtrar contenido, adaptar cantidades al número de raciones y compartir cada receta mediante distintos canales.
 
-Las operaciones sensibles no dependen únicamente del frontend:
+El área administrativa permite crear y editar recetas, trabajar con borradores, gestionar imágenes y clasificaciones, publicar o despublicar contenido y utilizar una herramienta asistida por IA para convertir fotografías de recetas en borradores editables.
 
-```text
-Interfaz
-   ↓
-Server Action / Route Handler
-   ↓
-Service
-   ↓
-Supabase Auth
-   ↓
-RLS / funciones PostgreSQL
-```
+CociHub se desarrolla también como proyecto de portfolio, documentando el proceso completo de análisis, UX/UI, arquitectura, base de datos, seguridad, desarrollo, IA, pruebas, SEO, rendimiento y despliegue.
 
 ---
 
-## Storage de imágenes
+# 🚦 Estado actual
 
-Bucket:
+CociHub se encuentra en **preproducción**.
 
-```text
-recipe-images
-```
-
-Ruta de imágenes principales:
+La aplicación principal está desarrollada y ha superado la regresión funcional y técnica en entorno local de producción.
 
 ```text
-recipes/{recipeId}/main.ext
+Release candidate: v1.0.0-rc.1
+Objetivo:          CociHub 1.0
+Node.js:           24
+Next.js:           16.2.12
+React:             19.2.4
 ```
 
-Ya funciona:
+Validaciones realizadas:
 
-- Subida.
-- Sustitución.
-- Eliminación.
-- URL pública.
-- Persistencia de `image_path`.
-- Cache-busting al sustituir imágenes.
+- [x] TypeScript sin errores.
+- [x] ESLint sin errores.
+- [x] Build de producción correcto.
+- [x] Servidor de producción local correcto.
+- [x] Área pública validada.
+- [x] Área administrativa validada.
+- [x] CRUD de recetas validado.
+- [x] Importación mediante IA validada.
+- [x] Estados 404, error y vacío validados.
+- [x] SEO técnico validado.
+- [x] Imágenes públicas optimizadas.
+- [x] `.env.local` ignorado por Git.
+- [ ] Despliegue en servidor.
+- [ ] Dominio definitivo.
+- [ ] HTTPS en producción.
+- [ ] Revisión legal final con datos reales.
+- [ ] Smoke test online.
+- [ ] Backup de producción.
+- [ ] Release final `v1.0.0`.
 
-Formatos admitidos:
-
-```text
-JPEG
-PNG
-WebP
-```
-
-Máximo actual:
-
-```text
-5 MB
-```
+> ESLint muestra dos avisos conocidos relacionados con React Hook Form y React Compiler en formularios administrativos. No existen errores de lint.
 
 ---
 
-## Gestión administrativa de recetas
+# ✨ Funcionalidades
 
-El CRUD administrativo está completado.
+## 🌍 Área pública
 
-Ya funciona:
-
-- Crear borradores.
-- Listar recetas.
-- Editar recetas por ID.
-- Eliminar recetas de forma segura.
-- Previsualizar recetas.
-- Título.
-- Slug.
-- Descripción corta.
-- Introducción.
-- Imagen principal.
-- Texto alternativo de imagen.
-- Tipo de receta.
-- Categorías.
-- Etiquetas.
-- Dificultad.
-- `featured`.
-- Raciones base.
-- Tiempos.
-- Ingredientes agrupados.
-- Ingredientes escalables.
-- Reordenación de grupos e ingredientes.
-- Pasos de elaboración.
-- Reordenación de pasos.
-- Consejos por paso.
-- Consejos generales.
-- Sustituciones.
-- Conservación.
-- Congelación.
-- Recalentado.
-- Fuente/procedencia.
-- Alérgenos presentes.
-- Posibles trazas.
-- Checklist de requisitos de publicación.
-- Publicación.
-- Gestión de `published_at`.
-- Despublicación y vuelta a borrador.
-- Archivado.
-- Restauración de recetas archivadas a borrador.
-- Validación de publicación tanto en aplicación como en PostgreSQL.
-
-### Editor de recetas
-
-```text
-01 Información básica       ✅
-02 Imagen principal         ✅
-03 Clasificación            ✅
-04 Raciones                 ✅
-05 Tiempos                  ✅
-06 Ingredientes             ✅
-07 Elaboración              ✅
-08 Información adicional    ✅
-09 Alérgenos                ✅
-10 Publicación              ✅
-```
-
----
-
-## Creación de recetas
-
-CociHub dispone actualmente de dos flujos de creación.
-
-### Creación manual
-
-```text
-Nueva receta
-   ↓
-Título
-   ↓
-Crear borrador
-   ↓
-Editor completo
-   ↓
-Publicar cuando esté lista
-```
-
-### Importación con IA
-
-```text
-Imagen
-   ↓
-Análisis multimodal
-   ↓
-JSON estructurado
-   ↓
-Validación Zod
-   ↓
-Revisión humana editable
-   ↓
-Normalización al modelo CociHub
-   ↓
-Borrador real
-   ↓
-Editor normal
-   ↓
-Publicación manual
-```
-
-Ambos flujos terminan en el mismo editor y generan recetas normales dentro del mismo modelo de datos.
-
----
-
-# 🤖 Importación asistida por IA
-
-La importación desde imagen está implementada y probada con recetas reales.
-
-Proveedor actual:
-
-```text
-Google Gemini API
-```
-
-SDK:
-
-```text
-@google/genai
-```
-
-El modelo se configura mediante variable de entorno:
-
-```text
-GEMINI_RECIPE_IMPORT_MODEL
-```
-
-La clave permanece exclusivamente en servidor:
-
-```text
-GEMINI_API_KEY
-```
-
-Nunca debe utilizarse una variable `NEXT_PUBLIC_*` para esta clave.
-
-## Flujo
-
-```text
-Imagen
-   ↓
-POST /api/admin/recipes/import
-   ↓
-Autenticación
-   ↓
-Comprobación de rol admin
-   ↓
-Gemini multimodal
-   ↓
-Structured JSON
-   ↓
-Zod
-   ↓
-Revisión humana
-   ↓
-POST /api/admin/recipes/import/draft
-   ↓
-Normalización
-   ↓
-Supabase
-   ↓
-Borrador
-   ↓
-Editor
-```
-
-## Reglas de seguridad y comportamiento
-
-- Solo un administrador autenticado puede utilizar la función.
-- Se aceptan JPG, PNG y WebP.
-- Tamaño máximo: 5 MB.
-- La IA no publica recetas automáticamente.
-- El resultado siempre pasa por revisión humana.
-- La receta importada se crea siempre como `draft`.
-- Los campos no detectados permanecen `null` o vacíos.
-- La IA no debe inventar información ausente.
-- Las sugerencias de categorías, etiquetas, tipos y alérgenos se comparan con los catálogos existentes.
-- No se crean automáticamente nuevos elementos de catálogo.
-- Los grupos de ingredientes sin nombre se normalizan antes de persistirlos.
-- La imagen utilizada como fuente para leer la receta no se convierte automáticamente en la imagen pública del plato.
-- Si falla la creación secundaria del borrador se intenta limpiar la receta creada para evitar registros incompletos.
-
-## Datos extraídos
-
-El contrato de importación puede contener:
-
-- Título.
-- Descripción corta.
-- Introducción.
-- Raciones.
-- Dificultad.
-- Tiempos.
-- Grupos de ingredientes.
-- Ingredientes.
-- Pasos.
-- Alérgenos.
-- Sugerencias de clasificación.
-- Fuente.
-- Texto original detectado.
-- Nivel de confianza.
-- Campos inciertos.
-- Advertencias.
-
----
-
-# 🌍 Área pública
-
-El área pública ya está funcional y solo muestra recetas con estado `published`.
-
-## Inicio
-
-La Home incluye:
+### Inicio
 
 - Presentación de CociHub.
-- Eslogan oficial.
+- Eslogan e identidad visual.
 - Recetas destacadas.
-- Recetas recientes.
-- Categorías principales.
-- Accesos a exploración de recetas.
+- Últimas recetas publicadas.
+- Categorías activas.
+- Accesos directos al catálogo.
+- Estado vacío cuando no existen recetas.
 
-## Listado de recetas
+### Recetas
 
-Ruta:
-
-```text
-/recipes
-```
-
-Incluye:
-
-- Recetas publicadas.
+- Catálogo de recetas publicadas.
 - Búsqueda.
 - Filtros.
 - Ordenación.
 - Contador de resultados.
-- Estados sin resultados.
+- Estado sin resultados.
+- Navegación hacia el detalle de cada receta.
 
-Búsqueda:
+### Detalle de receta
 
-```text
-/recipes?search=...
-```
+Cada receta puede mostrar:
 
-## Detalle de receta
-
-Ruta:
-
-```text
-/recipes/[slug]
-```
-
-Incluye:
-
-- Título.
-- Imagen.
-- Descripción.
-- Introducción.
-- Clasificación.
+- Título e imagen principal.
+- Descripción e introducción.
+- Tipo, categorías y etiquetas.
 - Dificultad.
-- Tiempos.
-- Raciones.
-- Ingredientes.
-- Pasos.
-- Información adicional.
-- Alérgenos.
-- Acciones de compartir.
+- Tiempos de preparación, cocción, adicional y total.
+- Raciones base.
+- Ingredientes agrupados.
+- Elaboración paso a paso.
+- Duración y consejo opcionales por paso.
+- Consejos y sustituciones.
+- Conservación, congelación y recalentado.
+- Información orientativa sobre alérgenos.
+- Fuente o procedencia.
 - Recetas relacionadas.
 
-Los borradores y recetas archivadas no son accesibles públicamente.
+### Ajuste de raciones
 
-## Selector de raciones
-
-Rango público actual:
+El visitante puede seleccionar entre **1 y 20 raciones**.
 
 ```text
-1–20 raciones
+factor = raciones seleccionadas / raciones base
 ```
 
-Factor:
+Solo se recalculan cantidades numéricas marcadas como escalables. Expresiones como `al gusto`, `una pizca` o `cantidad necesaria` se conservan sin modificación.
 
-```text
-factor =
-  raciones seleccionadas
-  / raciones base
-```
-
-Solo se recalculan cantidades numéricas con:
-
-```text
-scalable = true
-```
-
-Las cantidades originales almacenadas nunca se modifican.
-
-Expresiones como:
-
-```text
-al gusto
-una pizca
-cantidad necesaria
-```
-
-no se recalculan.
-
-## Compartir
-
-Actualmente se soporta:
+### Compartir
 
 - Compartir nativo del dispositivo cuando está disponible.
 - WhatsApp.
@@ -456,280 +154,193 @@ Actualmente se soporta:
 - Correo electrónico.
 - Copiar enlace.
 
-## Recetas relacionadas
+### Categorías y páginas informativas
 
-Las recetas relacionadas se calculan utilizando coincidencias de:
-
-- Tipo de receta.
-- Categorías.
-- Etiquetas.
+- Listado de categorías.
+- Página individual por categoría.
+- Número de recetas publicadas por categoría.
+- Sobre CociHub.
+- Aviso legal.
+- Política de privacidad.
+- Política de cookies.
+- Página 404 personalizada.
+- Estado de error general.
 
 ---
 
-# 🗂️ Categorías
+# 🔐 Área administrativa
 
-Rutas:
+El acceso administrativo requiere autenticación y rol autorizado.
+
+Funciones actuales:
+
+- Login y logout.
+- Protección de rutas administrativas.
+- Listado de recetas.
+- Creación y edición.
+- Eliminación controlada.
+- Estados `draft`, `published` y `archived`.
+- Publicación y despublicación.
+- Recetas destacadas.
+- Previsualización.
+- Imagen principal.
+- Clasificación, categorías y etiquetas.
+- Raciones y tiempos.
+- Grupos de ingredientes e ingredientes.
+- Pasos de elaboración.
+- Información adicional.
+- Alérgenos.
+- Gestión de categorías.
+- Checklist previo a publicación.
+
+## Checklist de publicación
+
+Antes de publicar, CociHub comprueba los requisitos obligatorios de la receta.
+
+Los requisitos completos aparecen en verde y los incompletos en rojo. Los elementos pendientes permiten navegar al bloque que necesita corrección.
+
+---
+
+# 🧭 Arquitectura
+
+CociHub utiliza **Next.js App Router** y separa el área pública del área administrativa.
 
 ```text
+src/
+├── app/
+│   ├── (public)/
+│   │   ├── page.tsx
+│   │   ├── recipes/
+│   │   ├── categories/
+│   │   ├── about/
+│   │   ├── legal-notice/
+│   │   ├── privacy/
+│   │   └── cookies/
+│   ├── admin/
+│   │   ├── recipes/
+│   │   └── categories/
+│   ├── api/
+│   │   └── admin/
+│   │       └── recipes/
+│   │           └── import/
+│   ├── login/
+│   ├── not-found.tsx
+│   ├── robots.ts
+│   ├── sitemap.ts
+│   └── opengraph-image.tsx
+├── components/
+├── config/
+├── lib/
+├── schemas/
+├── services/
+└── types/
+```
+
+Separación principal de responsabilidades:
+
+```text
+páginas / UI
+    ↓
+componentes
+    ↓
+servicios y lógica
+    ↓
+Supabase / proveedores externos
+```
+
+Las validaciones utilizan Zod y los formularios administrativos React Hook Form.
+
+---
+
+# 🛣️ Rutas
+
+## Públicas
+
+```text
+/
+/recipes
+/recipes/[slug]
 /categories
 /categories/[slug]
+/about
+/privacy
+/cookies
+/legal-notice
 ```
 
-Permiten:
-
-- Consultar categorías públicas.
-- Ver recetas publicadas asociadas.
-- Navegar desde una categoría al detalle de una receta.
-
----
-
-# 🍽️ Modelo funcional de receta
-
-Campos principales:
+## Autenticación
 
 ```text
-title
-slug
-short_description
-introduction
-image_path
-image_alt
-status
-difficulty
-base_servings
-preparation_minutes
-cooking_minutes
-additional_minutes
-recipe_type_id
-featured
+/login
 ```
 
-Estados:
+## Administración
 
 ```text
-draft
-published
-archived
+/admin
+/admin/recipes
+/admin/recipes/new
+/admin/recipes/[id]/edit
+/admin/recipes/[id]/preview
+/admin/recipes/import
+/admin/categories
 ```
 
-Dificultad:
+## API administrativa
 
 ```text
-easy
-medium
-hard
+/api/admin/recipes/import
+/api/admin/recipes/import/draft
 ```
 
-## Clasificación
+## Sistema
 
 ```text
-1 tipo principal
-1 o más categorías para publicar
-0 o más etiquetas
-```
-
-## Tiempos
-
-Se almacenan:
-
-```text
-preparation_minutes
-cooking_minutes
-additional_minutes
-```
-
-El tiempo total se calcula:
-
-```text
-total =
-  preparation_minutes
-  + cooking_minutes
-  + additional_minutes
+/_not-found
+/robots.txt
+/sitemap.xml
+/opengraph-image
 ```
 
 ---
 
-# 🥕 Ingredientes y escalado
+# 🧰 Stack tecnológico
 
-Estructura:
+| Área | Tecnología |
+|---|---|
+| Framework | Next.js 16.2.12 |
+| UI | React 19.2.4 |
+| Lenguaje | TypeScript |
+| Estilos | Tailwind CSS 4 |
+| Formularios | React Hook Form |
+| Validación | Zod |
+| Backend | Server Components, Server Actions y Route Handlers |
+| Base de datos | PostgreSQL |
+| Plataforma | Supabase |
+| Autenticación | Supabase Auth |
+| Seguridad | RLS + roles |
+| Imágenes | Supabase Storage |
+| IA | Google Gemini mediante `@google/genai` |
+| Iconos | Lucide React |
+| Versionado | Git + GitHub |
+| Runtime previsto | Node.js 24 |
+| Proxy web previsto | Nginx |
+| Servicio previsto | systemd |
+| Sistema previsto | Ubuntu Server |
 
-```text
-ingredient_groups
-└── ingredients
-```
-
-Cada ingrediente:
-
-```text
-name
-quantity
-unit
-notes
-scalable
-position
-```
-
-Ejemplo escalable:
-
-```text
-quantity = 600
-unit = g
-scalable = true
-```
-
-Ejemplo no escalable:
+`.nvmrc`:
 
 ```text
-quantity = NULL
-notes = "al gusto"
-scalable = false
+24
 ```
 
 ---
 
-# 📋 Elaboración
+# 🗃️ Base de datos y seguridad
 
-Tabla:
+La persistencia principal utiliza PostgreSQL mediante Supabase.
 
-```text
-recipe_steps
-```
-
-Campos:
-
-```text
-title
-instructions
-duration_minutes
-tip
-position
-```
-
-El editor permite añadir, editar, duplicar, eliminar y reordenar pasos.
-
-Las imágenes por paso quedan reservadas para una evolución posterior.
-
----
-
-# ℹ️ Información adicional
-
-Campos:
-
-```text
-tips
-substitutions
-storage
-freezing
-reheating
-source_type
-source_title
-source_author
-source_page
-source_url
-source_notes
-```
-
-Tipos de fuente:
-
-```text
-own
-family
-book
-magazine
-web
-handwritten
-other
-```
-
-Los campos opcionales vacíos se normalizan:
-
-```text
-"" → NULL
-```
-
----
-
-# ⚠️ Alérgenos
-
-Estados:
-
-```text
-present
-possible
-```
-
-Interpretación:
-
-```text
-present  → contiene
-possible → puede contener / posibles trazas
-sin fila → no indicado
-```
-
-Relación:
-
-```text
-recipe_allergens
-```
-
-> La información sobre alérgenos es orientativa y no sustituye la comprobación del etiquetado de los productos utilizados ni contempla por sí sola posibles contaminaciones cruzadas.
-
----
-
-# 🚦 Publicación
-
-Flujo principal:
-
-```text
-draft
-  ↓
-validación de requisitos
-  ↓
-published
-```
-
-También se soporta:
-
-```text
-published → draft
-draft     → archived
-published → archived
-archived  → draft
-```
-
-## Requisitos mínimos de publicación
-
-Una receta debe disponer de:
-
-- Título.
-- Slug.
-- Descripción corta.
-- Imagen principal.
-- Tipo de receta.
-- Dificultad.
-- Raciones base.
-- Tiempo de preparación mayor que cero.
-- Al menos una categoría.
-- Al menos un ingrediente.
-- Al menos un paso de elaboración.
-
-La validación se realiza en varios niveles:
-
-```text
-Interfaz
-   ↓
-Checklist
-   ↓
-Servidor
-   ↓
-PostgreSQL
-```
-
----
-
-# 🗃️ Modelo de datos
-
-Tablas principales:
+Entidades principales:
 
 ```text
 profiles
@@ -746,143 +357,110 @@ allergens
 recipe_allergens
 ```
 
-Relaciones principales:
+Estados de receta:
 
 ```text
-profiles
-   └── recipes
-         ├── recipe_types
-         ├── recipe_categories ── categories
-         ├── recipe_tags ──────── tags
-         ├── ingredient_groups
-         │      └── ingredients
-         ├── recipe_steps
-         └── recipe_allergens ─── allergens
+draft
+published
+archived
 ```
 
-Enums principales:
+El MVP utiliza el rol administrativo `admin`.
 
-```text
-role:
-  admin
-  editor
-  user
+Medidas principales:
 
-recipe status:
-  draft
-  published
-  archived
-
-difficulty:
-  easy
-  medium
-  hard
-
-allergen presence:
-  present
-  possible
-
-source type:
-  own
-  family
-  book
-  magazine
-  web
-  handwritten
-  other
-```
+- Supabase Auth.
+- Verificación de usuario y rol.
+- Protección de rutas privadas.
+- Políticas RLS.
+- Separación de operaciones públicas y administrativas.
+- Variables sensibles fuera del repositorio.
+- `.env.local` ignorado por Git.
+- Rutas administrativas excluidas de indexación.
 
 ---
 
-# 🛣️ Rutas
+# 🤖 Importación con IA
 
-## Públicas
-
-```text
-/
-/recipes
-/recipes/[slug]
-/categories
-/categories/[slug]
-/about
-/login
-/privacy
-/cookies
-/legal-notice
-```
-
-Búsqueda:
+CociHub incluye una herramienta administrativa para convertir fotografías de recetas en borradores editables.
 
 ```text
-/recipes?search=...
+Imagen
+   ↓
+Validación
+   ↓
+Gemini multimodal
+   ↓
+Respuesta estructurada
+   ↓
+Zod
+   ↓
+Normalización
+   ↓
+Revisión del administrador
+   ↓
+Borrador
+   ↓
+Edición manual
+   ↓
+Publicación
 ```
 
-Las rutas `/about`, `/privacy`, `/cookies` y `/legal-notice` forman parte del cierre pendiente antes del despliegue definitivo.
+Características:
 
-## Administración
+- JPG, PNG y WebP.
+- Máximo actual: 5 MB.
+- La IA nunca publica automáticamente.
+- El resultado se revisa antes de crear el borrador definitivo.
+- Los datos ausentes no deben inventarse.
+- No se crean automáticamente categorías o etiquetas nuevas.
+- Se muestran errores amigables ante cuota agotada o saturación temporal.
 
-```text
-/admin
-/admin/recipes
-/admin/recipes/new
-/admin/recipes/import
-/admin/recipes/[id]/edit
-/admin/recipes/[id]/preview
-/admin/categories
-/admin/tags
-```
-
-## API interna de importación IA
-
-```text
-POST /api/admin/recipes/import
-POST /api/admin/recipes/import/draft
-```
-
-## Rutas temporales eliminadas
-
-Ya se eliminaron:
-
-```text
-/design-system
-/supabase-test
-/admin/storage-test
-```
+> La IA asiste al administrador; la revisión y publicación siguen siendo humanas.
 
 ---
 
-# 🧰 Stack
+# 🔎 SEO y rendimiento
 
-| Área | Tecnología |
-|---|---|
-| Framework | Next.js 16 |
-| UI | React |
-| Lenguaje | TypeScript |
-| Estilos | Tailwind CSS |
-| Formularios | React Hook Form |
-| Validación | Zod |
-| Backend | Server Components + Server Actions + Route Handlers |
-| Base de datos | PostgreSQL |
-| Plataforma | Supabase |
-| Auth | Supabase Auth |
-| Seguridad | RLS + roles |
-| Imágenes | Supabase Storage |
-| IA | Google Gemini API |
-| SDK IA | `@google/genai` |
-| Iconos | Lucide React |
-| Migraciones | Supabase CLI |
-| Versionado | Git + GitHub |
-| Despliegue | Servidor/hosting Node + dominio propio, por definir |
+## SEO implementado
 
-Node recomendado:
+- Metadata global y por página.
+- Metadata dinámica por receta.
+- Canonical.
+- Open Graph.
+- Twitter metadata.
+- Imagen Open Graph generada por Next.js.
+- `robots.txt`.
+- `sitemap.xml`.
+- JSON-LD tipo `Recipe`.
+- `recipeIngredient`.
+- `recipeInstructions`.
+- Exclusión de `/admin`, `/api/` y `/login` en robots.
+- `noindex` para login y administración.
+
+En local las URLs SEO utilizan:
 
 ```text
-Node.js 22 o superior
+http://localhost:3000
 ```
+
+En producción deben utilizar el dominio definitivo.
+
+## Rendimiento
+
+Las imágenes públicas utilizan `next/image` con tamaños responsive y optimización para imágenes servidas desde Supabase Storage.
+
+Las tarjetas aprovechan carga diferida y la imagen principal de la receta recibe tratamiento prioritario cuando corresponde.
 
 ---
 
 # 🎨 Identidad visual
+
+## Eslogan oficial
+
+> **Comer es un placer, cocinar un privilegio, enseñar una responsabilidad.**
+
+## Paleta
 
 | Uso | Color |
 |---|---|
@@ -893,69 +471,96 @@ Node.js 22 o superior
 | Mostaza | `#E5A93D` |
 | Crema | `#FFF9F2` |
 | Beige | `#F4E9DC` |
-| Blanco | `#FFFFFF` |
-| Texto | `#292522` |
+| Texto principal | `#292522` |
 | Texto secundario | `#6F675F` |
 | Borde | `#DED3C8` |
 
 Tipografías:
 
 ```text
-Lora  → títulos
-Inter → interfaz y formularios
+Lora  → títulos y contenido editorial
+Inter → interfaz, navegación y formularios
 ```
 
-La funcionalidad está prácticamente cerrada. El siguiente gran bloque es el pulido visual global para aplicar de forma consistente esta identidad a toda la aplicación.
+Principios: mobile first, cocina casera, claridad visual, fotografía protagonista, tarjetas limpias, sombras discretas y terracota como CTA principal.
 
 ---
 
-# 📂 Estructura actual orientativa
+# 🔐 Variables de entorno
+
+CociHub utiliza actualmente:
 
 ```text
-coci_hub/
-├── database/
-├── docs/
-├── public/
-├── src/
-│   ├── app/
-│   │   ├── admin/
-│   │   ├── api/
-│   │   ├── categories/
-│   │   ├── login/
-│   │   └── recipes/
-│   ├── components/
-│   │   ├── admin/
-│   │   ├── categories/
-│   │   ├── layout/
-│   │   ├── recipes/
-│   │   └── ui/
-│   ├── config/
-│   ├── lib/
-│   │   ├── ai/
-│   │   └── supabase/
-│   ├── schemas/
-│   ├── services/
-│   │   └── recipes/
-│   └── types/
-├── supabase/
-│   ├── migrations/
-│   ├── config.toml
-│   └── seed.sql
-├── .env.example
-├── .env.local
-├── .nvmrc
-├── package.json
-├── tsconfig.json
-└── README.md
+GEMINI_API_KEY
+GEMINI_RECIPE_IMPORT_MODEL
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+NEXT_PUBLIC_SUPABASE_URL
 ```
 
-> `.env.local` existe solo en el entorno local y no debe añadirse nunca al repositorio.
+Ejemplo sin valores:
+
+```env
+GEMINI_API_KEY=
+GEMINI_RECIPE_IMPORT_MODEL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+NEXT_PUBLIC_SUPABASE_URL=
+```
+
+Los valores reales deben mantenerse fuera del repositorio.
+
+> Nunca deben documentarse claves privadas o tokens reales en este README.
+
+Antes del despliegue se añadirá la configuración necesaria para que las URLs SEO utilicen el dominio definitivo.
 
 ---
 
-# 🧪 Comprobaciones antes de commit
+# 💻 Instalación local
 
-Comprobaciones generales:
+Requisitos:
+
+- Node.js 24.
+- npm.
+- Git.
+- Proyecto Supabase configurado.
+- Variables de entorno necesarias.
+
+Clonar:
+
+```bash
+git clone https://github.com/Eracres/coci_hub.git
+cd coci_hub
+```
+
+Con NVM:
+
+```bash
+nvm install
+nvm use
+```
+
+Instalar dependencias:
+
+```bash
+npm ci
+```
+
+Crear `.env.local` con las variables necesarias y ejecutar:
+
+```bash
+npm run dev
+```
+
+Aplicación local:
+
+```text
+http://localhost:3000
+```
+
+---
+
+# 🧪 Comprobaciones
+
+Antes de un commit importante:
 
 ```bash
 npx tsc --noEmit
@@ -963,38 +568,104 @@ npm run lint
 npm run build
 ```
 
-Comprobación de secretos locales:
+Producción local:
+
+```bash
+npm run build
+npm run start
+```
+
+Comprobar que `.env.local` está ignorado:
 
 ```bash
 git check-ignore .env.local
 ```
 
-Debe devolver:
-
-```text
-.env.local
-```
-
-Para cambios de base de datos:
+Revisar cambios:
 
 ```bash
-npx supabase db push --dry-run
-npx supabase db push
-npx supabase migration list
+git status --short
+git diff --stat
 ```
 
-Una migración aplicada no se modifica: se crea una nueva migración para corregir o evolucionar el esquema.
+Comprobar SEO con el servidor iniciado:
 
-## Estado conocido del lint
+```bash
+curl -s http://localhost:3000/robots.txt
+curl -s http://localhost:3000/sitemap.xml
+```
 
-Actualmente existen dos warnings aceptados de React Compiler relacionados con `watch()` de React Hook Form:
+Ejemplo de JSON-LD:
+
+```bash
+curl -s http://localhost:3000/recipes/albondigar-al-curry \
+  | grep -o '"@type":"Recipe"'
+```
+
+---
+
+# 🚀 Despliegue previsto
+
+CociHub 1.0 se prepara para un despliegue autogestionado.
 
 ```text
-recipe-basic-info-form.tsx
-recipe-times-form.tsx
+Internet
+   │
+   ▼
+Dominio CociHub
+   │
+   ▼
+HTTPS :443
+   │
+   ▼
+Nginx
+   │
+   ▼
+Next.js / Node.js 24
+127.0.0.1:3000
+   │
+   ├── Supabase PostgreSQL
+   ├── Supabase Auth
+   ├── Supabase Storage
+   └── Google Gemini
 ```
 
-No son errores de compilación.
+El puerto de Next.js no debe exponerse directamente a Internet. Nginx actuará como reverse proxy y el proceso de aplicación se gestionará mediante `systemd`.
+
+Pendientes:
+
+- Ubuntu Server.
+- Usuario de despliegue.
+- SSH y firewall.
+- Node.js 24.
+- Clonado del repositorio.
+- Variables de producción.
+- `npm ci` y build.
+- Servicio `systemd`.
+- Nginx.
+- DNS.
+- HTTPS.
+- Datos legales definitivos.
+- SEO con dominio real.
+- Smoke test.
+- Backup.
+- Release final `v1.0.0`.
+
+---
+
+# ⚖️ Legal
+
+CociHub incluye:
+
+```text
+/legal-notice
+/privacy
+/cookies
+```
+
+La estructura está implementada, pero antes de producción deben completarse los datos reales del titular/responsable y revisar los proveedores realmente utilizados.
+
+La revisión final deberá contemplar Supabase, hosting/VPS, CDN o proxy si se incorpora, Google Gemini, cookies de autenticación, analítica si se añade y logs del servidor.
 
 ---
 
@@ -1002,260 +673,109 @@ No son errores de compilación.
 
 ## Fase 1 — Definición funcional ✅
 
-- [x] Problema real.
-- [x] Público objetivo.
-- [x] Alcance MVP.
-- [x] Historias de usuario.
-- [x] Modelo inicial.
+- [x] Problema real y público objetivo.
+- [x] Alcance inicial e historias de usuario.
+- [x] Modelo de datos.
 - [x] Identidad visual.
-- [x] Principios UX.
 
-## Fase 2 — Arquitectura visual y UX ✅
+## Fase 2 — UX y arquitectura visual ✅
 
-- [x] Sitemap.
-- [x] Rutas.
-- [x] Wireframes.
-- [x] Responsive.
-- [x] Flujos.
-- [x] Área pública y privada.
+- [x] Sitemap y wireframes.
+- [x] Navegación y responsive.
+- [x] Flujos principales.
 
-## Fase 3 — Design System ✅
+## Fase 3 — Sistema de diseño ✅
 
-- [x] Tokens.
-- [x] Paleta.
-- [x] Tipografías.
-- [x] Componentes base.
-- [x] Prototipos administrativos.
-- [x] Diseño de formularios.
-- [x] Diseño de tarjetas.
-- [x] Estados visuales.
+- [x] Tokens de color.
+- [x] Inter y Lora.
+- [x] Componentes y estados visuales.
 
-## Fase 4 — Arquitectura técnica y CRUD administrador ✅
+## Fase 4 — Arquitectura técnica y administración ✅
 
-### Infraestructura
+- [x] Next.js App Router.
+- [x] Supabase, PostgreSQL, Auth, RLS y Storage.
+- [x] Zod y formularios.
+- [x] CRUD administrativo.
+- [x] Publicación y borradores.
+- [x] Importación con IA.
 
-- [x] Next.js.
-- [x] TypeScript.
-- [x] Tailwind.
-- [x] Zod.
-- [x] PostgreSQL.
-- [x] Supabase.
-- [x] CLI y migraciones.
-- [x] Seeds.
+## Fase 5 — Área pública ✅
 
-### Seguridad
+- [x] Inicio, recetas y categorías.
+- [x] Detalle y selector de raciones.
+- [x] Compartir.
+- [x] About y páginas legales base.
+- [x] 404, errores y estados vacíos.
+- [x] SEO, Open Graph y JSON-LD.
+- [x] Sitemap y robots.
+- [x] Optimización de imágenes.
+- [x] Regresión local final.
 
-- [x] Auth.
-- [x] Profiles.
-- [x] Roles.
-- [x] Login/logout.
-- [x] Protección `/admin`.
-- [x] RLS.
-- [x] Storage seguro.
+## Fase 6 — Preproducción y lanzamiento ⏳
 
-### CRUD
-
-- [x] Crear borrador.
-- [x] Listar recetas.
-- [x] Editar receta.
-- [x] Información básica.
-- [x] Imagen principal.
-- [x] Clasificación.
-- [x] Categorías.
-- [x] Raciones.
-- [x] Tiempos.
-- [x] Ingredientes.
-- [x] Elaboración.
-- [x] Información adicional.
-- [x] Alérgenos.
-- [x] Publicación.
-- [x] Despublicación.
-- [x] Archivado.
-- [x] Restauración a borrador.
-- [x] Checklist de requisitos de publicación.
-- [x] Validación final de publicación en PostgreSQL.
-- [x] Eliminación segura.
-- [x] Previsualización.
-- [x] Revisión global de errores.
-- [x] Limpieza de rutas temporales.
-- [x] Pruebas de regresión del CRUD.
-
-## Fase 5 — Área pública 🟡
-
-- [x] Home.
-- [x] Listado de recetas.
-- [x] Búsqueda.
-- [x] Filtros.
-- [x] Ordenación.
-- [x] Categorías.
-- [x] Detalle de receta.
-- [x] Selector de raciones.
-- [x] Recalculado de ingredientes.
-- [x] WhatsApp.
-- [x] Telegram.
-- [x] Correo electrónico.
-- [x] Compartir nativo.
-- [x] Copiar enlace.
-- [x] Recetas relacionadas.
-- [ ] Página Sobre CociHub.
-- [ ] Página 404 definitiva.
-- [ ] Estados de error finales.
-- [ ] Aviso legal.
-- [ ] Política de privacidad.
-- [ ] Política de cookies.
-- [ ] Revisión responsive final.
-
-## Extensión — Importación asistida por IA ✅
-
-- [x] Contrato JSON.
-- [x] Schema Zod.
-- [x] Carga y previsualización de imagen.
-- [x] Validación de formato y tamaño.
-- [x] Endpoint protegido.
-- [x] Gemini multimodal.
-- [x] Structured Output.
-- [x] Validación de respuesta.
-- [x] Revisión humana editable.
-- [x] Ingredientes y grupos.
-- [x] Pasos.
-- [x] Tiempos.
-- [x] Alérgenos.
-- [x] Clasificación sugerida.
-- [x] Normalización de catálogos.
-- [x] Creación de borrador real.
-- [x] Rollback de creación incompleta.
-- [x] Redirección al editor.
-- [x] Integración en `/admin/recipes/new`.
-- [x] Pruebas reales con varias recetas.
-- [x] Garantía de publicación manual.
-
-## Fase 6 — Cierre y despliegue ⬜
-
-- [ ] Pulido visual global.
-- [ ] Responsive final.
-- [ ] Accesibilidad.
-- [ ] Página 404.
-- [ ] Estados vacíos y de error.
-- [ ] Páginas legales.
-- [ ] SEO.
-- [ ] Metadata.
-- [ ] Open Graph.
-- [ ] JSON-LD.
-- [ ] Sitemap.
-- [ ] `robots.txt`.
-- [ ] Optimización de imágenes.
-- [ ] Optimización de rendimiento.
-- [ ] Regresión completa.
-- [ ] `npm run build`.
-- [ ] Preparación del servidor.
-- [ ] Configuración de producción.
-- [ ] Dominio.
-- [ ] HTTPS.
-- [ ] Backup estable previo a nuevas funcionalidades.
-- [ ] Despliegue público.
+- [x] Release candidate local.
+- [x] Build de producción validada.
+- [x] Inventario de variables.
+- [ ] Preparar servidor.
+- [ ] Configurar Node.js, `systemd` y Nginx.
+- [ ] Configurar dominio y HTTPS.
+- [ ] Completar datos legales.
+- [ ] Validar SEO con dominio real.
+- [ ] Smoke test online.
+- [ ] Backup de producción.
+- [ ] Publicar `v1.0.0`.
 
 ---
 
-# 🎯 Siguiente paso
+# 🔮 Mejoras posteriores
 
-## Pulido y cierre de CociHub
+Estas funciones quedan fuera del lanzamiento inicial y no deben bloquear CociHub 1.0:
 
-La funcionalidad principal está construida.
-
-El trabajo continúa con:
-
-```text
-Diseño visual final
-      ↓
-Responsive
-      ↓
-404 / errores / estados vacíos
-      ↓
-About
-      ↓
-Legal / privacidad / cookies
-      ↓
-SEO / metadata / Open Graph / JSON-LD
-      ↓
-Rendimiento
-      ↓
-Build y regresión completa
-      ↓
-Servidor + dominio
-      ↓
-Backup estable
-      ↓
-Producción
-```
-
-Durante esta fase no se introducirán nuevas funcionalidades importantes salvo que aparezca un requisito imprescindible para completar el MVP.
-
----
-
-# 🔮 Evolución futura
-
-Las nuevas funcionalidades se valorarán después de:
-
-```text
-CociHub terminado
-   ↓
-Despliegue estable
-   ↓
-Backup completo
-   ↓
-Uso real
-   ↓
-Evaluación de demanda
-```
-
-Posibles líneas de evolución ya contempladas:
-
-- Registro público.
-- Recetas de usuarios.
+- Inferencia avanzada de alérgenos mediante IA.
+- Mejor contextualización automática de recetas importadas.
+- Nuevas reglas de redondeo de cantidades al cambiar raciones.
+- Flujo público para que otros usuarios creen recetas.
+- Permisos de edición por propietario/administrador.
+- Guardado administrativo unificado o aviso de cambios pendientes.
+- Ventana avanzada de compartir y nuevas redes.
+- Modo oscuro.
+- Múltiples idiomas.
 - Favoritos.
-- Valoraciones.
-- Comentarios.
-- Seguidores.
-- Planificador.
-- Lista de compra.
-- Funciones sociales.
-- Imágenes por paso.
-- Nuevas mejoras funcionales definidas tras el lanzamiento.
-- Sistema de IA alternativo o autoalojado si resulta conveniente.
-- Migración a servicios de IA de pago únicamente si el uso real lo justifica.
-
-La arquitectura de importación está preparada para mantener separado el proveedor de IA del resto del flujo de CociHub.
+- Comentarios y valoraciones.
+- Perfiles públicos.
+- Lista de la compra.
+- Planificación de menús.
+- Recetas privadas o colaborativas.
+- Notificaciones.
+- Aplicación móvil nativa.
 
 ---
 
-# 📚 Documentación y aprendizaje
+# 📦 Versionado
 
-CociHub se desarrolla también como proyecto de aprendizaje y portfolio.
+Repositorio:
 
-Una vez finalizado el proyecto se realizará una revisión técnica completa para documentar y comprender:
+```text
+https://github.com/Eracres/coci_hub
+```
 
-- Arquitectura general.
-- App Router.
-- Server y Client Components.
-- Server Actions.
-- Route Handlers.
-- Supabase.
-- PostgreSQL.
-- RLS.
-- Autenticación.
-- Storage.
-- CRUD.
-- Zod.
-- React Hook Form.
-- Servicios.
-- Importación IA.
-- Seguridad.
-- Git.
-- Migraciones.
-- Despliegue.
-- Decisiones de arquitectura tomadas durante el desarrollo.
+Convención:
 
-El objetivo será poder explicar no solo **qué hace cada parte**, sino también **por qué se diseñó de esa forma**.
+```text
+v1.0.0-rc.1 → primera candidata a producción
+v1.0.0      → primera versión estable publicada
+```
+
+Un tag representa un punto concreto del historial y permite recuperar exactamente el código correspondiente a una release.
+
+Como copia adicional se recomienda conservar un ZIP fuera del repositorio excluyendo:
+
+```text
+node_modules/
+.next/
+.git/
+.env.local
+```
 
 ---
 
@@ -1263,12 +783,22 @@ El objetivo será poder explicar no solo **qué hace cada parte**, sino también
 
 **Sergio Cáceres**
 
-Desarrollador web full stack.
+Desarrollador web.
 
-CociHub se desarrolla como aplicación real y proyecto de portfolio, documentando el proceso completo desde la idea inicial hasta el despliegue.
+CociHub se desarrolla como una aplicación real y como proyecto de portfolio, cubriendo análisis, UX/UI, arquitectura, desarrollo full stack, base de datos, autenticación, seguridad, integración con IA, SEO, optimización, pruebas y despliegue.
 
 ---
 
 # 📄 Licencia
 
-La licencia se definirá antes de la publicación de la primera versión estable.
+La licencia definitiva se establecerá antes o durante la publicación pública de la primera versión estable.
+
+---
+
+<div align="center">
+
+## 🍳 CociHub
+
+**Comer es un placer, cocinar un privilegio, enseñar una responsabilidad.**
+
+</div>

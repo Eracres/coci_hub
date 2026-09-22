@@ -1,5 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
-
+import Image from "next/image";
 import Link from "next/link";
 
 import {
@@ -59,14 +58,16 @@ export function RecipeCard({
       >
         <div className="relative aspect-[4/3] overflow-hidden bg-page-muted">
           {recipe.imageUrl ? (
-            <img
+            <Image
               src={
                 recipe.imageUrl
               }
               alt={
                 recipe.title
               }
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+              fill
+              sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
+              className="object-cover transition duration-500 group-hover:scale-[1.04]"
             />
           ) : (
             <div className="flex h-full items-center justify-center px-6 text-center">

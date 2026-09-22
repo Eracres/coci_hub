@@ -1,9 +1,8 @@
-/* eslint-disable @next/next/no-img-element */
-
 import type {
   Metadata,
 } from "next";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import {
@@ -291,7 +290,7 @@ export default async function RecipePage({
             <header className="grid overflow-hidden rounded-3xl border border-border bg-surface shadow-lg lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
               <div className="relative min-h-[300px] overflow-hidden bg-page-muted sm:min-h-[400px] lg:min-h-[520px]">
                 {recipe.imageUrl ? (
-                  <img
+                  <Image
                     src={
                       recipe.imageUrl
                     }
@@ -299,7 +298,10 @@ export default async function RecipePage({
                       recipe.imageAlt ??
                       recipe.title
                     }
-                    className="absolute inset-0 h-full w-full object-cover"
+                    fill
+                    priority
+                    sizes="(min-width: 1024px) 48vw, 100vw"
+                    className="object-cover"
                   />
                 ) : (
                   <div className="flex h-full min-h-[300px] items-center justify-center p-8 text-center">

@@ -623,7 +623,7 @@ export default async function HomePage() {
 
                 <Link
                   href="/recipes"
-                  className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-surface px-6 font-semibold text-foreground shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-page-muted hover:shadow-md"
+                  className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-6 font-semibold text-inverse shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-md"
                 >
                   Buscar recetas
 

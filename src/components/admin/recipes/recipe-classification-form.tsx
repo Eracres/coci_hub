@@ -63,6 +63,304 @@ type RecipeClassificationFormProps = {
 };
 
 
+type CategorySubgroup = {
+  title:
+    string;
+
+  description?:
+    string;
+
+  categoryNames:
+    string[];
+};
+
+
+type CategorySection = {
+  title:
+    string;
+
+  description:
+    string;
+
+  subgroups:
+    CategorySubgroup[];
+};
+
+
+const CATEGORY_SECTIONS: CategorySection[] =
+  [
+    {
+      title:
+        "Ingrediente principal",
+
+      description:
+        "Clasifica la receta según los alimentos que tienen mayor protagonismo.",
+
+      subgroups: [
+        {
+          title:
+            "Carnes y aves",
+
+          categoryNames: [
+            "Carnes",
+            "Aves",
+            "Cerdo",
+          ],
+        },
+
+        {
+          title:
+            "Pescados y mariscos",
+
+          categoryNames: [
+            "Pescados",
+            "Mariscos",
+          ],
+        },
+
+        {
+          title:
+            "Cereales y derivados",
+
+          categoryNames: [
+            "Arroces",
+            "Pasta",
+          ],
+        },
+
+        {
+          title:
+            "Verduras, hortalizas y tubérculos",
+
+          categoryNames: [
+            "Verduras y hortalizas",
+            "Legumbres",
+            "Setas y hongos",
+            "Patatas",
+          ],
+        },
+
+        {
+          title:
+            "Frutas y frutos secos",
+
+          categoryNames: [
+            "Frutas",
+            "Frutos secos",
+          ],
+        },
+
+        {
+          title:
+            "Huevos y lácteos",
+
+          categoryNames: [
+            "Huevos",
+            "Quesos y lácteos",
+          ],
+        },
+      ],
+    },
+
+    {
+      title:
+        "Tipo de preparación o formato",
+
+      description:
+        "Agrupa las recetas según su elaboración, presentación o formato final.",
+
+      subgroups: [
+        {
+          title:
+            "Preparaciones saladas",
+
+          categoryNames: [
+            "Ensaladas",
+            "Sopas y cremas",
+            "Guisos y estofados",
+            "Platos de cuchara",
+            "Salsas",
+            "Croquetas y frituras",
+          ],
+        },
+
+        {
+          title:
+            "Panes, masas y elaboraciones similares",
+
+          categoryNames: [
+            "Panes y masas",
+            "Pizzas",
+            "Bocadillos y sándwiches",
+            "Empanadas",
+          ],
+        },
+
+        {
+          title:
+            "Dulces y postres",
+
+          categoryNames: [
+            "Tartas y pasteles",
+            "Galletas y dulces",
+            "Helados y postres fríos",
+          ],
+        },
+
+        {
+          title:
+            "Conservas y bebidas",
+
+          categoryNames: [
+            "Conservas y encurtidos",
+            "Bebidas",
+          ],
+        },
+      ],
+    },
+
+    {
+      title:
+        "Cocina y origen gastronómico",
+
+      description:
+        "Relaciona la receta con una tradición culinaria o procedencia gastronómica.",
+
+      subgroups: [
+        {
+          title:
+            "Europa",
+
+          categoryNames: [
+            "Cocina española",
+            "Cocina francesa",
+            "Cocina italiana",
+          ],
+        },
+
+        {
+          title:
+            "Latinoamérica",
+
+          categoryNames: [
+            "Cocina mexicana",
+            "Cocina colombiana",
+            "Cocina venezolana",
+            "Cocina ecuatoriana",
+            "Cocina peruana",
+          ],
+        },
+
+        {
+          title:
+            "Asia",
+
+          categoryNames: [
+            "Cocina china",
+            "Cocina japonesa",
+            "Cocina india",
+          ],
+        },
+      ],
+    },
+
+    {
+      title:
+        "Estilo de cocina",
+
+      description:
+        "Clasificaciones generales que describen el carácter o enfoque de la receta.",
+
+      subgroups: [
+        {
+          title:
+            "Estilo general",
+
+          categoryNames: [
+            "Cocina tradicional",
+          ],
+        },
+      ],
+    },
+  ];
+
+
+function normalizeCategoryName(
+  value:
+    string,
+) {
+  return value
+    .trim()
+    .toLocaleLowerCase(
+      "es",
+    )
+    .normalize(
+      "NFD",
+    )
+    .replace(
+      /[\u0300-\u036f]/g,
+      "",
+    );
+}
+
+
+function getCategoriesByNames(
+  categories:
+    CategoryOption[],
+
+  names:
+    string[],
+) {
+  const normalizedNames =
+    new Set(
+      names.map(
+        (
+          name,
+        ) =>
+          normalizeCategoryName(
+            name,
+          ),
+      ),
+    );
+
+
+  return categories.filter(
+    (
+      category,
+    ) =>
+      normalizedNames.has(
+        normalizeCategoryName(
+          category.name,
+        ),
+      ),
+  );
+}
+
+
+function getConfiguredCategoryNames() {
+  return new Set(
+    CATEGORY_SECTIONS.flatMap(
+      (
+        section,
+      ) =>
+        section.subgroups.flatMap(
+          (
+            subgroup,
+          ) =>
+            subgroup.categoryNames.map(
+              (
+                categoryName,
+              ) =>
+                normalizeCategoryName(
+                  categoryName,
+                ),
+            ),
+        ),
+    ),
+  );
+}
+
+
 export function RecipeClassificationForm({
   recipeId,
   recipeTypes,
@@ -119,6 +417,23 @@ export function RecipeClassificationForm({
             .featured,
       },
     });
+
+
+  const configuredCategoryNames =
+    getConfiguredCategoryNames();
+
+
+  const uncategorizedCategories =
+    categories.filter(
+      (
+        category,
+      ) =>
+        !configuredCategoryNames.has(
+          normalizeCategoryName(
+            category.name,
+          ),
+        ),
+    );
 
 
   async function onSubmit(
@@ -266,6 +581,14 @@ export function RecipeClassificationForm({
             Categorías
           </legend>
 
+          <p className="mt-1 text-sm text-muted-foreground">
+            Puedes seleccionar varias
+            categorías. Los grupos
+            sirven únicamente para
+            organizarlas visualmente.
+          </p>
+
+
           {categories.length ===
           0 ? (
             <p className="mt-3 text-sm">
@@ -273,33 +596,186 @@ export function RecipeClassificationForm({
               categorías creadas.
             </p>
           ) : (
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              {categories.map(
+            <div className="mt-5 space-y-6">
+              {CATEGORY_SECTIONS.map(
                 (
-                  category,
-                ) => (
-                  <label
-                    key={
-                      category.id
-                    }
-                    className="flex items-center gap-2"
-                  >
-                    <input
-                      type="checkbox"
-                      value={
-                        category.id
-                      }
-                      {...register(
-                        "categoryIds",
-                      )}
-                    />
+                  section,
+                ) => {
+                  const sectionCategories =
+                    section.subgroups.flatMap(
+                      (
+                        subgroup,
+                      ) =>
+                        getCategoriesByNames(
+                          categories,
+                          subgroup.categoryNames,
+                        ),
+                    );
 
-                    {
-                      category.name
-                    }
-                  </label>
-                ),
+
+                  if (
+                    sectionCategories.length ===
+                    0
+                  ) {
+                    return null;
+                  }
+
+
+                  return (
+                    <section
+                      key={
+                        section.title
+                      }
+                      className="rounded-xl border border-border bg-page-muted/30 p-4 sm:p-5"
+                    >
+                      <header>
+                        <h3 className="font-semibold">
+                          {
+                            section.title
+                          }
+                        </h3>
+
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {
+                            section.description
+                          }
+                        </p>
+                      </header>
+
+
+                      <div className="mt-4 space-y-4">
+                        {section.subgroups.map(
+                          (
+                            subgroup,
+                          ) => {
+                            const subgroupCategories =
+                              getCategoriesByNames(
+                                categories,
+                                subgroup.categoryNames,
+                              );
+
+
+                            if (
+                              subgroupCategories.length ===
+                              0
+                            ) {
+                              return null;
+                            }
+
+
+                            return (
+                              <div
+                                key={
+                                  subgroup.title
+                                }
+                                className="rounded-lg border border-border bg-surface p-4"
+                              >
+                                <h4 className="text-sm font-semibold">
+                                  {
+                                    subgroup.title
+                                  }
+                                </h4>
+
+                                {subgroup.description ? (
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    {
+                                      subgroup.description
+                                    }
+                                  </p>
+                                ) : null}
+
+
+                                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                  {subgroupCategories.map(
+                                    (
+                                      category,
+                                    ) => (
+                                      <label
+                                        key={
+                                          category.id
+                                        }
+                                        className="flex cursor-pointer items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm transition hover:border-border hover:bg-page-muted"
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          value={
+                                            category.id
+                                          }
+                                          {...register(
+                                            "categoryIds",
+                                          )}
+                                          className="size-4 accent-brand"
+                                        />
+
+                                        <span>
+                                          {
+                                            category.name
+                                          }
+                                        </span>
+                                      </label>
+                                    ),
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          },
+                        )}
+                      </div>
+                    </section>
+                  );
+                },
               )}
+
+
+              {uncategorizedCategories.length >
+              0 ? (
+                <section className="rounded-xl border border-dashed border-border bg-page-muted/20 p-4 sm:p-5">
+                  <header>
+                    <h3 className="font-semibold">
+                      Otras categorías
+                    </h3>
+
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Categorías todavía
+                      no asignadas a un
+                      grupo visual.
+                    </p>
+                  </header>
+
+
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {uncategorizedCategories.map(
+                      (
+                        category,
+                      ) => (
+                        <label
+                          key={
+                            category.id
+                          }
+                          className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm transition hover:bg-page-muted"
+                        >
+                          <input
+                            type="checkbox"
+                            value={
+                              category.id
+                            }
+                            {...register(
+                              "categoryIds",
+                            )}
+                            className="size-4 accent-brand"
+                          />
+
+                          <span>
+                            {
+                              category.name
+                            }
+                          </span>
+                        </label>
+                      ),
+                    )}
+                  </div>
+                </section>
+              ) : null}
             </div>
           )}
         </fieldset>

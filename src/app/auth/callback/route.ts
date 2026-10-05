@@ -8,7 +8,8 @@ import {
 
 
 export async function GET(
-  request: Request,
+  request:
+    Request,
 ) {
   const requestUrl =
     new URL(
@@ -29,16 +30,6 @@ export async function GET(
       .origin;
 
 
-  // =======================================================
-  // MISSING OAUTH CODE
-  // =======================================================
-  //
-  // If somebody visits /auth/callback manually,
-  // there is no OAuth code to exchange.
-  //
-  // In that case we simply return them to the login page.
-  // =======================================================
-
   if (!code) {
     return NextResponse.redirect(
       `${origin}/login?error=oauth-callback`,
@@ -49,10 +40,6 @@ export async function GET(
   const supabase =
     await createClient();
 
-
-  // =======================================================
-  // EXCHANGE OAUTH CODE FOR SESSION
-  // =======================================================
 
   const {
     error:
@@ -71,10 +58,6 @@ export async function GET(
     );
   }
 
-
-  // =======================================================
-  // AUTHENTICATED USER
-  // =======================================================
 
   const {
     data:
@@ -103,10 +86,6 @@ export async function GET(
     );
   }
 
-
-  // =======================================================
-  // COCIHUB PROFILE
-  // =======================================================
 
   const {
     data:
@@ -139,10 +118,6 @@ export async function GET(
   }
 
 
-  // =======================================================
-  // INCOMPLETE OAUTH PROFILE
-  // =======================================================
-
   if (
     !profile.username
   ) {
@@ -151,16 +126,6 @@ export async function GET(
     );
   }
 
-
-  // =======================================================
-  // COMPLETE PROFILE
-  // =======================================================
-  //
-  // Admin users return to the administration panel.
-  //
-  // Normal users will eventually go to /mi-cocihub.
-  // Until that area exists, we return them to the homepage.
-  // =======================================================
 
   if (
     profile.role ===
@@ -173,6 +138,6 @@ export async function GET(
 
 
   return NextResponse.redirect(
-    `${origin}/`,
+    `${origin}/mi-cocihub`,
   );
 }

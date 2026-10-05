@@ -66,10 +66,6 @@ export async function login(
     );
 
 
-  // =======================================================
-  // BASIC VALIDATION
-  // =======================================================
-
   if (
     !email ||
     !password
@@ -90,10 +86,6 @@ export async function login(
     await createClient();
 
 
-  // =======================================================
-  // SUPABASE AUTH
-  // =======================================================
-
   const {
     error:
       loginError,
@@ -102,7 +94,6 @@ export async function login(
       .auth
       .signInWithPassword({
         email,
-
         password,
       });
 
@@ -135,10 +126,6 @@ export async function login(
     };
   }
 
-
-  // =======================================================
-  // AUTHENTICATED USER
-  // =======================================================
 
   const {
     data:
@@ -173,10 +160,6 @@ export async function login(
     };
   }
 
-
-  // =======================================================
-  // COCIHUB PROFILE
-  // =======================================================
 
   const {
     data:
@@ -220,10 +203,6 @@ export async function login(
   }
 
 
-  // =======================================================
-  // INCOMPLETE PROFILE
-  // =======================================================
-
   if (
     !profile.username
   ) {
@@ -232,10 +211,6 @@ export async function login(
     );
   }
 
-
-  // =======================================================
-  // ROLE DESTINATION
-  // =======================================================
 
   if (
     profile.role ===
@@ -247,10 +222,7 @@ export async function login(
   }
 
 
-  // /mi-cocihub will replace this destination when
-  // the personal area is implemented.
-
   redirect(
-    "/",
+    "/mi-cocihub",
   );
 }

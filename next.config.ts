@@ -1,17 +1,30 @@
-import type { NextConfig } from "next";
+import type {
+  NextConfig,
+} from "next";
 
-type RemotePatterns = NonNullable<
-  NonNullable<NextConfig["images"]>["remotePatterns"]
->;
+
+type RemotePatterns =
+  NonNullable<
+    NonNullable<
+      NextConfig[
+        "images"
+      ]
+    >[
+      "remotePatterns"
+    ]
+  >;
+
 
 const remotePatterns:
   RemotePatterns =
   [];
 
+
 const supabaseUrl =
   process.env
     .NEXT_PUBLIC_SUPABASE_URL
     ?.trim();
+
 
 if (
   supabaseUrl
@@ -20,6 +33,7 @@ if (
     new URL(
       supabaseUrl,
     );
+
 
   remotePatterns.push(
     {
@@ -41,8 +55,40 @@ if (
   );
 }
 
+
 const nextConfig:
   NextConfig = {
+
+  // =======================================================
+  // TURBOPACK
+  // =======================================================
+  //
+  // CociHub has its own package-lock.json in the project
+  // root.
+  //
+  // There is also an unrelated package-lock.json in the
+  // user's home directory. Without an explicit root,
+  // Turbopack can infer /home/eracres as the workspace root.
+  //
+  // process.cwd() points to the directory where
+  // `npm run dev` is executed:
+  //
+  //   ~/Escritorio/coci_hub
+  //
+  // This keeps routing, cache and module resolution scoped
+  // to the real CociHub project.
+  // =======================================================
+
+  turbopack: {
+    root:
+      process.cwd(),
+  },
+
+
+  // =======================================================
+  // IMAGES
+  // =======================================================
+
   images: {
     formats: [
       "image/avif",
@@ -52,5 +98,6 @@ const nextConfig:
     remotePatterns,
   },
 };
+
 
 export default nextConfig;

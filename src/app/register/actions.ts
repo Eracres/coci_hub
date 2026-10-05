@@ -1,10 +1,6 @@
 "use server";
 
 import {
-  redirect,
-} from "next/navigation";
-
-import {
   createClient,
 } from "@/lib/supabase/server";
 
@@ -13,59 +9,128 @@ import {
 } from "@/schemas/register-schema";
 
 
+type RegisterValues = {
+  displayName:
+    string;
+
+  username:
+    string;
+
+  email:
+    string;
+};
+
+
+export type RegisterState = {
+  status:
+    | "idle"
+    | "error"
+    | "success";
+
+  message:
+    string | null;
+
+  values:
+    RegisterValues;
+
+  attempt:
+    number;
+};
+
+
+function getFormValue(
+  formData:
+    FormData,
+
+  field:
+    string,
+) {
+  const value =
+    formData.get(
+      field,
+    );
+
+
+  return typeof value ===
+    "string"
+    ? value
+    : "";
+}
+
+
 export async function register(
-  formData: FormData,
-): Promise<void> {
+  previousState:
+    RegisterState,
+
+  formData:
+    FormData,
+): Promise<RegisterState> {
+
+  const rawValues:
+    RegisterValues = {
+    displayName:
+      getFormValue(
+        formData,
+        "displayName",
+      ),
+
+    username:
+      getFormValue(
+        formData,
+        "username",
+      ),
+
+    email:
+      getFormValue(
+        formData,
+        "email",
+      ),
+  };
+
+
   const parsed =
     registerSchema.safeParse({
-      displayName:
-        formData.get(
-          "displayName",
-        ),
-
-      username:
-        formData.get(
-          "username",
-        ),
-
-      email:
-        formData.get(
-          "email",
-        ),
+      ...rawValues,
 
       password:
-        formData.get(
+        getFormValue(
+          formData,
           "password",
         ),
 
       confirmPassword:
-        formData.get(
+        getFormValue(
+          formData,
           "confirmPassword",
         ),
     });
 
 
+  const attempt =
+    previousState.attempt +
+    1;
+
+
   if (!parsed.success) {
-    const passwordMismatch =
-      parsed.error.issues.some(
-        (issue) =>
-          issue.path[0] ===
-            "confirmPassword" &&
-          issue.message ===
-            "Las contraseñas no coinciden.",
-      );
+    const firstIssue =
+      parsed.error
+        .issues[0];
 
 
-    if (passwordMismatch) {
-      redirect(
-        "/register?error=password-mismatch",
-      );
-    }
+    return {
+      status:
+        "error",
 
+      message:
+        firstIssue
+          ?.message ??
+        "Revisa los datos del formulario e inténtalo de nuevo.",
 
-    redirect(
-      "/register?error=invalid-data",
-    );
+      values:
+        rawValues,
+
+      attempt,
+    };
   }
 
 
@@ -76,6 +141,18 @@ export async function register(
     password,
   } =
     parsed.data;
+
+
+  const safeValues:
+    RegisterValues = {
+    displayName:
+      displayName ??
+      "",
+
+    username,
+
+    email,
+  };
 
 
   const supabase =
@@ -103,9 +180,18 @@ export async function register(
 
 
   if (usernameError) {
-    redirect(
-      "/register?error=registration-unavailable",
-    );
+    return {
+      status:
+        "error",
+
+      message:
+        "No hemos podido comprobar el nombre de usuario. Inténtalo de nuevo.",
+
+      values:
+        safeValues,
+
+      attempt,
+    };
   }
 
 
@@ -113,9 +199,18 @@ export async function register(
     usernameAvailable !==
     true
   ) {
-    redirect(
-      "/register?error=username-unavailable",
-    );
+    return {
+      status:
+        "error",
+
+      message:
+        "Ese nombre de usuario no está disponible. Prueba con otro.",
+
+      values:
+        safeValues,
+
+      attempt,
+    };
   }
 
 
@@ -148,33 +243,69 @@ export async function register(
 
 
   if (signUpError) {
-    redirect(
-      "/register?error=signup-failed",
-    );
+    return {
+      status:
+        "error",
+
+      message:
+        "No hemos podido crear la cuenta. Comprueba los datos o inténtalo de nuevo más tarde.",
+
+      values:
+        safeValues,
+
+      attempt,
+    };
   }
 
 
   // =======================================================
-  // REGISTRATION RESULT
-  // =======================================================
-  //
-  // Depending on the Supabase Auth configuration,
-  // registration can either:
-  //
-  //   1. create a session immediately, or
-  //   2. require email confirmation first.
-  //
-  // We support both cases.
+  // SUCCESS
   // =======================================================
 
-  if (signUpData.session) {
-    redirect(
-      "/register?success=created",
-    );
+  if (
+    signUpData.session
+  ) {
+    return {
+      status:
+        "success",
+
+      message:
+        "Tu cuenta se ha creado correctamente y tu sesión ya está activa.",
+
+      values: {
+        displayName:
+          "",
+
+        username:
+          "",
+
+        email:
+          "",
+      },
+
+      attempt,
+    };
   }
 
 
-  redirect(
-    "/register?success=check-email",
-  );
+  return {
+    status:
+      "success",
+
+    message:
+      "Te hemos enviado un correo de confirmación. Abre el enlace para activar tu cuenta antes de iniciar sesión.",
+
+    values: {
+      displayName:
+        "",
+
+      username:
+        "",
+
+      email:
+        "",
+    },
+
+    attempt,
+  };
 }

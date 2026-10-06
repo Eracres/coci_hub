@@ -51,6 +51,10 @@ import {
   StepsForm,
 } from "./steps-form";
 
+import {
+  TimesForm,
+} from "./times-form";
+
 
 type EditorStep =
   | "basic"
@@ -75,6 +79,18 @@ type EditMyRecipePageProps = {
       step?:
         string;
     }>;
+};
+
+
+type RecipeTimesRow = {
+  preparation_minutes:
+    number | null;
+
+  cooking_minutes:
+    number | null;
+
+  additional_minutes:
+    number | null;
 };
 
 
@@ -297,11 +313,6 @@ export default async function EditMyRecipePage({
   if (
     !recipe
   ) {
-    /*
-     * No revelamos si la receta no existe
-     * o pertenece a otra persona.
-     */
-
     notFound();
   }
 
@@ -317,13 +328,14 @@ export default async function EditMyRecipePage({
 
 
   // =======================================================
-  // RELATIONS + INGREDIENTS + STEPS
+  // RELATIONS + INGREDIENTS + STEPS + TIMES
   // =======================================================
 
   const [
     classificationRelations,
     ingredientGroups,
     recipeSteps,
+    recipeTimesResult,
   ] =
     await Promise.all([
       getRecipeClassificationRelations(
@@ -337,7 +349,40 @@ export default async function EditMyRecipePage({
       getRecipeSteps(
         recipe.id,
       ),
+
+      supabase
+        .from(
+          "recipes",
+        )
+        .select(`
+          preparation_minutes,
+          cooking_minutes,
+          additional_minutes
+        `)
+        .eq(
+          "id",
+          recipe.id,
+        )
+        .eq(
+          "author_id",
+          userId,
+        )
+        .single(),
     ]);
+
+
+  if (
+    recipeTimesResult.error
+  ) {
+    throw new Error(
+      `No se pudieron obtener los tiempos de la receta: ${recipeTimesResult.error.message}`,
+    );
+  }
+
+
+  const recipeTimes =
+    recipeTimesResult.data as
+      RecipeTimesRow;
 
 
   // =======================================================
@@ -402,13 +447,25 @@ export default async function EditMyRecipePage({
     0;
 
 
+  const timesComplete =
+    recipeTimes
+      .preparation_minutes !==
+      null &&
+    recipeTimes
+      .cooking_minutes !==
+      null &&
+    recipeTimes
+      .additional_minutes !==
+      null;
+
+
   // =======================================================
   // DEFAULT STEP
   // =======================================================
 
   let defaultStep:
     EditorStep =
-      "times";
+      "image";
 
 
   if (
@@ -436,6 +493,11 @@ export default async function EditMyRecipePage({
   ) {
     defaultStep =
       "steps";
+  } else if (
+    !timesComplete
+  ) {
+    defaultStep =
+      "times";
   }
 
 
@@ -494,7 +556,7 @@ export default async function EditMyRecipePage({
       stepsComplete,
 
     times:
-      false,
+      timesComplete,
 
     image:
       false,
@@ -542,10 +604,6 @@ export default async function EditMyRecipePage({
 
       <div className="mx-auto w-full max-w-6xl">
 
-        {/* =================================================
-            TOP BAR
-        ================================================= */}
-
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
           <Link
@@ -574,10 +632,6 @@ export default async function EditMyRecipePage({
 
         </div>
 
-
-        {/* =================================================
-            RECIPE HEADER
-        ================================================= */}
 
         <section className="rounded-3xl border border-border bg-surface p-6 shadow-sm sm:p-8">
 
@@ -621,10 +675,6 @@ export default async function EditMyRecipePage({
         </section>
 
 
-        {/* =================================================
-            EDITOR
-        ================================================= */}
-
         <div className="mt-6 grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
 
           <RecipeEditorStepper
@@ -635,10 +685,6 @@ export default async function EditMyRecipePage({
 
 
           <div>
-
-            {/* =============================================
-                BASIC
-            ============================================= */}
 
             {activeStep ===
               "basic" && (
@@ -666,10 +712,6 @@ export default async function EditMyRecipePage({
               )}
 
 
-            {/* =============================================
-                SERVINGS
-            ============================================= */}
-
             {activeStep ===
               "servings" && (
                 <ServingsForm
@@ -688,10 +730,6 @@ export default async function EditMyRecipePage({
                 />
               )}
 
-
-            {/* =============================================
-                CLASSIFICATION
-            ============================================= */}
 
             {activeStep ===
               "classification" &&
@@ -737,10 +775,6 @@ export default async function EditMyRecipePage({
               )}
 
 
-            {/* =============================================
-                INGREDIENTS
-            ============================================= */}
-
             {activeStep ===
               "ingredients" && (
                 <IngredientsForm
@@ -759,10 +793,6 @@ export default async function EditMyRecipePage({
                 />
               )}
 
-
-            {/* =============================================
-                STEPS
-            ============================================= */}
 
             {activeStep ===
               "steps" && (
@@ -783,9 +813,34 @@ export default async function EditMyRecipePage({
               )}
 
 
-            {/* =============================================
-                UPCOMING STEPS
-            ============================================= */}
+            {activeStep ===
+              "times" && (
+                <TimesForm
+                  recipeId={
+                    recipe.id
+                  }
+                  initialValues={{
+                    preparationMinutes:
+                      recipeTimes
+                        .preparation_minutes,
+
+                    cookingMinutes:
+                      recipeTimes
+                        .cooking_minutes,
+
+                    additionalMinutes:
+                      recipeTimes
+                        .additional_minutes,
+                  }}
+                  previousStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=steps`
+                  }
+                  nextStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=image`
+                  }
+                />
+              )}
+
 
             {activeStep !==
               "basic" &&
@@ -796,7 +851,9 @@ export default async function EditMyRecipePage({
               activeStep !==
                 "ingredients" &&
               activeStep !==
-                "steps" && (
+                "steps" &&
+              activeStep !==
+                "times" && (
                 <PlaceholderStep
                   recipeId={
                     recipe.id

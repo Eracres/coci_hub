@@ -10,6 +10,11 @@ import type {
   RecipeServingsData,
 } from "@/schemas/recipe-servings-schema";
 
+import type {
+  CommunityRecipeClassificationData,
+  CommunityRecipeDifficulty,
+} from "@/schemas/community-recipe-classification-schema";
+
 
 export type CommunityRecipeStatus =
   | "draft"
@@ -36,6 +41,12 @@ export type CommunityRecipeEditorRecord = {
 
   introduction:
     string | null;
+
+  recipe_type_id:
+    string | null;
+
+  difficulty:
+    CommunityRecipeDifficulty | null;
 
   base_servings:
     number | null;
@@ -86,6 +97,8 @@ export async function getMyRecipeForEditor(
         slug,
         short_description,
         introduction,
+        recipe_type_id,
+        difficulty,
         base_servings,
         status,
         review_notes,
@@ -103,7 +116,9 @@ export async function getMyRecipeForEditor(
       .maybeSingle();
 
 
-  if (error) {
+  if (
+    error
+  ) {
     throw new Error(
       `No se pudo obtener la receta: ${error.message}`,
     );
@@ -156,7 +171,9 @@ export async function updateMyRecipeBasicInfo(
     );
 
 
-  if (error) {
+  if (
+    error
+  ) {
     throw error;
   }
 }
@@ -192,7 +209,56 @@ export async function updateMyRecipeServings(
     );
 
 
-  if (error) {
+  if (
+    error
+  ) {
+    throw error;
+  }
+}
+
+
+/* =========================================================
+   UPDATE OWN CLASSIFICATION
+========================================================= */
+
+export async function updateMyRecipeClassification(
+  recipeId:
+    string,
+
+  input:
+    CommunityRecipeClassificationData,
+) {
+  const supabase =
+    await createClient();
+
+
+  const {
+    error,
+  } =
+    await supabase.rpc(
+      "update_my_recipe_classification",
+      {
+        p_recipe_id:
+          recipeId,
+
+        p_recipe_type_id:
+          input.recipeTypeId,
+
+        p_difficulty:
+          input.difficulty,
+
+        p_category_ids:
+          input.categoryIds,
+
+        p_tag_ids:
+          input.tagIds,
+      },
+    );
+
+
+  if (
+    error
+  ) {
     throw error;
   }
 }

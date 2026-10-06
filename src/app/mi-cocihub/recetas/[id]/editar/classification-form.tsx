@@ -11,6 +11,13 @@ import {
 } from "next/navigation";
 
 import {
+  ChefHat,
+  Gauge,
+  LayoutGrid,
+  Tag,
+} from "lucide-react";
+
+import {
   useForm,
 } from "react-hook-form";
 
@@ -19,7 +26,12 @@ import {
 } from "@hookform/resolvers/zod";
 
 import {
+  getRecipeCategoryVisual,
+} from "@/config/recipe-category-icons";
+
+import {
   getConfiguredRecipeCategoryNames,
+  getHiddenRecipeCategoryNames,
   getRecipeCategoriesByNames,
   normalizeRecipeCategoryName,
   RECIPE_CATEGORY_SECTIONS,
@@ -75,6 +87,54 @@ type ClassificationFormProps = {
   nextStepHref:
     string;
 };
+
+
+type RecipeCategoryVisualProps = {
+  categoryName:
+    string;
+};
+
+
+function RecipeCategoryVisual({
+  categoryName,
+}: RecipeCategoryVisualProps) {
+  const visual =
+    getRecipeCategoryVisual(
+      categoryName,
+    );
+
+
+  if (
+    visual.kind ===
+    "flag"
+  ) {
+    return (
+      <span
+        className="inline-flex min-w-5 shrink-0 items-center justify-center text-base leading-none"
+        aria-hidden="true"
+      >
+        {
+          visual.flag
+        }
+      </span>
+    );
+  }
+
+
+  const Icon =
+    visual.icon;
+
+
+  return (
+    <Icon
+      className="size-4 shrink-0 text-brand/80"
+      strokeWidth={
+        1.8
+      }
+      aria-hidden="true"
+    />
+  );
+}
 
 
 export function ClassificationForm({
@@ -156,16 +216,30 @@ export function ClassificationForm({
     getConfiguredRecipeCategoryNames();
 
 
+  const hiddenCategoryNames =
+    getHiddenRecipeCategoryNames();
+
+
   const uncategorizedCategories =
     categories.filter(
       (
         category,
-      ) =>
-        !configuredCategoryNames.has(
+      ) => {
+        const normalizedName =
           normalizeRecipeCategoryName(
             category.name,
-          ),
-        ),
+          );
+
+
+        return (
+          !configuredCategoryNames.has(
+            normalizedName,
+          ) &&
+          !hiddenCategoryNames.has(
+            normalizedName,
+          )
+        );
+      },
     );
 
 
@@ -285,18 +359,19 @@ export function ClassificationForm({
         className="mt-8 space-y-8"
       >
 
-        {/* ===============================================
-            TYPE + DIFFICULTY
-        =============================================== */}
-
         <div className="grid gap-6 md:grid-cols-2">
 
           <div>
 
             <label
               htmlFor="recipeTypeId"
-              className="mb-2 block text-sm font-medium"
+              className="mb-2 flex items-center gap-2 text-sm font-medium"
             >
+              <ChefHat
+                className="size-4 text-brand"
+                aria-hidden="true"
+              />
+
               Tipo de receta
             </label>
 
@@ -355,8 +430,13 @@ export function ClassificationForm({
 
             <label
               htmlFor="difficulty"
-              className="mb-2 block text-sm font-medium"
+              className="mb-2 flex items-center gap-2 text-sm font-medium"
             >
+              <Gauge
+                className="size-4 text-brand"
+                aria-hidden="true"
+              />
+
               Dificultad
             </label>
 
@@ -405,14 +485,19 @@ export function ClassificationForm({
         </div>
 
 
-        {/* ===============================================
-            CATEGORIES
-        =============================================== */}
-
         <fieldset>
 
           <legend className="text-base font-semibold">
-            Categorías
+            <span className="inline-flex items-center gap-2">
+
+              <LayoutGrid
+                className="size-4 text-brand"
+                aria-hidden="true"
+              />
+
+              Categorías
+
+            </span>
           </legend>
 
 
@@ -552,7 +637,7 @@ export function ClassificationForm({
                                         key={
                                           category.id
                                         }
-                                        className="flex cursor-pointer items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm transition hover:border-border hover:bg-page-muted"
+                                        className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-transparent px-3 py-2 text-sm transition hover:border-border hover:bg-page-muted"
                                       >
                                         <input
                                           type="checkbox"
@@ -562,14 +647,23 @@ export function ClassificationForm({
                                           {...register(
                                             "categoryIds",
                                           )}
-                                          className="size-4 accent-brand"
+                                          className="size-4 shrink-0 accent-brand"
                                         />
+
+
+                                        <RecipeCategoryVisual
+                                          categoryName={
+                                            category.name
+                                          }
+                                        />
+
 
                                         <span>
                                           {
                                             category.name
                                           }
                                         </span>
+
                                       </label>
                                     ),
                                   )}
@@ -619,7 +713,7 @@ export function ClassificationForm({
                           key={
                             category.id
                           }
-                          className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm transition hover:bg-page-muted"
+                          className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-surface px-3 py-2 text-sm transition hover:bg-page-muted"
                         >
                           <input
                             type="checkbox"
@@ -629,14 +723,23 @@ export function ClassificationForm({
                             {...register(
                               "categoryIds",
                             )}
-                            className="size-4 accent-brand"
+                            className="size-4 shrink-0 accent-brand"
                           />
+
+
+                          <RecipeCategoryVisual
+                            categoryName={
+                              category.name
+                            }
+                          />
+
 
                           <span>
                             {
                               category.name
                             }
                           </span>
+
                         </label>
                       ),
                     )}
@@ -652,10 +755,6 @@ export function ClassificationForm({
         </fieldset>
 
 
-        {/* ===============================================
-            TAGS
-        =============================================== */}
-
         <fieldset>
 
           <div className="flex flex-wrap items-end justify-between gap-2">
@@ -663,7 +762,16 @@ export function ClassificationForm({
             <div>
 
               <legend className="text-base font-semibold">
-                Etiquetas
+                <span className="inline-flex items-center gap-2">
+
+                  <Tag
+                    className="size-4 text-brand"
+                    aria-hidden="true"
+                  />
+
+                  Etiquetas
+
+                </span>
               </legend>
 
 
@@ -761,10 +869,6 @@ export function ClassificationForm({
         </fieldset>
 
 
-        {/* ===============================================
-            GENERAL ERROR
-        =============================================== */}
-
         {message && (
           <p
             role="alert"
@@ -776,10 +880,6 @@ export function ClassificationForm({
           </p>
         )}
 
-
-        {/* ===============================================
-            NAVIGATION
-        =============================================== */}
 
         <div className="flex flex-wrap items-center justify-between gap-4">
 

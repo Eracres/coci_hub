@@ -1,158 +1,240 @@
 import {
   ArrowLeft,
-  Archive,
   ChefHat,
-  Clock3,
-  Eye,
   FilePenLine,
-  Plus,
-  Send,
 } from "lucide-react";
 
 import Link from "next/link";
 
 import {
+  notFound,
   redirect,
 } from "next/navigation";
+
+import {
+  RecipeEditorStepper,
+  type RecipeEditorStep,
+} from "@/components/recipes/recipe-editor-stepper";
 
 import {
   createClient,
 } from "@/lib/supabase/server";
 
+import {
+  getMyRecipeForEditor,
+} from "@/services/recipes/community-recipe-service";
 
-type RecipeStatus =
-  | "draft"
-  | "pending_review"
-  | "published"
-  | "archived";
+import {
+  getRecipeClassificationOptions,
+  getRecipeClassificationRelations,
+} from "@/services/recipes/recipe-service";
+
+import {
+  BasicInfoForm,
+} from "./basic-info-form";
+
+import {
+  ClassificationForm,
+} from "./classification-form";
+
+import {
+  ServingsForm,
+} from "./servings-form";
 
 
-type PageProps = {
-  searchParams?:
+type EditorStep =
+  | "basic"
+  | "servings"
+  | "classification"
+  | "ingredients"
+  | "steps"
+  | "times"
+  | "image"
+  | "review";
+
+
+type EditMyRecipePageProps = {
+  params:
     Promise<{
-      status?:
+      id:
+        string;
+    }>;
+
+  searchParams:
+    Promise<{
+      step?:
         string;
     }>;
 };
 
 
-const statusConfig = {
-  draft: {
-    label:
-      "Borrador",
-
-    icon:
-      FilePenLine,
-  },
-
-  pending_review: {
-    label:
-      "En revisión",
-
-    icon:
-      Clock3,
-  },
-
-  published: {
-    label:
-      "Publicada",
-
-    icon:
-      Send,
-  },
-
-  archived: {
-    label:
-      "Archivada",
-
-    icon:
-      Archive,
-  },
-} satisfies Record<
-  RecipeStatus,
-  {
-    label:
-      string;
-
-    icon:
-      typeof FilePenLine;
-  }
->;
+const editorSteps:
+  EditorStep[] = [
+    "basic",
+    "servings",
+    "classification",
+    "ingredients",
+    "steps",
+    "times",
+    "image",
+    "review",
+  ];
 
 
-/* =========================================================
-   STATUS
-========================================================= */
+const stepLabels:
+  Record<
+    EditorStep,
+    string
+  > = {
+    basic:
+      "Información básica",
 
-function isRecipeStatus(
+    servings:
+      "Raciones",
+
+    classification:
+      "Clasificación",
+
+    ingredients:
+      "Ingredientes",
+
+    steps:
+      "Elaboración",
+
+    times:
+      "Tiempos",
+
+    image:
+      "Imagen",
+
+    review:
+      "Revisión final",
+  };
+
+
+function isEditorStep(
   value:
     string | undefined,
-): value is RecipeStatus {
-  return (
-    value === "draft" ||
-    value === "pending_review" ||
-    value === "published" ||
-    value === "archived"
+): value is EditorStep {
+  return editorSteps.includes(
+    value as EditorStep,
   );
 }
 
 
-/* =========================================================
-   DATE
-========================================================= */
+type PlaceholderStepProps = {
+  recipeId:
+    string;
 
-function formatDate(
-  value:
-    string | null,
-) {
-  if (
-    !value
-  ) {
-    return "Sin fecha";
-  }
+  step:
+    EditorStep;
+};
 
 
-  return new Intl.DateTimeFormat(
-    "es-ES",
-    {
-      day:
-        "2-digit",
-
-      month:
-        "short",
-
-      year:
-        "numeric",
-    },
-  ).format(
-    new Date(
-      value,
-    ),
-  );
-}
+function PlaceholderStep({
+  recipeId,
+  step,
+}: PlaceholderStepProps) {
+  const currentIndex =
+    editorSteps.indexOf(
+      step,
+    );
 
 
-/* =========================================================
-   PAGE
-========================================================= */
-
-export default async function MyRecipesPage({
-  searchParams,
-}: PageProps) {
-  const params =
-    await searchParams;
-
-
-  const requestedStatus =
-    params?.status;
-
-
-  const activeStatus =
-    isRecipeStatus(
-      requestedStatus,
-    )
-      ? requestedStatus
+  const previousStep =
+    currentIndex >
+    0
+      ? editorSteps[
+          currentIndex -
+          1
+        ]
       : null;
+
+
+  const nextStep =
+    currentIndex <
+    editorSteps.length -
+      1
+      ? editorSteps[
+          currentIndex +
+          1
+        ]
+      : null;
+
+
+  return (
+    <section className="rounded-2xl border border-border bg-surface p-6">
+
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
+        Paso {
+          currentIndex +
+          1
+        } de {
+          editorSteps.length
+        }
+      </p>
+
+
+      <h2 className="mt-2 font-serif text-2xl font-semibold">
+        {
+          stepLabels[
+            step
+          ]
+        }
+      </h2>
+
+
+      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+        Este bloque será el siguiente
+        en incorporarse al editor de CociHub.
+      </p>
+
+
+      <div className="mt-8 flex items-center justify-between gap-4">
+
+        {previousStep ? (
+          <Link
+            href={`/mi-cocihub/recetas/${recipeId}/editar?step=${previousStep}`}
+            className="rounded-xl border border-border bg-surface px-5 py-3 text-sm font-semibold transition hover:bg-page-muted"
+          >
+            ← Anterior
+          </Link>
+        ) : (
+          <span />
+        )}
+
+
+        {nextStep && (
+          <Link
+            href={`/mi-cocihub/recetas/${recipeId}/editar?step=${nextStep}`}
+            className="rounded-xl border border-border bg-surface px-5 py-3 text-sm font-semibold transition hover:bg-page-muted"
+          >
+            Siguiente →
+          </Link>
+        )}
+
+      </div>
+
+    </section>
+  );
+}
+
+
+export default async function EditMyRecipePage({
+  params,
+  searchParams,
+}: EditMyRecipePageProps) {
+  const {
+    id,
+  } =
+    await params;
+
+
+  const {
+    step:
+      requestedStep,
+  } =
+    await searchParams;
 
 
   const supabase =
@@ -192,123 +274,202 @@ export default async function MyRecipesPage({
 
 
   // =======================================================
-  // PROFILE
+  // RECIPE
   // =======================================================
 
-  const {
-    data:
-      profile,
-
-    error:
-      profileError,
-  } =
-    await supabase
-      .from(
-        "profiles",
-      )
-      .select(
-        "username",
-      )
-      .eq(
-        "id",
-        userId,
-      )
-      .single();
+  const recipe =
+    await getMyRecipeForEditor(
+      id,
+      userId,
+    );
 
 
   if (
-    profileError ||
-    !profile
+    !recipe
+  ) {
+    notFound();
+  }
+
+
+  if (
+    recipe.status !==
+    "draft"
   ) {
     redirect(
-      "/login?error=profile-missing",
+      "/mi-cocihub/recetas",
     );
   }
 
 
+  // =======================================================
+  // CLASSIFICATION RELATIONS
+  // =======================================================
+
+  const classificationRelations =
+    await getRecipeClassificationRelations(
+      recipe.id,
+    );
+
+
+  // =======================================================
+  // REAL COMPLETION
+  // =======================================================
+
+  const basicInfoComplete =
+    Boolean(
+      recipe.title
+        .trim(),
+    ) &&
+    Boolean(
+      recipe.slug
+        .trim(),
+    ) &&
+    Boolean(
+      recipe
+        .short_description
+        ?.trim(),
+    );
+
+
+  const servingsComplete =
+    recipe.base_servings !==
+      null &&
+    recipe.base_servings >
+      0;
+
+
+  const classificationComplete =
+    Boolean(
+      recipe.recipe_type_id,
+    ) &&
+    Boolean(
+      recipe.difficulty,
+    ) &&
+    classificationRelations
+      .categoryIds
+      .length >
+      0;
+
+
+  // =======================================================
+  // DEFAULT STEP
+  // =======================================================
+
+  let defaultStep:
+    EditorStep =
+      "ingredients";
+
+
   if (
-    !profile.username
+    !basicInfoComplete
+  ) {
+    defaultStep =
+      "basic";
+  } else if (
+    !servingsComplete
+  ) {
+    defaultStep =
+      "servings";
+  } else if (
+    !classificationComplete
+  ) {
+    defaultStep =
+      "classification";
+  }
+
+
+  // =======================================================
+  // CURRENT STEP
+  // =======================================================
+
+  if (
+    !isEditorStep(
+      requestedStep,
+    )
   ) {
     redirect(
-      "/complete-profile",
+      `/mi-cocihub/recetas/${recipe.id}/editar?step=${defaultStep}`,
     );
   }
 
 
+  const activeStep =
+    requestedStep;
+
+
   // =======================================================
-  // OWN RECIPES
+  // CLASSIFICATION OPTIONS
   // =======================================================
 
-  /*
-   * IMPORTANTE:
-   *
-   * El select se mantiene como una cadena literal.
-   *
-   * Supabase utiliza ese literal para inferir el tipo
-   * TypeScript de los registros devueltos.
-   *
-   * Si lo construimos dinámicamente con:
-   *
-   *   ["id", "title", ...].join(",")
-   *
-   * TypeScript solo obtiene `string` y Supabase pierde
-   * la información necesaria para inferir las columnas.
-   */
+  const classificationOptions =
+    activeStep ===
+      "classification"
+      ? await getRecipeClassificationOptions()
+      : null;
 
-  let recipesQuery =
-    supabase
-      .from(
-        "recipes",
-      )
-      .select(
-        "id,title,slug,status,short_description,created_at,updated_at,submitted_at,published_at,review_notes",
-      )
-      .eq(
-        "author_id",
-        userId,
-      )
-      .order(
-        "updated_at",
-        {
-          ascending:
-            false,
-        },
+
+  // =======================================================
+  // STEPPER COMPLETION
+  // =======================================================
+
+  const completion:
+    Record<
+      EditorStep,
+      boolean
+    > = {
+    basic:
+      basicInfoComplete,
+
+    servings:
+      servingsComplete,
+
+    classification:
+      classificationComplete,
+
+    ingredients:
+      false,
+
+    steps:
+      false,
+
+    times:
+      false,
+
+    image:
+      false,
+
+    review:
+      false,
+  };
+
+
+  const stepperItems:
+    RecipeEditorStep[] =
+      editorSteps.map(
+        (
+          step,
+        ) => ({
+          key:
+            step,
+
+          label:
+            stepLabels[
+              step
+            ],
+
+          href:
+            `/mi-cocihub/recetas/${recipe.id}/editar?step=${step}`,
+
+          completed:
+            completion[
+              step
+            ],
+
+          current:
+            step ===
+            activeStep,
+        }),
       );
-
-
-  if (
-    activeStatus
-  ) {
-    recipesQuery =
-      recipesQuery.eq(
-        "status",
-        activeStatus,
-      );
-  }
-
-
-  const {
-    data:
-      recipes,
-
-    error:
-      recipesError,
-  } =
-    await recipesQuery;
-
-
-  if (
-    recipesError
-  ) {
-    throw new Error(
-      "No se pudieron cargar tus recetas.",
-    );
-  }
-
-
-  const recipeList =
-    recipes ??
-    [];
 
 
   return (
@@ -316,14 +477,10 @@ export default async function MyRecipesPage({
 
       <div className="mx-auto w-full max-w-6xl">
 
-        {/* =================================================
-            TOP BAR
-        ================================================= */}
-
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
           <Link
-            href="/mi-cocihub"
+            href="/mi-cocihub/recetas"
             className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
           >
             <ArrowLeft
@@ -331,334 +488,185 @@ export default async function MyRecipesPage({
               aria-hidden="true"
             />
 
-            Volver a Mi CociHub
+            Volver a Mis recetas
           </Link>
 
 
-          <Link
-            href="/mi-cocihub/recetas/nueva"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-inverse shadow-sm transition hover:bg-brand-hover"
-          >
-            <Plus
-              className="size-5"
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium">
+
+            <FilePenLine
+              className="size-4 text-brand"
               aria-hidden="true"
             />
 
-            Crear receta
-          </Link>
+            Borrador
+
+          </span>
 
         </div>
 
 
-        {/* =================================================
-            CONTENT
-        ================================================= */}
-
         <section className="rounded-3xl border border-border bg-surface p-6 shadow-sm sm:p-8">
 
-          <div>
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
 
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
-              Mi CociHub
-            </p>
-
-
-            <h1 className="mt-2 font-serif text-3xl font-semibold sm:text-4xl">
-              Mis recetas
-            </h1>
-
-
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Consulta tus borradores,
-              recetas pendientes de revisión,
-              publicaciones y recetas archivadas.
-            </p>
-
-          </div>
-
-
-          {/* ===============================================
-              FILTERS
-          =============================================== */}
-
-          <nav className="mt-8 flex flex-wrap gap-2">
-
-            <Link
-              href="/mi-cocihub/recetas"
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                activeStatus ===
-                null
-                  ? "border-brand bg-brand text-inverse"
-                  : "border-border bg-page hover:bg-page-muted"
-              }`}
-            >
-              Todas
-            </Link>
-
-
-            {(
-              Object.entries(
-                statusConfig,
-              ) as [
-                RecipeStatus,
-                (
-                  typeof statusConfig
-                )[RecipeStatus],
-              ][]
-            ).map(
-              ([
-                status,
-                config,
-              ]) => (
-                <Link
-                  key={
-                    status
-                  }
-                  href={`/mi-cocihub/recetas?status=${status}`}
-                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                    activeStatus ===
-                    status
-                      ? "border-brand bg-brand text-inverse"
-                      : "border-border bg-page hover:bg-page-muted"
-                  }`}
-                >
-                  {
-                    config.label
-                  }
-                </Link>
-              ),
-            )}
-
-          </nav>
-
-
-          {/* ===============================================
-              EMPTY STATE
-          =============================================== */}
-
-          {recipeList.length ===
-          0 ? (
-            <div className="mt-10 rounded-2xl border border-dashed border-border bg-page-muted px-6 py-12 text-center">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-inverse">
 
               <ChefHat
-                className="mx-auto size-8 text-brand"
+                className="size-6"
                 aria-hidden="true"
               />
 
-
-              <h2 className="mt-4 font-serif text-xl font-semibold">
-                No hay recetas aquí todavía
-              </h2>
+            </div>
 
 
-              <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
-                Cuando empieces a crear
-                recetas aparecerán aquí
-                clasificadas según su estado.
+            <div>
+
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
+                Editor de recetas
               </p>
 
 
-              <Link
-                href="/mi-cocihub/recetas/nueva"
-                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-inverse transition hover:bg-brand-hover"
-              >
-                <Plus
-                  className="size-4"
-                  aria-hidden="true"
-                />
-
-                Crear mi primera receta
-              </Link>
-
-            </div>
-          ) : (
-
-            /* =============================================
-                RECIPE LIST
-            ============================================= */
-
-            <div className="mt-8 grid gap-4">
-
-              {recipeList.map(
-                (
-                  recipe,
-                ) => {
-
-                  const status =
-                    recipe.status as
-                      RecipeStatus;
+              <h1 className="mt-2 font-serif text-3xl font-semibold sm:text-4xl">
+                {
+                  recipe.title
+                }
+              </h1>
 
 
-                  const config =
-                    statusConfig[
-                      status
-                    ];
-
-
-                  const StatusIcon =
-                    config.icon;
-
-
-                  const hasReviewNotes =
-                    status ===
-                      "draft" &&
-                    Boolean(
-                      recipe.review_notes,
-                    );
-
-
-                  return (
-                    <article
-                      key={
-                        recipe.id
-                      }
-                      className="rounded-2xl border border-border bg-page p-5"
-                    >
-
-                      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-
-                        {/* =================================
-                            RECIPE INFORMATION
-                        ================================= */}
-
-                        <div className="min-w-0 flex-1">
-
-                          <div className="flex flex-wrap items-center gap-2">
-
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs font-semibold">
-
-                              <StatusIcon
-                                className="size-3.5"
-                                aria-hidden="true"
-                              />
-
-                              {
-                                config.label
-                              }
-
-                            </span>
-
-
-                            {hasReviewNotes && (
-                              <span className="rounded-full bg-page-muted px-3 py-1 text-xs font-semibold text-brand">
-                                Cambios solicitados
-                              </span>
-                            )}
-
-                          </div>
-
-
-                          <h2 className="mt-3 font-serif text-xl font-semibold">
-                            {
-                              recipe.title
-                            }
-                          </h2>
-
-
-                          {recipe.short_description && (
-                            <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
-                              {
-                                recipe.short_description
-                              }
-                            </p>
-                          )}
-
-
-                          <p className="mt-3 text-xs text-muted-foreground">
-                            Última actualización:{" "}
-                            {
-                              formatDate(
-                                recipe.updated_at,
-                              )
-                            }
-                          </p>
-
-
-                          {hasReviewNotes && (
-                            <div className="mt-4 rounded-xl border border-border bg-surface p-4">
-
-                              <p className="text-xs font-semibold uppercase tracking-wide text-brand">
-                                Comentario de revisión
-                              </p>
-
-
-                              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                                {
-                                  recipe.review_notes
-                                }
-                              </p>
-
-                            </div>
-                          )}
-
-                        </div>
-
-
-                        {/* =================================
-                            ACTIONS
-                        ================================= */}
-
-                        <div className="flex shrink-0 flex-wrap gap-2">
-
-                          {status ===
-                            "draft" && (
-                              <Link
-                                href={`/mi-cocihub/recetas/${recipe.id}/editar`}
-                                className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-inverse transition hover:bg-brand-hover"
-                              >
-                                <FilePenLine
-                                  className="size-4"
-                                  aria-hidden="true"
-                                />
-
-                                Editar
-                              </Link>
-                            )}
-
-
-                          {status ===
-                            "pending_review" && (
-                              <span className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-border bg-page-muted px-4 py-2.5 text-sm font-medium text-muted-foreground">
-
-                                <Clock3
-                                  className="size-4"
-                                  aria-hidden="true"
-                                />
-
-                                En revisión
-
-                              </span>
-                            )}
-
-
-                          {status ===
-                            "published" && (
-                              <Link
-                                href={`/recipes/${recipe.slug}`}
-                                className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition hover:bg-page-muted"
-                              >
-                                <Eye
-                                  className="size-4"
-                                  aria-hidden="true"
-                                />
-
-                                Ver publicada
-                              </Link>
-                            )}
-
-                        </div>
-
-                      </div>
-
-                    </article>
-                  );
-                },
-              )}
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                Completa tu receta paso a paso.
+                Puedes moverte libremente entre
+                las secciones mientras siga
+                siendo un borrador.
+              </p>
 
             </div>
-          )}
+
+          </div>
 
         </section>
+
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
+
+          <RecipeEditorStepper
+            steps={
+              stepperItems
+            }
+          />
+
+
+          <div>
+
+            {activeStep ===
+              "basic" && (
+                <BasicInfoForm
+                  recipeId={
+                    recipe.id
+                  }
+                  nextStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=servings`
+                  }
+                  initialValues={{
+                    title:
+                      recipe.title,
+
+                    slug:
+                      recipe.slug,
+
+                    shortDescription:
+                      recipe.short_description,
+
+                    introduction:
+                      recipe.introduction,
+                  }}
+                />
+              )}
+
+
+            {activeStep ===
+              "servings" && (
+                <ServingsForm
+                  recipeId={
+                    recipe.id
+                  }
+                  initialValue={
+                    recipe.base_servings
+                  }
+                  previousStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=basic`
+                  }
+                  nextStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=classification`
+                  }
+                />
+              )}
+
+
+            {activeStep ===
+              "classification" &&
+              classificationOptions && (
+                <ClassificationForm
+                  recipeId={
+                    recipe.id
+                  }
+                  recipeTypes={
+                    classificationOptions
+                      .recipeTypes
+                  }
+                  categories={
+                    classificationOptions
+                      .categories
+                  }
+                  tags={
+                    classificationOptions
+                      .tags
+                  }
+                  initialValues={{
+                    recipeTypeId:
+                      recipe.recipe_type_id,
+
+                    difficulty:
+                      recipe.difficulty,
+
+                    categoryIds:
+                      classificationRelations
+                        .categoryIds,
+
+                    tagIds:
+                      classificationRelations
+                        .tagIds,
+                  }}
+                  previousStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=servings`
+                  }
+                  nextStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=ingredients`
+                  }
+                />
+              )}
+
+
+            {activeStep !==
+              "basic" &&
+              activeStep !==
+                "servings" &&
+              activeStep !==
+                "classification" && (
+                <PlaceholderStep
+                  recipeId={
+                    recipe.id
+                  }
+                  step={
+                    activeStep
+                  }
+                />
+              )}
+
+          </div>
+
+        </div>
 
       </div>
 

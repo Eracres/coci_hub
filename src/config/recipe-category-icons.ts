@@ -12,7 +12,6 @@ import {
   Drumstick,
   Fish,
   Flame,
-  Globe,
   Ham,
   Leaf,
   Package,
@@ -29,10 +28,61 @@ import {
 } from "@/config/recipe-category-sections";
 
 
-const RECIPE_CATEGORY_ICONS:
+export type RecipeCategoryVisual =
+  | {
+      kind:
+        "icon";
+
+      icon:
+        LucideIcon;
+    }
+  | {
+      kind:
+        "flag";
+
+      flag:
+        string;
+    };
+
+
+function icon(
+  value:
+    LucideIcon,
+): RecipeCategoryVisual {
+  return {
+    kind:
+      "icon",
+
+    icon:
+      value,
+  };
+}
+
+
+function flag(
+  value:
+    string,
+): RecipeCategoryVisual {
+  return {
+    kind:
+      "flag",
+
+    flag:
+      value,
+  };
+}
+
+
+const DEFAULT_RECIPE_CATEGORY_VISUAL =
+  icon(
+    Tag,
+  );
+
+
+const RECIPE_CATEGORY_VISUALS:
   Record<
     string,
-    LucideIcon
+    RecipeCategoryVisual
   > = {
     /*
      * =====================================================
@@ -43,77 +93,107 @@ const RECIPE_CATEGORY_ICONS:
     [normalizeRecipeCategoryName(
       "Carnes",
     )]:
-      Beef,
+      icon(
+        Beef,
+      ),
 
     [normalizeRecipeCategoryName(
       "Aves",
     )]:
-      Drumstick,
+      icon(
+        Drumstick,
+      ),
 
     [normalizeRecipeCategoryName(
       "Cerdo",
     )]:
-      Ham,
+      icon(
+        Ham,
+      ),
 
     [normalizeRecipeCategoryName(
       "Pescados",
     )]:
-      Fish,
+      icon(
+        Fish,
+      ),
 
     [normalizeRecipeCategoryName(
       "Mariscos",
     )]:
-      Shell,
+      icon(
+        Shell,
+      ),
 
     [normalizeRecipeCategoryName(
       "Arroces",
     )]:
-      ChefHat,
+      icon(
+        ChefHat,
+      ),
 
     [normalizeRecipeCategoryName(
       "Pasta",
     )]:
-      ChefHat,
+      icon(
+        ChefHat,
+      ),
 
     [normalizeRecipeCategoryName(
       "Verduras y hortalizas",
     )]:
-      Leaf,
+      icon(
+        Leaf,
+      ),
 
     [normalizeRecipeCategoryName(
       "Legumbres",
     )]:
-      Bean,
+      icon(
+        Bean,
+      ),
 
     [normalizeRecipeCategoryName(
       "Setas y hongos",
     )]:
-      Leaf,
+      icon(
+        Leaf,
+      ),
 
     [normalizeRecipeCategoryName(
       "Patatas",
     )]:
-      Leaf,
+      icon(
+        Leaf,
+      ),
 
     [normalizeRecipeCategoryName(
       "Frutas",
     )]:
-      Apple,
+      icon(
+        Apple,
+      ),
 
     [normalizeRecipeCategoryName(
       "Frutos secos",
     )]:
-      Leaf,
+      icon(
+        Leaf,
+      ),
 
     [normalizeRecipeCategoryName(
       "Huevos",
     )]:
-      ChefHat,
+      icon(
+        ChefHat,
+      ),
 
     [normalizeRecipeCategoryName(
       "Quesos y lácteos",
     )]:
-      ChefHat,
+      icon(
+        ChefHat,
+      ),
 
 
     /*
@@ -125,77 +205,107 @@ const RECIPE_CATEGORY_ICONS:
     [normalizeRecipeCategoryName(
       "Ensaladas",
     )]:
-      Leaf,
+      icon(
+        Leaf,
+      ),
 
     [normalizeRecipeCategoryName(
       "Sopas y cremas",
     )]:
-      Soup,
+      icon(
+        Soup,
+      ),
 
     [normalizeRecipeCategoryName(
       "Guisos y estofados",
     )]:
-      Soup,
+      icon(
+        Soup,
+      ),
 
     [normalizeRecipeCategoryName(
       "Platos de cuchara",
     )]:
-      Soup,
+      icon(
+        Soup,
+      ),
 
     [normalizeRecipeCategoryName(
       "Salsas",
     )]:
-      Droplet,
+      icon(
+        Droplet,
+      ),
 
     [normalizeRecipeCategoryName(
       "Croquetas y frituras",
     )]:
-      Flame,
+      icon(
+        Flame,
+      ),
 
     [normalizeRecipeCategoryName(
       "Panes y masas",
     )]:
-      Sandwich,
+      icon(
+        Sandwich,
+      ),
 
     [normalizeRecipeCategoryName(
       "Pizzas",
     )]:
-      ChefHat,
+      icon(
+        ChefHat,
+      ),
 
     [normalizeRecipeCategoryName(
       "Bocadillos y sándwiches",
     )]:
-      Sandwich,
+      icon(
+        Sandwich,
+      ),
 
     [normalizeRecipeCategoryName(
       "Empanadas",
     )]:
-      Sandwich,
+      icon(
+        Sandwich,
+      ),
 
     [normalizeRecipeCategoryName(
       "Tartas y pasteles",
     )]:
-      Sparkles,
+      icon(
+        Sparkles,
+      ),
 
     [normalizeRecipeCategoryName(
       "Galletas y dulces",
     )]:
-      Sparkles,
+      icon(
+        Sparkles,
+      ),
 
     [normalizeRecipeCategoryName(
       "Helados y postres fríos",
     )]:
-      Snowflake,
+      icon(
+        Snowflake,
+      ),
 
     [normalizeRecipeCategoryName(
       "Conservas y encurtidos",
     )]:
-      Package,
+      icon(
+        Package,
+      ),
 
     [normalizeRecipeCategoryName(
       "Bebidas",
     )]:
-      Droplet,
+      icon(
+        Droplet,
+      ),
 
 
     /*
@@ -207,57 +317,72 @@ const RECIPE_CATEGORY_ICONS:
     [normalizeRecipeCategoryName(
       "Cocina española",
     )]:
-      Globe,
+      flag(
+        "🇪🇸",
+      ),
 
     [normalizeRecipeCategoryName(
       "Cocina francesa",
     )]:
-      Globe,
+      flag(
+        "🇫🇷",
+      ),
 
     [normalizeRecipeCategoryName(
       "Cocina italiana",
     )]:
-      Globe,
+      flag(
+        "🇮🇹",
+      ),
 
     [normalizeRecipeCategoryName(
       "Cocina mexicana",
     )]:
-      Globe,
+      flag(
+        "🇲🇽",
+      ),
 
     [normalizeRecipeCategoryName(
       "Cocina colombiana",
     )]:
-      Globe,
-
-    [normalizeRecipeCategoryName(
-      "Cocina venezolana",
-    )]:
-      Globe,
+      flag(
+        "🇨🇴",
+      ),
 
     [normalizeRecipeCategoryName(
       "Cocina ecuatoriana",
     )]:
-      Globe,
+      flag(
+        "🇪🇨",
+      ),
 
     [normalizeRecipeCategoryName(
       "Cocina peruana",
     )]:
-      Globe,
+      flag(
+        "🇵🇪",
+      ),
 
     [normalizeRecipeCategoryName(
       "Cocina china",
     )]:
-      Globe,
+      flag(
+        "🇨🇳",
+      ),
 
     [normalizeRecipeCategoryName(
       "Cocina japonesa",
     )]:
-      Globe,
+      flag(
+        "🇯🇵",
+      ),
 
     [normalizeRecipeCategoryName(
       "Cocina india",
     )]:
-      Globe,
+      flag(
+        "🇮🇳",
+      ),
 
 
     /*
@@ -269,20 +394,22 @@ const RECIPE_CATEGORY_ICONS:
     [normalizeRecipeCategoryName(
       "Cocina tradicional",
     )]:
-      BookOpen,
+      icon(
+        BookOpen,
+      ),
   };
 
 
-export function getRecipeCategoryIcon(
+export function getRecipeCategoryVisual(
   categoryName:
     string,
-): LucideIcon {
+): RecipeCategoryVisual {
   return (
-    RECIPE_CATEGORY_ICONS[
+    RECIPE_CATEGORY_VISUALS[
       normalizeRecipeCategoryName(
         categoryName,
       )
     ] ??
-    Tag
+    DEFAULT_RECIPE_CATEGORY_VISUAL
   );
 }

@@ -97,7 +97,9 @@ function formatDate(
   value:
     string | null,
 ) {
-  if (!value) {
+  if (
+    !value
+  ) {
     return "Sin fecha";
   }
 
@@ -224,6 +226,17 @@ export default async function MyRecipesPage({
   // =======================================================
   // OWN RECIPES
   // =======================================================
+  //
+  // IMPORTANT:
+  //
+  // This select must remain a string literal.
+  //
+  // Supabase uses the literal query at compile time
+  // to infer the returned TypeScript object.
+  //
+  // Building it dynamically with .join(",") widens
+  // the expression to string and breaks that inference.
+  // =======================================================
 
   let recipesQuery =
     supabase
@@ -231,20 +244,7 @@ export default async function MyRecipesPage({
         "recipes",
       )
       .select(
-        [
-          "id",
-          "title",
-          "slug",
-          "status",
-          "short_description",
-          "created_at",
-          "updated_at",
-          "submitted_at",
-          "published_at",
-          "review_notes",
-        ].join(
-          ",",
-        ),
+        "id,title,slug,status,short_description,created_at,updated_at,submitted_at,published_at,review_notes",
       )
       .eq(
         "author_id",
@@ -296,6 +296,7 @@ export default async function MyRecipesPage({
 
   return (
     <main className="min-h-screen bg-page px-4 py-8 text-foreground">
+
       <div className="mx-auto w-full max-w-6xl">
 
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -331,19 +332,23 @@ export default async function MyRecipesPage({
         <section className="rounded-3xl border border-border bg-surface p-6 shadow-sm sm:p-8">
 
           <div>
+
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
               Mi CociHub
             </p>
 
+
             <h1 className="mt-2 font-serif text-3xl font-semibold sm:text-4xl">
               Mis recetas
             </h1>
+
 
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
               Consulta tus borradores,
               recetas pendientes de revisión,
               publicaciones y recetas archivadas.
             </p>
+
           </div>
 
 
@@ -407,15 +412,18 @@ export default async function MyRecipesPage({
                 aria-hidden="true"
               />
 
+
               <h2 className="mt-4 font-serif text-xl font-semibold">
                 No hay recetas aquí todavía
               </h2>
+
 
               <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
                 Cuando empieces a crear
                 recetas aparecerán aquí
                 clasificadas según su estado.
               </p>
+
 
               <Link
                 href="/mi-cocihub/recetas/nueva"
@@ -438,7 +446,8 @@ export default async function MyRecipesPage({
                   recipe,
                 ) => {
                   const status =
-                    recipe.status as RecipeStatus;
+                    recipe.status as
+                      RecipeStatus;
 
 
                   const config =
@@ -474,6 +483,7 @@ export default async function MyRecipesPage({
                           <div className="flex flex-wrap items-center gap-2">
 
                             <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs font-semibold">
+
                               <StatusIcon
                                 className="size-3.5"
                                 aria-hidden="true"
@@ -482,6 +492,7 @@ export default async function MyRecipesPage({
                               {
                                 config.label
                               }
+
                             </span>
 
 
@@ -527,6 +538,7 @@ export default async function MyRecipesPage({
                                 Comentario de revisión
                               </p>
 
+
                               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                                 {
                                   recipe.review_notes
@@ -560,12 +572,14 @@ export default async function MyRecipesPage({
                           {status ===
                             "pending_review" && (
                               <span className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-border bg-page-muted px-4 py-2.5 text-sm font-medium text-muted-foreground">
+
                                 <Clock3
                                   className="size-4"
                                   aria-hidden="true"
                                 />
 
                                 En revisión
+
                               </span>
                             )}
 
@@ -600,6 +614,7 @@ export default async function MyRecipesPage({
         </section>
 
       </div>
+
     </main>
   );
 }

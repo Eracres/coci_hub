@@ -35,6 +35,9 @@ type BasicInfoFormProps = {
   recipeId:
     string;
 
+  nextStepHref:
+    string;
+
   initialValues: {
     title:
       string;
@@ -53,6 +56,7 @@ type BasicInfoFormProps = {
 
 export function BasicInfoForm({
   recipeId,
+  nextStepHref,
   initialValues,
 }: BasicInfoFormProps) {
   const router =
@@ -232,25 +236,18 @@ export function BasicInfoForm({
     }
 
 
-    /*
-     * Marcamos los datos actuales como
-     * nuevo estado limpio del formulario.
-     *
-     * Así el botón vuelve a quedar desactivado
-     * hasta que el usuario cambie algo de nuevo.
-     */
     reset(
       values,
     );
 
 
-    setMessage(
-      result.message ??
-      "Cambios guardados.",
+    /*
+     * Guardamos correctamente y avanzamos
+     * al siguiente paso.
+     */
+    router.push(
+      nextStepHref,
     );
-
-
-    router.refresh();
   }
 
 
@@ -259,7 +256,7 @@ export function BasicInfoForm({
 
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
-          Paso 1
+          Paso 1 de 8
         </p>
 
         <h2 className="mt-2 font-serif text-2xl font-semibold">
@@ -282,10 +279,6 @@ export function BasicInfoForm({
         }
         className="mt-8 space-y-6"
       >
-
-        {/* =================================================
-            TITLE
-        ================================================= */}
 
         <div>
           <label
@@ -317,10 +310,6 @@ export function BasicInfoForm({
           )}
         </div>
 
-
-        {/* =================================================
-            SLUG
-        ================================================= */}
 
         <div>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
@@ -406,10 +395,6 @@ export function BasicInfoForm({
         </div>
 
 
-        {/* =================================================
-            SHORT DESCRIPTION
-        ================================================= */}
-
         <div>
           <label
             htmlFor="shortDescription"
@@ -446,10 +431,6 @@ export function BasicInfoForm({
           )}
         </div>
 
-
-        {/* =================================================
-            INTRODUCTION
-        ================================================= */}
 
         <div>
           <label
@@ -490,36 +471,33 @@ export function BasicInfoForm({
         </div>
 
 
-        {/* =================================================
-            ACTIONS
-        ================================================= */}
+        {message && (
+          <p
+            role="alert"
+            className="text-sm text-red-700"
+          >
+            {
+              message
+            }
+          </p>
+        )}
 
-        <div className="flex flex-wrap items-center gap-4">
+
+        <div className="flex justify-end">
 
           <button
             type="submit"
             disabled={
-              isSubmitting ||
-              !isDirty
+              isSubmitting
             }
             className="rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting
               ? "Guardando..."
-              : "Guardar información básica"}
+              : isDirty
+                ? "Guardar y continuar →"
+                : "Continuar →"}
           </button>
-
-
-          {message && (
-            <p
-              role="status"
-              className="text-sm text-muted-foreground"
-            >
-              {
-                message
-              }
-            </p>
-          )}
 
         </div>
 

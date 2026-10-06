@@ -6,6 +6,10 @@ import type {
   RecipeBasicInfoFormData,
 } from "@/schemas/recipe-basic-info-schema";
 
+import type {
+  RecipeServingsData,
+} from "@/schemas/recipe-servings-schema";
+
 
 export type CommunityRecipeStatus =
   | "draft"
@@ -32,6 +36,9 @@ export type CommunityRecipeEditorRecord = {
 
   introduction:
     string | null;
+
+  base_servings:
+    number | null;
 
   status:
     CommunityRecipeStatus;
@@ -79,6 +86,7 @@ export async function getMyRecipeForEditor(
         slug,
         short_description,
         introduction,
+        base_servings,
         status,
         review_notes,
         created_at,
@@ -144,6 +152,42 @@ export async function updateMyRecipeBasicInfo(
 
         p_introduction:
           input.introduction,
+      },
+    );
+
+
+  if (error) {
+    throw error;
+  }
+}
+
+
+/* =========================================================
+   UPDATE OWN SERVINGS
+========================================================= */
+
+export async function updateMyRecipeServings(
+  recipeId:
+    string,
+
+  input:
+    RecipeServingsData,
+) {
+  const supabase =
+    await createClient();
+
+
+  const {
+    error,
+  } =
+    await supabase.rpc(
+      "update_my_recipe_servings",
+      {
+        p_recipe_id:
+          recipeId,
+
+        p_base_servings:
+          input.baseServings,
       },
     );
 

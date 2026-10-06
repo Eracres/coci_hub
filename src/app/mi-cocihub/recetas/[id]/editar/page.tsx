@@ -28,6 +28,7 @@ import {
   getRecipeClassificationOptions,
   getRecipeClassificationRelations,
   getRecipeIngredients,
+  getRecipeSteps,
 } from "@/services/recipes/recipe-service";
 
 import {
@@ -45,6 +46,10 @@ import {
 import {
   ServingsForm,
 } from "./servings-form";
+
+import {
+  StepsForm,
+} from "./steps-form";
 
 
 type EditorStep =
@@ -312,12 +317,13 @@ export default async function EditMyRecipePage({
 
 
   // =======================================================
-  // RELATIONS + INGREDIENTS
+  // RELATIONS + INGREDIENTS + STEPS
   // =======================================================
 
   const [
     classificationRelations,
     ingredientGroups,
+    recipeSteps,
   ] =
     await Promise.all([
       getRecipeClassificationRelations(
@@ -325,6 +331,10 @@ export default async function EditMyRecipePage({
       ),
 
       getRecipeIngredients(
+        recipe.id,
+      ),
+
+      getRecipeSteps(
         recipe.id,
       ),
     ]);
@@ -387,24 +397,18 @@ export default async function EditMyRecipePage({
     0;
 
 
+  const stepsComplete =
+    recipeSteps.length >
+    0;
+
+
   // =======================================================
   // DEFAULT STEP
   // =======================================================
 
-  /*
-   * Cuando se entra simplemente en:
-   *
-   *   /editar
-   *
-   * enviamos al autor al primer bloque incompleto.
-   *
-   * A medida que terminamos bloques reales del editor,
-   * este punto avanza automáticamente.
-   */
-
   let defaultStep:
     EditorStep =
-      "steps";
+      "times";
 
 
   if (
@@ -427,6 +431,11 @@ export default async function EditMyRecipePage({
   ) {
     defaultStep =
       "ingredients";
+  } else if (
+    !stepsComplete
+  ) {
+    defaultStep =
+      "steps";
   }
 
 
@@ -482,7 +491,7 @@ export default async function EditMyRecipePage({
       ingredientsComplete,
 
     steps:
-      false,
+      stepsComplete,
 
     times:
       false,
@@ -752,6 +761,29 @@ export default async function EditMyRecipePage({
 
 
             {/* =============================================
+                STEPS
+            ============================================= */}
+
+            {activeStep ===
+              "steps" && (
+                <StepsForm
+                  recipeId={
+                    recipe.id
+                  }
+                  initialSteps={
+                    recipeSteps
+                  }
+                  previousStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=ingredients`
+                  }
+                  nextStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=times`
+                  }
+                />
+              )}
+
+
+            {/* =============================================
                 UPCOMING STEPS
             ============================================= */}
 
@@ -762,7 +794,9 @@ export default async function EditMyRecipePage({
               activeStep !==
                 "classification" &&
               activeStep !==
-                "ingredients" && (
+                "ingredients" &&
+              activeStep !==
+                "steps" && (
                 <PlaceholderStep
                   recipeId={
                     recipe.id

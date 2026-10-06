@@ -27,6 +27,7 @@ import {
 import {
   getRecipeClassificationOptions,
   getRecipeClassificationRelations,
+  getRecipeIngredients,
 } from "@/services/recipes/recipe-service";
 
 import {
@@ -36,6 +37,10 @@ import {
 import {
   ClassificationForm,
 } from "./classification-form";
+
+import {
+  IngredientsForm,
+} from "./ingredients-form";
 
 import {
   ServingsForm,
@@ -287,6 +292,11 @@ export default async function EditMyRecipePage({
   if (
     !recipe
   ) {
+    /*
+     * No revelamos si la receta no existe
+     * o pertenece a otra persona.
+     */
+
     notFound();
   }
 
@@ -302,13 +312,22 @@ export default async function EditMyRecipePage({
 
 
   // =======================================================
-  // CLASSIFICATION RELATIONS
+  // RELATIONS + INGREDIENTS
   // =======================================================
 
-  const classificationRelations =
-    await getRecipeClassificationRelations(
-      recipe.id,
-    );
+  const [
+    classificationRelations,
+    ingredientGroups,
+  ] =
+    await Promise.all([
+      getRecipeClassificationRelations(
+        recipe.id,
+      ),
+
+      getRecipeIngredients(
+        recipe.id,
+      ),
+    ]);
 
 
   // =======================================================
@@ -351,13 +370,41 @@ export default async function EditMyRecipePage({
       0;
 
 
+  const ingredientCount =
+    ingredientGroups.reduce(
+      (
+        total,
+        group,
+      ) =>
+        total +
+        group.ingredients.length,
+      0,
+    );
+
+
+  const ingredientsComplete =
+    ingredientCount >
+    0;
+
+
   // =======================================================
   // DEFAULT STEP
   // =======================================================
 
+  /*
+   * Cuando se entra simplemente en:
+   *
+   *   /editar
+   *
+   * enviamos al autor al primer bloque incompleto.
+   *
+   * A medida que terminamos bloques reales del editor,
+   * este punto avanza automáticamente.
+   */
+
   let defaultStep:
     EditorStep =
-      "ingredients";
+      "steps";
 
 
   if (
@@ -375,6 +422,11 @@ export default async function EditMyRecipePage({
   ) {
     defaultStep =
       "classification";
+  } else if (
+    !ingredientsComplete
+  ) {
+    defaultStep =
+      "ingredients";
   }
 
 
@@ -427,7 +479,7 @@ export default async function EditMyRecipePage({
       classificationComplete,
 
     ingredients:
-      false,
+      ingredientsComplete,
 
     steps:
       false,
@@ -472,10 +524,18 @@ export default async function EditMyRecipePage({
       );
 
 
+  // =======================================================
+  // RENDER
+  // =======================================================
+
   return (
     <main className="min-h-screen bg-page px-4 py-8 text-foreground">
 
       <div className="mx-auto w-full max-w-6xl">
+
+        {/* =================================================
+            TOP BAR
+        ================================================= */}
 
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
@@ -505,6 +565,10 @@ export default async function EditMyRecipePage({
 
         </div>
 
+
+        {/* =================================================
+            RECIPE HEADER
+        ================================================= */}
 
         <section className="rounded-3xl border border-border bg-surface p-6 shadow-sm sm:p-8">
 
@@ -548,6 +612,10 @@ export default async function EditMyRecipePage({
         </section>
 
 
+        {/* =================================================
+            EDITOR
+        ================================================= */}
+
         <div className="mt-6 grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
 
           <RecipeEditorStepper
@@ -558,6 +626,10 @@ export default async function EditMyRecipePage({
 
 
           <div>
+
+            {/* =============================================
+                BASIC
+            ============================================= */}
 
             {activeStep ===
               "basic" && (
@@ -585,6 +657,10 @@ export default async function EditMyRecipePage({
               )}
 
 
+            {/* =============================================
+                SERVINGS
+            ============================================= */}
+
             {activeStep ===
               "servings" && (
                 <ServingsForm
@@ -603,6 +679,10 @@ export default async function EditMyRecipePage({
                 />
               )}
 
+
+            {/* =============================================
+                CLASSIFICATION
+            ============================================= */}
 
             {activeStep ===
               "classification" &&
@@ -648,12 +728,41 @@ export default async function EditMyRecipePage({
               )}
 
 
+            {/* =============================================
+                INGREDIENTS
+            ============================================= */}
+
+            {activeStep ===
+              "ingredients" && (
+                <IngredientsForm
+                  recipeId={
+                    recipe.id
+                  }
+                  initialGroups={
+                    ingredientGroups
+                  }
+                  previousStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=classification`
+                  }
+                  nextStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=steps`
+                  }
+                />
+              )}
+
+
+            {/* =============================================
+                UPCOMING STEPS
+            ============================================= */}
+
             {activeStep !==
               "basic" &&
               activeStep !==
                 "servings" &&
               activeStep !==
-                "classification" && (
+                "classification" &&
+              activeStep !==
+                "ingredients" && (
                 <PlaceholderStep
                   recipeId={
                     recipe.id

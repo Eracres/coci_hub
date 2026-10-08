@@ -48,6 +48,10 @@ import {
 } from "./ingredients-form";
 
 import {
+  ReviewForm,
+} from "./review-form";
+
+import {
   ServingsForm,
 } from "./servings-form";
 
@@ -148,104 +152,6 @@ function isEditorStep(
 ): value is EditorStep {
   return editorSteps.includes(
     value as EditorStep,
-  );
-}
-
-
-type PlaceholderStepProps = {
-  recipeId:
-    string;
-
-  step:
-    EditorStep;
-};
-
-
-function PlaceholderStep({
-  recipeId,
-  step,
-}: PlaceholderStepProps) {
-  const currentIndex =
-    editorSteps.indexOf(
-      step,
-    );
-
-
-  const previousStep =
-    currentIndex >
-    0
-      ? editorSteps[
-          currentIndex -
-          1
-        ]
-      : null;
-
-
-  const nextStep =
-    currentIndex <
-    editorSteps.length -
-      1
-      ? editorSteps[
-          currentIndex +
-          1
-        ]
-      : null;
-
-
-  return (
-    <section className="rounded-2xl border border-border bg-surface p-6">
-
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
-        Paso {
-          currentIndex +
-          1
-        } de {
-          editorSteps.length
-        }
-      </p>
-
-
-      <h2 className="mt-2 font-serif text-2xl font-semibold">
-        {
-          stepLabels[
-            step
-          ]
-        }
-      </h2>
-
-
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">
-        Este bloque será el siguiente
-        en incorporarse al editor de CociHub.
-      </p>
-
-
-      <div className="mt-8 flex items-center justify-between gap-4">
-
-        {previousStep ? (
-          <Link
-            href={`/mi-cocihub/recetas/${recipeId}/editar?step=${previousStep}`}
-            className="rounded-xl border border-border bg-surface px-5 py-3 text-sm font-semibold transition hover:bg-page-muted"
-          >
-            ← Anterior
-          </Link>
-        ) : (
-          <span />
-        )}
-
-
-        {nextStep && (
-          <Link
-            href={`/mi-cocihub/recetas/${recipeId}/editar?step=${nextStep}`}
-            className="rounded-xl border border-border bg-surface px-5 py-3 text-sm font-semibold transition hover:bg-page-muted"
-          >
-            Siguiente →
-          </Link>
-        )}
-
-      </div>
-
-    </section>
   );
 }
 
@@ -475,6 +381,9 @@ export default async function EditMyRecipePage({
       .preparation_minutes !==
       null &&
     recipeTimes
+      .preparation_minutes >
+      0 &&
+    recipeTimes
       .cooking_minutes !==
       null &&
     recipeTimes
@@ -493,6 +402,153 @@ export default async function EditMyRecipePage({
 
 
   // =======================================================
+  // TOTAL TIME
+  // =======================================================
+
+  const totalMinutes =
+    (
+      recipeTimes
+        .preparation_minutes ??
+      0
+    ) +
+    (
+      recipeTimes
+        .cooking_minutes ??
+      0
+    ) +
+    (
+      recipeTimes
+        .additional_minutes ??
+      0
+    );
+
+
+  // =======================================================
+  // REVIEW CHECKLIST
+  // =======================================================
+
+  const reviewChecklist = [
+    {
+      key:
+        "basic",
+
+      label:
+        "Información básica",
+
+      complete:
+        basicInfoComplete,
+
+      href:
+        `/mi-cocihub/recetas/${recipe.id}/editar?step=basic`,
+    },
+
+    {
+      key:
+        "servings",
+
+      label:
+        "Raciones",
+
+      complete:
+        servingsComplete,
+
+      href:
+        `/mi-cocihub/recetas/${recipe.id}/editar?step=servings`,
+    },
+
+    {
+      key:
+        "classification",
+
+      label:
+        "Clasificación",
+
+      complete:
+        classificationComplete,
+
+      href:
+        `/mi-cocihub/recetas/${recipe.id}/editar?step=classification`,
+    },
+
+    {
+      key:
+        "ingredients",
+
+      label:
+        "Ingredientes",
+
+      complete:
+        ingredientsComplete,
+
+      href:
+        `/mi-cocihub/recetas/${recipe.id}/editar?step=ingredients`,
+    },
+
+    {
+      key:
+        "steps",
+
+      label:
+        "Elaboración",
+
+      complete:
+        stepsComplete,
+
+      href:
+        `/mi-cocihub/recetas/${recipe.id}/editar?step=steps`,
+    },
+
+    {
+      key:
+        "times",
+
+      label:
+        "Tiempos",
+
+      complete:
+        timesComplete,
+
+      href:
+        `/mi-cocihub/recetas/${recipe.id}/editar?step=times`,
+    },
+
+    {
+      key:
+        "image",
+
+      label:
+        "Imagen",
+
+      complete:
+        imageComplete,
+
+      href:
+        `/mi-cocihub/recetas/${recipe.id}/editar?step=image`,
+    },
+  ];
+
+
+  // =======================================================
+  // CAN SUBMIT
+  // =======================================================
+  //
+  // La interfaz utiliza exactamente los mismos apartados
+  // que se muestran al usuario.
+  //
+  // PostgreSQL realizará después la validación definitiva
+  // mediante submit_my_recipe_for_review().
+  // =======================================================
+
+  const canSubmitForReview =
+    reviewChecklist.every(
+      (
+        item,
+      ) =>
+        item.complete,
+    );
+
+
+  // =======================================================
   // DEFAULT STEP
   // =======================================================
 
@@ -506,31 +562,37 @@ export default async function EditMyRecipePage({
   ) {
     defaultStep =
       "basic";
+
   } else if (
     !servingsComplete
   ) {
     defaultStep =
       "servings";
+
   } else if (
     !classificationComplete
   ) {
     defaultStep =
       "classification";
+
   } else if (
     !ingredientsComplete
   ) {
     defaultStep =
       "ingredients";
+
   } else if (
     !stepsComplete
   ) {
     defaultStep =
       "steps";
+
   } else if (
     !timesComplete
   ) {
     defaultStep =
       "times";
+
   } else if (
     !imageComplete
   ) {
@@ -642,6 +704,10 @@ export default async function EditMyRecipePage({
 
       <div className="mx-auto w-full max-w-6xl">
 
+        {/* =================================================
+            TOP BAR
+        ================================================= */}
+
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
           <Link
@@ -670,6 +736,10 @@ export default async function EditMyRecipePage({
 
         </div>
 
+
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
         <section className="rounded-3xl border border-border bg-surface p-6 shadow-sm sm:p-8">
 
@@ -713,6 +783,10 @@ export default async function EditMyRecipePage({
         </section>
 
 
+        {/* =================================================
+            EDITOR
+        ================================================= */}
+
         <div className="mt-6 grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
 
           <RecipeEditorStepper
@@ -723,6 +797,10 @@ export default async function EditMyRecipePage({
 
 
           <div>
+
+            {/* =============================================
+                BASIC
+            ============================================= */}
 
             {activeStep ===
               "basic" && (
@@ -750,6 +828,10 @@ export default async function EditMyRecipePage({
               )}
 
 
+            {/* =============================================
+                SERVINGS
+            ============================================= */}
+
             {activeStep ===
               "servings" && (
                 <ServingsForm
@@ -768,6 +850,10 @@ export default async function EditMyRecipePage({
                 />
               )}
 
+
+            {/* =============================================
+                CLASSIFICATION
+            ============================================= */}
 
             {activeStep ===
               "classification" &&
@@ -813,6 +899,10 @@ export default async function EditMyRecipePage({
               )}
 
 
+            {/* =============================================
+                INGREDIENTS
+            ============================================= */}
+
             {activeStep ===
               "ingredients" && (
                 <IngredientsForm
@@ -832,6 +922,10 @@ export default async function EditMyRecipePage({
               )}
 
 
+            {/* =============================================
+                STEPS
+            ============================================= */}
+
             {activeStep ===
               "steps" && (
                 <StepsForm
@@ -850,6 +944,10 @@ export default async function EditMyRecipePage({
                 />
               )}
 
+
+            {/* =============================================
+                TIMES
+            ============================================= */}
 
             {activeStep ===
               "times" && (
@@ -880,6 +978,10 @@ export default async function EditMyRecipePage({
               )}
 
 
+            {/* =============================================
+                IMAGE
+            ============================================= */}
+
             {activeStep ===
               "image" && (
                 <ImageForm
@@ -905,26 +1007,63 @@ export default async function EditMyRecipePage({
               )}
 
 
-            {activeStep !==
-              "basic" &&
-              activeStep !==
-                "servings" &&
-              activeStep !==
-                "classification" &&
-              activeStep !==
-                "ingredients" &&
-              activeStep !==
-                "steps" &&
-              activeStep !==
-                "times" &&
-              activeStep !==
-                "image" && (
-                <PlaceholderStep
+            {/* =============================================
+                REVIEW
+            ============================================= */}
+
+            {activeStep ===
+              "review" && (
+                <ReviewForm
                   recipeId={
                     recipe.id
                   }
-                  step={
-                    activeStep
+                  title={
+                    recipe.title
+                  }
+                  shortDescription={
+                    recipe.short_description
+                  }
+                  imageUrl={
+                    imageUrl
+                  }
+                  imageAlt={
+                    recipe.image_alt
+                  }
+                  baseServings={
+                    recipe.base_servings
+                  }
+                  difficulty={
+                    recipe.difficulty
+                  }
+                  ingredientCount={
+                    ingredientCount
+                  }
+                  stepCount={
+                    recipeSteps.length
+                  }
+                  times={{
+                    preparationMinutes:
+                      recipeTimes
+                        .preparation_minutes,
+
+                    cookingMinutes:
+                      recipeTimes
+                        .cooking_minutes,
+
+                    additionalMinutes:
+                      recipeTimes
+                        .additional_minutes,
+
+                    totalMinutes,
+                  }}
+                  checklist={
+                    reviewChecklist
+                  }
+                  canSubmit={
+                    canSubmitForReview
+                  }
+                  previousStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=image`
                   }
                 />
               )}

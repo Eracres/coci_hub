@@ -3,7 +3,7 @@ import {
 } from "zod";
 
 
-const minuteFieldSchema =
+const integerMinutesSchema =
   z
     .string()
     .trim()
@@ -22,7 +22,37 @@ const minuteFieldSchema =
         message:
           "El tiempo debe ser un número entero.",
       },
-    )
+    );
+
+
+const preparationMinutesSchema =
+  integerMinutesSchema
+    .refine(
+      (
+        value,
+      ) => {
+        const minutes =
+          Number(
+            value,
+          );
+
+
+        return (
+          minutes >=
+            1 &&
+          minutes <=
+            10080
+        );
+      },
+      {
+        message:
+          "El tiempo de preparación debe estar entre 1 y 10080 minutos.",
+      },
+    );
+
+
+const additionalMinutesSchema =
+  integerMinutesSchema
     .refine(
       (
         value,
@@ -42,7 +72,7 @@ const minuteFieldSchema =
       },
       {
         message:
-          "El tiempo debe estar entre 0 y 10080 minutos.",
+          "El tiempo adicional debe estar entre 0 y 10080 minutos.",
       },
     );
 
@@ -50,10 +80,10 @@ const minuteFieldSchema =
 export const communityRecipeTimesSchema =
   z.object({
     preparationMinutes:
-      minuteFieldSchema,
+      preparationMinutesSchema,
 
     additionalMinutes:
-      minuteFieldSchema,
+      additionalMinutesSchema,
   });
 
 

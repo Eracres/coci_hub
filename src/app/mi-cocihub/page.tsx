@@ -23,6 +23,129 @@ import {
 } from "./actions";
 
 
+type ProfileRow = {
+  display_name:
+    string | null;
+
+  username:
+    string | null;
+
+  role:
+    string | null;
+
+  avatar_url:
+    string | null;
+};
+
+
+function normalizeExternalUrl(
+  value:
+    string | null | undefined,
+) {
+  if (
+    !value
+  ) {
+    return null;
+  }
+
+
+  try {
+    const url =
+      new URL(
+        value,
+      );
+
+
+    if (
+      url.protocol !==
+        "https:" &&
+      url.protocol !==
+        "http:"
+    ) {
+      return null;
+    }
+
+
+    return value;
+
+  } catch {
+    return null;
+  }
+}
+
+
+function getMetadataAvatar(
+  claims:
+    unknown,
+) {
+  if (
+    !claims ||
+    typeof claims !==
+      "object"
+  ) {
+    return null;
+  }
+
+
+  const claimsRecord =
+    claims as
+      Record<
+        string,
+        unknown
+      >;
+
+
+  const metadata =
+    claimsRecord
+      .user_metadata;
+
+
+  if (
+    !metadata ||
+    typeof metadata !==
+      "object"
+  ) {
+    return null;
+  }
+
+
+  const metadataRecord =
+    metadata as
+      Record<
+        string,
+        unknown
+      >;
+
+
+  const avatarUrl =
+    typeof metadataRecord
+      .avatar_url ===
+      "string"
+      ? metadataRecord
+          .avatar_url
+      : null;
+
+
+  const picture =
+    typeof metadataRecord
+      .picture ===
+      "string"
+      ? metadataRecord
+          .picture
+      : null;
+
+
+  return (
+    normalizeExternalUrl(
+      avatarUrl,
+    ) ??
+    normalizeExternalUrl(
+      picture,
+    )
+  );
+}
+
+
 export default async function MiCociHubPage() {
   const supabase =
     await createClient();
@@ -44,10 +167,22 @@ export default async function MiCociHubPage() {
       .getClaims();
 
 
-  const userId =
+  const claims =
     claimsData
-      ?.claims
-      ?.sub;
+      ?.claims as
+      Record<
+        string,
+        unknown
+      > |
+      undefined;
+
+
+  const userId =
+    typeof claims
+      ?.sub ===
+      "string"
+      ? claims.sub
+      : null;
 
 
   if (
@@ -66,7 +201,7 @@ export default async function MiCociHubPage() {
 
   const {
     data:
-      profile,
+      profileData,
 
     error:
       profileError,
@@ -87,12 +222,17 @@ export default async function MiCociHubPage() {
 
   if (
     profileError ||
-    !profile
+    !profileData
   ) {
     redirect(
       "/login?error=profile-missing",
     );
   }
+
+
+  const profile =
+    profileData as
+      ProfileRow;
 
 
   if (
@@ -102,6 +242,60 @@ export default async function MiCociHubPage() {
       "/complete-profile",
     );
   }
+
+
+  // =======================================================
+  // AVATAR
+  // =======================================================
+
+  const storedAvatar =
+    profile
+      .avatar_url
+      ?.trim() ||
+    null;
+
+
+  let profileAvatarUrl:
+    string | null =
+      null;
+
+
+  if (
+    storedAvatar
+  ) {
+    const externalAvatar =
+      normalizeExternalUrl(
+        storedAvatar,
+      );
+
+
+    if (
+      externalAvatar
+    ) {
+      profileAvatarUrl =
+        externalAvatar;
+
+    } else {
+      profileAvatarUrl =
+        supabase
+          .storage
+          .from(
+            "profile-avatars",
+          )
+          .getPublicUrl(
+            storedAvatar,
+          )
+          .data
+          .publicUrl;
+    }
+  }
+
+
+  const avatarUrl =
+    profileAvatarUrl ??
+    getMetadataAvatar(
+      claims,
+    );
 
 
   // =======================================================
@@ -183,12 +377,19 @@ export default async function MiCociHubPage() {
 
 
   const displayName =
-    profile.display_name ??
+    profile
+      .display_name
+      ?.trim() ||
     profile.username;
 
 
+  // =======================================================
+  // RENDER
+  // =======================================================
+
   return (
     <main className="min-h-screen bg-page px-4 py-8 text-foreground">
+
       <div className="mx-auto w-full max-w-6xl">
 
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -197,14 +398,18 @@ export default async function MiCociHubPage() {
             href="/"
             className="inline-flex items-center gap-2 font-serif text-xl font-semibold"
           >
+
             <span className="flex size-10 items-center justify-center rounded-xl bg-brand text-inverse">
+
               <ChefHat
                 className="size-5"
                 aria-hidden="true"
               />
+
             </span>
 
             CociHub
+
           </Link>
 
 
@@ -213,17 +418,21 @@ export default async function MiCociHubPage() {
               logout
             }
           >
+
             <button
               type="submit"
               className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-medium transition hover:bg-page-muted"
             >
+
               <LogOut
                 className="size-4"
                 aria-hidden="true"
               />
 
               Cerrar sesión
+
             </button>
+
           </form>
 
         </div>
@@ -237,13 +446,13 @@ export default async function MiCociHubPage() {
 
               <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface">
 
-                {profile.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+                {avatarUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={
-                      profile.avatar_url
+                      avatarUrl
                     }
-                    alt=""
+                    alt={`Avatar de ${displayName}`}
                     className="size-full object-cover"
                   />
                 ) : (
@@ -284,20 +493,25 @@ export default async function MiCociHubPage() {
 
 
               <div>
+
                 <Link
                   href="/mi-cocihub/perfil"
                   className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition hover:bg-page"
                 >
+
                   <UserRound
                     className="size-4"
                     aria-hidden="true"
                   />
 
                   Editar perfil
+
                 </Link>
+
               </div>
 
             </div>
+
           </div>
 
 
@@ -306,15 +520,18 @@ export default async function MiCociHubPage() {
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
               <div>
+
                 <h2 className="font-serif text-2xl font-semibold">
                   Mis recetas
                 </h2>
+
 
                 <p className="mt-1 text-sm text-muted-foreground">
                   Controla el estado de todo
                   lo que estás cocinando en
                   CociHub.
                 </p>
+
               </div>
 
 
@@ -322,12 +539,14 @@ export default async function MiCociHubPage() {
                 href="/mi-cocihub/recetas/nueva"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-inverse shadow-sm transition hover:bg-brand-hover"
               >
+
                 <FilePenLine
                   className="size-5"
                   aria-hidden="true"
                 />
 
                 Crear receta
+
               </Link>
 
             </div>
@@ -338,21 +557,28 @@ export default async function MiCociHubPage() {
               <article className="rounded-2xl border border-border bg-page p-5">
 
                 <div className="flex items-center justify-between">
+
                   <span className="flex size-10 items-center justify-center rounded-xl bg-page-muted">
+
                     <FilePenLine
                       className="size-5"
                       aria-hidden="true"
                     />
+
                   </span>
+
 
                   <span className="font-serif text-3xl font-semibold">
                     {draftCount}
                   </span>
+
                 </div>
+
 
                 <h3 className="mt-5 font-semibold">
                   Borradores
                 </h3>
+
 
                 <p className="mt-1 text-sm text-muted-foreground">
                   Recetas que todavía puedes
@@ -365,21 +591,28 @@ export default async function MiCociHubPage() {
               <article className="rounded-2xl border border-border bg-page p-5">
 
                 <div className="flex items-center justify-between">
+
                   <span className="flex size-10 items-center justify-center rounded-xl bg-page-muted">
+
                     <Clock3
                       className="size-5"
                       aria-hidden="true"
                     />
+
                   </span>
+
 
                   <span className="font-serif text-3xl font-semibold">
                     {pendingCount}
                   </span>
+
                 </div>
+
 
                 <h3 className="mt-5 font-semibold">
                   En revisión
                 </h3>
+
 
                 <p className="mt-1 text-sm text-muted-foreground">
                   Pendientes de validación
@@ -392,21 +625,28 @@ export default async function MiCociHubPage() {
               <article className="rounded-2xl border border-border bg-page p-5">
 
                 <div className="flex items-center justify-between">
+
                   <span className="flex size-10 items-center justify-center rounded-xl bg-page-muted">
+
                     <Send
                       className="size-5"
                       aria-hidden="true"
                     />
+
                   </span>
+
 
                   <span className="font-serif text-3xl font-semibold">
                     {publishedCount}
                   </span>
+
                 </div>
+
 
                 <h3 className="mt-5 font-semibold">
                   Publicadas
                 </h3>
+
 
                 <p className="mt-1 text-sm text-muted-foreground">
                   Recetas visibles para toda
@@ -419,21 +659,28 @@ export default async function MiCociHubPage() {
               <article className="rounded-2xl border border-border bg-page p-5">
 
                 <div className="flex items-center justify-between">
+
                   <span className="flex size-10 items-center justify-center rounded-xl bg-page-muted">
+
                     <Archive
                       className="size-5"
                       aria-hidden="true"
                     />
+
                   </span>
+
 
                   <span className="font-serif text-3xl font-semibold">
                     {archivedCount}
                   </span>
+
                 </div>
+
 
                 <h3 className="mt-5 font-semibold">
                   Archivadas
                 </h3>
+
 
                 <p className="mt-1 text-sm text-muted-foreground">
                   Recetas apartadas de la
@@ -452,9 +699,11 @@ export default async function MiCociHubPage() {
                 aria-hidden="true"
               />
 
+
               <p className="mt-3 font-semibold">
                 Tus próximas recetas empiezan aquí
               </p>
+
 
               <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
                 Crea borradores, completa todos
@@ -469,6 +718,7 @@ export default async function MiCociHubPage() {
         </section>
 
       </div>
+
     </main>
   );
 }

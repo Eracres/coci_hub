@@ -1,6 +1,5 @@
 import {
   ArrowLeft,
-  ChefHat,
   UserRound,
 } from "lucide-react";
 
@@ -15,11 +14,104 @@ import {
 } from "@/lib/supabase/server";
 
 import {
+  AvatarForm,
+} from "./avatar-form";
+
+import {
   ProfileForm,
 } from "./profile-form";
 
 
-export default async function MiPerfilPage() {
+type ProfileRow = {
+  display_name:
+    string | null;
+
+  username:
+    string | null;
+
+  avatar_url:
+    string | null;
+};
+
+
+function normalizeExternalUrl(
+  value:
+    unknown,
+) {
+  if (
+    typeof value !==
+      "string" ||
+    !value
+  ) {
+    return null;
+  }
+
+
+  try {
+    const url =
+      new URL(
+        value,
+      );
+
+
+    if (
+      url.protocol !==
+        "https:" &&
+      url.protocol !==
+        "http:"
+    ) {
+      return null;
+    }
+
+
+    return value;
+
+  } catch {
+    return null;
+  }
+}
+
+
+function getGoogleAvatar(
+  claims:
+    Record<
+      string,
+      unknown
+    >,
+) {
+  const metadata =
+    claims.user_metadata;
+
+
+  if (
+    !metadata ||
+    typeof metadata !==
+      "object"
+  ) {
+    return null;
+  }
+
+
+  const values =
+    metadata as
+      Record<
+        string,
+        unknown
+      >;
+
+
+  return (
+    normalizeExternalUrl(
+      values.avatar_url,
+    ) ??
+    normalizeExternalUrl(
+      values.picture,
+    )
+  );
+}
+
+
+export default async function MyProfilePage() {
   const supabase =
     await createClient();
 
@@ -40,41 +132,28 @@ export default async function MiPerfilPage() {
       .getClaims();
 
 
-  const userId =
+  const claims =
     claimsData
-      ?.claims
-      ?.sub;
+      ?.claims as
+      Record<
+        string,
+        unknown
+      > |
+      undefined;
+
+
+  const userId =
+    typeof claims
+      ?.sub ===
+      "string"
+      ? claims.sub
+      : null;
 
 
   if (
     claimsError ||
-    !userId
-  ) {
-    redirect(
-      "/login?error=session-required",
-    );
-  }
-
-
-  // =======================================================
-  // AUTH USER
-  // =======================================================
-
-  const {
-    data:
-      userData,
-
-    error:
-      userError,
-  } =
-    await supabase
-      .auth
-      .getUser();
-
-
-  if (
-    userError ||
-    !userData.user
+    !userId ||
+    !claims
   ) {
     redirect(
       "/login?error=session-required",
@@ -87,19 +166,18 @@ export default async function MiPerfilPage() {
   // =======================================================
 
   const {
-    data:
-      profile,
-
-    error:
-      profileError,
+    data,
+    error,
   } =
     await supabase
       .from(
         "profiles",
       )
-      .select(
-        "display_name, username, avatar_url",
-      )
+      .select(`
+        display_name,
+        username,
+        avatar_url
+      `)
       .eq(
         "id",
         userId,
@@ -108,146 +186,152 @@ export default async function MiPerfilPage() {
 
 
   if (
-    profileError ||
-    !profile
+    error ||
+    !data
   ) {
-    redirect(
-      "/login?error=profile-missing",
+    throw new Error(
+      "No se pudo cargar el perfil.",
     );
   }
+
+
+  const profile =
+    data as
+      ProfileRow;
+
+
+  // =======================================================
+  // AVATAR
+  // =======================================================
+
+  const googleAvatarUrl =
+    getGoogleAvatar(
+      claims,
+    );
+
+
+  const storedAvatar =
+    profile
+      .avatar_url
+      ?.trim() ||
+    null;
+
+
+  let customAvatarUrl:
+    string | null =
+      null;
 
 
   if (
-    !profile.username
+    storedAvatar
   ) {
-    redirect(
-      "/complete-profile",
-    );
+    const externalUrl =
+      normalizeExternalUrl(
+        storedAvatar,
+      );
+
+
+    if (
+      externalUrl
+    ) {
+      customAvatarUrl =
+        externalUrl;
+
+    } else {
+      customAvatarUrl =
+        supabase
+          .storage
+          .from(
+            "profile-avatars",
+          )
+          .getPublicUrl(
+            storedAvatar,
+          )
+          .data
+          .publicUrl;
+    }
   }
 
 
-  const email =
-    userData
-      .user
-      .email ??
-    "";
+  const displayedAvatarUrl =
+    customAvatarUrl ??
+    googleAvatarUrl;
 
+
+  // =======================================================
+  // DISPLAY DATA
+  // =======================================================
+
+  const displayName =
+    profile
+      .display_name
+      ?.trim() ||
+    profile
+      .username
+      ?.trim() ||
+    "Usuario";
+
+
+  const email =
+    typeof claims.email ===
+      "string"
+      ? claims.email
+      : null;
+
+
+  // =======================================================
+  // RENDER
+  // =======================================================
 
   return (
     <main className="min-h-screen bg-page px-4 py-8 text-foreground">
-      <div className="mx-auto w-full max-w-3xl">
 
-        <div className="mb-8 flex items-center justify-between gap-4">
+      <div className="mx-auto w-full max-w-4xl">
 
-          <Link
-            href="/mi-cocihub"
-            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
-          >
-            <ArrowLeft
-              className="size-4"
-              aria-hidden="true"
-            />
+        <Link
+          href="/mi-cocihub"
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+        >
 
-            Volver a Mi CociHub
-          </Link>
+          <ArrowLeft
+            className="size-4"
+            aria-hidden="true"
+          />
+
+          Volver a Mi CociHub
+
+        </Link>
 
 
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 font-serif font-semibold"
-          >
-            <span className="flex size-9 items-center justify-center rounded-xl bg-brand text-inverse">
-              <ChefHat
-                className="size-4"
+        <section className="mt-6 rounded-3xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+
+          <div className="flex items-start gap-4">
+
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-inverse">
+
+              <UserRound
+                className="size-6"
                 aria-hidden="true"
               />
-            </span>
-
-            CociHub
-          </Link>
-
-        </div>
-
-
-        <section className="overflow-hidden rounded-3xl border border-border bg-surface shadow-sm">
-
-          <div className="border-b border-border bg-page-muted px-6 py-8 sm:px-8">
-
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-
-              <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-surface">
-
-                {profile.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={
-                      profile.avatar_url
-                    }
-                    alt=""
-                    className="size-full object-cover"
-                  />
-                ) : (
-                  <UserRound
-                    className="size-8 text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                )}
-
-              </div>
-
-
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
-                  Mi perfil
-                </p>
-
-                <h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-                  Editar perfil
-                </h1>
-
-                <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-                  Decide cómo quieres aparecer
-                  dentro de CociHub.
-                  Tu nombre visible puede ser
-                  diferente de tu nombre de usuario.
-                </p>
-              </div>
 
             </div>
 
-          </div>
 
+            <div>
 
-          <div className="px-6 py-8 sm:px-8">
-
-            <ProfileForm
-              initialDisplayName={
-                profile
-                  .display_name ??
-                ""
-              }
-              initialUsername={
-                profile.username
-              }
-              email={
-                email
-              }
-            />
-
-
-            <div className="mt-8 rounded-2xl border border-dashed border-border bg-page-muted p-5">
-
-              <p className="text-sm font-semibold">
-                Foto de perfil
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
+                Mi CociHub
               </p>
 
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Si accediste con Google,
-                utilizamos temporalmente
-                la imagen asociada a tu cuenta.
-                Más adelante podrás subir,
-                sustituir o eliminar tu propia
-                foto desde CociHub.
+
+              <h1 className="mt-2 font-serif text-3xl font-semibold sm:text-4xl">
+                Mi perfil
+              </h1>
+
+
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                Personaliza cómo apareces dentro de CociHub
+                y gestiona los datos públicos de tu cuenta.
               </p>
 
             </div>
@@ -256,7 +340,47 @@ export default async function MiPerfilPage() {
 
         </section>
 
+
+        <div className="mt-6 space-y-6">
+
+          <AvatarForm
+            displayName={
+              displayName
+            }
+            initialAvatarUrl={
+              displayedAvatarUrl
+            }
+            fallbackAvatarUrl={
+              googleAvatarUrl
+            }
+            initialHasCustomAvatar={
+              Boolean(
+                storedAvatar,
+              )
+            }
+          />
+
+
+          <ProfileForm
+            initialDisplayName={
+              profile
+                .display_name ??
+              ""
+            }
+            initialUsername={
+              profile
+                .username ??
+              ""
+            }
+            email={
+              email
+            }
+          />
+
+        </div>
+
       </div>
+
     </main>
   );
 }

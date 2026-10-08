@@ -40,6 +40,10 @@ import {
 } from "./classification-form";
 
 import {
+  ImageForm,
+} from "./image-form";
+
+import {
   IngredientsForm,
 } from "./ingredients-form";
 
@@ -386,6 +390,25 @@ export default async function EditMyRecipePage({
 
 
   // =======================================================
+  // IMAGE URL
+  // =======================================================
+
+  const imageUrl =
+    recipe.image_path
+      ? supabase
+          .storage
+          .from(
+            "recipe-images",
+          )
+          .getPublicUrl(
+            recipe.image_path,
+          )
+          .data
+          .publicUrl
+      : null;
+
+
+  // =======================================================
   // REAL COMPLETION
   // =======================================================
 
@@ -459,13 +482,23 @@ export default async function EditMyRecipePage({
       null;
 
 
+  const imageComplete =
+    Boolean(
+      recipe.image_path,
+    ) &&
+    Boolean(
+      recipe.image_alt
+        ?.trim(),
+    );
+
+
   // =======================================================
   // DEFAULT STEP
   // =======================================================
 
   let defaultStep:
     EditorStep =
-      "image";
+      "review";
 
 
   if (
@@ -498,6 +531,11 @@ export default async function EditMyRecipePage({
   ) {
     defaultStep =
       "times";
+  } else if (
+    !imageComplete
+  ) {
+    defaultStep =
+      "image";
   }
 
 
@@ -559,7 +597,7 @@ export default async function EditMyRecipePage({
       timesComplete,
 
     image:
-      false,
+      imageComplete,
 
     review:
       false,
@@ -842,6 +880,31 @@ export default async function EditMyRecipePage({
               )}
 
 
+            {activeStep ===
+              "image" && (
+                <ImageForm
+                  recipeId={
+                    recipe.id
+                  }
+                  initialImagePath={
+                    recipe.image_path
+                  }
+                  initialImageUrl={
+                    imageUrl
+                  }
+                  initialImageAlt={
+                    recipe.image_alt
+                  }
+                  previousStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=times`
+                  }
+                  nextStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=review`
+                  }
+                />
+              )}
+
+
             {activeStep !==
               "basic" &&
               activeStep !==
@@ -853,7 +916,9 @@ export default async function EditMyRecipePage({
               activeStep !==
                 "steps" &&
               activeStep !==
-                "times" && (
+                "times" &&
+              activeStep !==
+                "image" && (
                 <PlaceholderStep
                   recipeId={
                     recipe.id

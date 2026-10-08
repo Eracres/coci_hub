@@ -42,6 +42,12 @@ export type CommunityRecipeEditorRecord = {
   introduction:
     string | null;
 
+  image_path:
+    string | null;
+
+  image_alt:
+    string | null;
+
   recipe_type_id:
     string | null;
 
@@ -97,6 +103,8 @@ export async function getMyRecipeForEditor(
         slug,
         short_description,
         introduction,
+        image_path,
+        image_alt,
         recipe_type_id,
         difficulty,
         base_servings,

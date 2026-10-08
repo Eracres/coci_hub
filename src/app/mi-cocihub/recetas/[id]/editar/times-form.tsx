@@ -186,17 +186,6 @@ export function TimesForm({
     clearErrors();
 
 
-    /*
-     * cooking_minutes es derivado de los pasos.
-     *
-     * Si vale NULL significa que:
-     *
-     * - no existen pasos, o
-     * - alguno de ellos no tiene duración.
-     *
-     * En ambos casos no permitimos cerrar Tiempos todavía.
-     */
-
     if (
       cookingMinutes ===
       null
@@ -311,7 +300,7 @@ export function TimesForm({
 
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
           Indica cuánto tiempo necesitas antes y después
-          del cocinado. El tiempo de cocinado se calcula
+          del cocinado. El tiempo de cocinado se obtiene
           automáticamente desde la elaboración.
         </p>
 
@@ -324,7 +313,7 @@ export function TimesForm({
             onSubmit,
           )
         }
-        className="mt-8 space-y-6"
+        className="mt-8 space-y-5"
       >
 
         {/* =================================================
@@ -353,7 +342,7 @@ export function TimesForm({
 
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
                 Tiempo necesario para preparar los
-                ingredientes antes del cocinado.
+                ingredientes antes de empezar a cocinar.
               </p>
 
 
@@ -363,7 +352,7 @@ export function TimesForm({
                   id="preparationMinutes"
                   type="number"
                   min={
-                    0
+                    1
                   }
                   max={
                     10080
@@ -423,14 +412,23 @@ export function TimesForm({
 
             <div className="min-w-0 flex-1">
 
-              <p className="font-semibold">
-                Tiempo de cocinado
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+
+                <p className="font-semibold">
+                  Tiempo de cocinado
+                </p>
+
+
+                <span className="rounded-full border border-brand/20 bg-surface px-2.5 py-1 text-xs font-medium text-brand">
+                  Automático
+                </span>
+
+              </div>
 
 
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Se calcula automáticamente sumando
-                la duración de todos los pasos de elaboración.
+                Se calcula sumando la duración de todos
+                los pasos de elaboración.
               </p>
 
 
@@ -452,9 +450,9 @@ export function TimesForm({
 
                   </div>
                 ) : (
-                  <div className="inline-flex items-baseline gap-2 rounded-xl border border-border bg-surface px-5 py-3">
+                  <div className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2">
 
-                    <span className="font-serif text-3xl font-semibold text-brand">
+                    <span className="font-semibold leading-none text-brand">
                       {
                         cookingMinutes
                       }
@@ -562,13 +560,13 @@ export function TimesForm({
             TOTAL
         ================================================= */}
 
-        <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+        <div className="rounded-xl border border-border bg-page-muted/20 px-5 py-4">
 
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 
             <div>
 
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-sm font-semibold">
                 Tiempo total estimado
               </p>
 
@@ -580,16 +578,16 @@ export function TimesForm({
             </div>
 
 
-            <div className="text-right">
+            <div className="flex items-center gap-1.5">
 
-              <span className="font-serif text-4xl font-semibold text-brand">
+              <span className="text-lg font-semibold text-brand">
                 {
                   totalMinutes
                 }
               </span>
 
 
-              <span className="ml-2 text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 min
               </span>
 

@@ -236,181 +236,220 @@ export function ReviewForm({
           HEADER
       ================================================= */}
 
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
-        Paso 8 de 8
-      </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+
+        <div>
+
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
+            Paso 8 de 8
+          </p>
 
 
-      <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2 flex items-center gap-2">
 
-        <ListChecks
-          className="size-5 text-brand"
-          aria-hidden="true"
-        />
-
-
-        <h2 className="font-serif text-2xl font-semibold">
-          Revisión final
-        </h2>
-
-      </div>
-
-
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-        Revisa los datos principales de tu receta antes
-        de enviarla al equipo de moderación de CociHub.
-      </p>
-
-
-      {/* =================================================
-          IMAGE + TITLE
-      ================================================= */}
-
-      <div className="mt-8 overflow-hidden rounded-2xl border border-border">
-
-        {imageUrl ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={
-              imageUrl
-            }
-            alt={
-              imageAlt ??
-              title
-            }
-            className="aspect-[16/9] w-full object-cover"
-          />
-        ) : (
-          <div className="flex aspect-[16/9] items-center justify-center bg-page-muted">
-
-            <ImageIcon
-              className="size-10 text-muted-foreground"
+            <ListChecks
+              className="size-5 text-brand"
               aria-hidden="true"
             />
+
+
+            <h2 className="font-serif text-2xl font-semibold">
+              Revisión final
+            </h2>
+
+          </div>
+
+
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Comprueba el resultado final antes de enviar
+            tu receta al equipo de moderación de CociHub.
+          </p>
+
+        </div>
+
+
+        {canSubmit && (
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-brand/20 bg-brand/5 px-3 py-2 text-sm font-medium text-brand">
+
+            <CheckCircle2
+              className="size-4"
+              aria-hidden="true"
+            />
+
+            Todo listo
 
           </div>
         )}
 
-
-        <div className="p-5">
-
-          <h3 className="font-serif text-2xl font-semibold">
-            {
-              title
-            }
-          </h3>
-
-
-          {shortDescription && (
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {
-                shortDescription
-              }
-            </p>
-          )}
-
-        </div>
-
       </div>
 
 
       {/* =================================================
-          RECIPE SUMMARY
+          MAIN SUMMARY
       ================================================= */}
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      <div className="mt-8 overflow-hidden rounded-2xl border border-border">
 
-        <div className="rounded-xl border border-border bg-page-muted/30 p-4">
+        <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
 
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {/* IMAGE */}
 
-            <Users
-              className="size-4 text-brand"
-              aria-hidden="true"
-            />
+          <div className="bg-page-muted">
 
-            Raciones
+            {imageUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={
+                  imageUrl
+                }
+                alt={
+                  imageAlt ??
+                  title
+                }
+                className="aspect-[16/10] h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex aspect-[16/10] h-full min-h-64 items-center justify-center">
 
-          </div>
+                <ImageIcon
+                  className="size-10 text-muted-foreground"
+                  aria-hidden="true"
+                />
 
-
-          <p className="mt-2 font-semibold">
-            {
-              baseServings ??
-              "—"
-            }
-          </p>
-
-        </div>
-
-
-        <div className="rounded-xl border border-border bg-page-muted/30 p-4">
-
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-
-            <ChefHat
-              className="size-4 text-brand"
-              aria-hidden="true"
-            />
-
-            Dificultad
+              </div>
+            )}
 
           </div>
 
 
-          <p className="mt-2 font-semibold">
-            {
-              getDifficultyLabel(
-                difficulty,
-              )
-            }
-          </p>
+          {/* INFORMATION */}
 
-        </div>
+          <div className="flex flex-col justify-between p-5 sm:p-6">
+
+            <div>
+
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">
+                Tu receta
+              </p>
 
 
-        <div className="rounded-xl border border-border bg-page-muted/30 p-4">
+              <h3 className="mt-2 font-serif text-2xl font-semibold sm:text-3xl">
+                {
+                  title
+                }
+              </h3>
 
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
 
-            <UtensilsCrossed
-              className="size-4 text-brand"
-              aria-hidden="true"
-            />
+              {shortDescription && (
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                  {
+                    shortDescription
+                  }
+                </p>
+              )}
 
-            Ingredientes
+            </div>
+
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+
+              <div className="rounded-xl border border-border bg-page-muted/30 p-4">
+
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+
+                  <Users
+                    className="size-4 text-brand"
+                    aria-hidden="true"
+                  />
+
+                  Raciones
+
+                </div>
+
+
+                <p className="mt-2 text-sm font-semibold">
+                  {
+                    baseServings ??
+                    "—"
+                  }
+                </p>
+
+              </div>
+
+
+              <div className="rounded-xl border border-border bg-page-muted/30 p-4">
+
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+
+                  <ChefHat
+                    className="size-4 text-brand"
+                    aria-hidden="true"
+                  />
+
+                  Dificultad
+
+                </div>
+
+
+                <p className="mt-2 text-sm font-semibold">
+                  {
+                    getDifficultyLabel(
+                      difficulty,
+                    )
+                  }
+                </p>
+
+              </div>
+
+
+              <div className="rounded-xl border border-border bg-page-muted/30 p-4">
+
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+
+                  <UtensilsCrossed
+                    className="size-4 text-brand"
+                    aria-hidden="true"
+                  />
+
+                  Ingredientes
+
+                </div>
+
+
+                <p className="mt-2 text-sm font-semibold">
+                  {
+                    ingredientCount
+                  }
+                </p>
+
+              </div>
+
+
+              <div className="rounded-xl border border-border bg-page-muted/30 p-4">
+
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+
+                  <ListChecks
+                    className="size-4 text-brand"
+                    aria-hidden="true"
+                  />
+
+                  Pasos
+
+                </div>
+
+
+                <p className="mt-2 text-sm font-semibold">
+                  {
+                    stepCount
+                  }
+                </p>
+
+              </div>
+
+            </div>
 
           </div>
-
-
-          <p className="mt-2 font-semibold">
-            {
-              ingredientCount
-            }
-          </p>
-
-        </div>
-
-
-        <div className="rounded-xl border border-border bg-page-muted/30 p-4">
-
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-
-            <ListChecks
-              className="size-4 text-brand"
-              aria-hidden="true"
-            />
-
-            Pasos
-
-          </div>
-
-
-          <p className="mt-2 font-semibold">
-            {
-              stepCount
-            }
-          </p>
 
         </div>
 
@@ -421,7 +460,7 @@ export function ReviewForm({
           TIMES
       ================================================= */}
 
-      <div className="mt-6 rounded-2xl border border-border bg-page-muted/30 p-5">
+      <div className="mt-6 rounded-2xl border border-border bg-page-muted/20 p-5">
 
         <div className="flex items-center gap-2">
 
@@ -438,79 +477,87 @@ export function ReviewForm({
         </div>
 
 
-        <dl className="mt-4 space-y-3 text-sm">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
 
-          <div className="flex justify-between gap-4">
+          <div className="rounded-xl border border-border bg-surface px-4 py-3">
 
-            <dt className="text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Preparación
-            </dt>
+            </p>
 
 
-            <dd className="font-medium">
+            <p className="mt-1 text-sm font-semibold">
               {
                 times.preparationMinutes ??
                 0
-              } min
-            </dd>
+              }{" "}
+              <span className="font-normal text-muted-foreground">
+                min
+              </span>
+            </p>
 
           </div>
 
 
-          <div className="flex justify-between gap-4">
+          <div className="rounded-xl border border-border bg-surface px-4 py-3">
 
-            <dt className="text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Cocinado
-            </dt>
+            </p>
 
 
-            <dd className="font-medium">
+            <p className="mt-1 text-sm font-semibold text-brand">
               {
                 times.cookingMinutes ??
                 0
-              } min
-            </dd>
+              }{" "}
+              <span className="font-normal text-muted-foreground">
+                min
+              </span>
+            </p>
 
           </div>
 
 
-          <div className="flex justify-between gap-4">
+          <div className="rounded-xl border border-border bg-surface px-4 py-3">
 
-            <dt className="text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Adicional
-            </dt>
+            </p>
 
 
-            <dd className="font-medium">
+            <p className="mt-1 text-sm font-semibold">
               {
                 times.additionalMinutes ??
                 0
-              } min
-            </dd>
+              }{" "}
+              <span className="font-normal text-muted-foreground">
+                min
+              </span>
+            </p>
 
           </div>
 
 
-          <div className="border-t border-border pt-3">
+          <div className="rounded-xl border border-brand/20 bg-brand/5 px-4 py-3">
 
-            <div className="flex items-center justify-between gap-4">
-
-              <dt className="font-semibold">
-                Tiempo total
-              </dt>
+            <p className="text-xs text-muted-foreground">
+              Total
+            </p>
 
 
-              <dd className="font-serif text-2xl font-semibold text-brand">
-                {
-                  times.totalMinutes
-                } min
-              </dd>
-
-            </div>
+            <p className="mt-1 text-base font-semibold text-brand">
+              {
+                times.totalMinutes
+              }{" "}
+              <span className="text-sm font-normal text-muted-foreground">
+                min
+              </span>
+            </p>
 
           </div>
 
-        </dl>
+        </div>
 
       </div>
 
@@ -521,12 +568,43 @@ export function ReviewForm({
 
       <div className="mt-6">
 
-        <h3 className="font-semibold">
-          Estado de la receta
-        </h3>
+        <div className="flex items-center justify-between gap-4">
+
+          <div>
+
+            <h3 className="font-semibold">
+              Estado de la receta
+            </h3>
 
 
-        <div className="mt-4 space-y-2">
+            <p className="mt-1 text-sm text-muted-foreground">
+              Puedes volver a cualquier apartado antes de enviarla.
+            </p>
+
+          </div>
+
+
+          <span className="text-xs font-medium text-muted-foreground">
+            {
+              checklist.filter(
+                (
+                  item,
+                ) =>
+                  item.complete,
+              ).length
+            }
+            /
+            {
+              checklist.length
+            }
+            {" "}
+            completos
+          </span>
+
+        </div>
+
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
 
           {checklist.map(
             (
@@ -539,10 +617,10 @@ export function ReviewForm({
                 href={
                   item.href
                 }
-                className="flex items-center justify-between gap-4 rounded-xl border border-border px-4 py-3 transition hover:bg-page-muted"
+                className="flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 transition hover:bg-page-muted"
               >
 
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 items-center gap-3">
 
                   {item.complete ? (
                     <CheckCircle2
@@ -557,7 +635,7 @@ export function ReviewForm({
                   )}
 
 
-                  <span className="text-sm font-medium">
+                  <span className="truncate text-sm font-medium">
                     {
                       item.label
                     }
@@ -566,7 +644,7 @@ export function ReviewForm({
                 </div>
 
 
-                <span className="text-xs text-muted-foreground">
+                <span className="shrink-0 text-xs text-muted-foreground">
                   {item.complete
                     ? "Completo"
                     : "Revisar"}
@@ -582,7 +660,7 @@ export function ReviewForm({
 
 
       {/* =================================================
-          MODERATION NOTICE
+          MODERATION
       ================================================= */}
 
       <div className="mt-6 rounded-2xl border border-brand/20 bg-brand/5 p-5">
@@ -603,15 +681,16 @@ export function ReviewForm({
 
 
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Cuando envíes la receta dejará de poder
-              editarse temporalmente y pasará al estado
-              «En revisión».
+              Al enviarla, la receta pasará al estado
+              «En revisión» y dejará de poder editarse
+              temporalmente.
             </p>
 
 
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Un administrador podrá aprobarla y publicarla
-              o devolvértela indicando los cambios necesarios.
+              El equipo de moderación podrá aprobarla
+              y publicarla o devolvértela indicando
+              los cambios necesarios.
             </p>
 
           </div>
@@ -625,7 +704,13 @@ export function ReviewForm({
           CONFIRMATION
       ================================================= */}
 
-      <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-xl border border-border p-4">
+      <label
+        className={`mt-5 flex items-start gap-3 rounded-xl border p-4 transition ${
+          canSubmit
+            ? "cursor-pointer border-border hover:bg-page-muted/40"
+            : "cursor-not-allowed border-border bg-page-muted/30 opacity-70"
+        }`}
+      >
 
         <input
           type="checkbox"
@@ -645,7 +730,7 @@ export function ReviewForm({
                 .checked,
             )
           }
-          className="mt-1 size-4"
+          className="mt-1 size-4 accent-[var(--brand)]"
         />
 
 
@@ -656,6 +741,10 @@ export function ReviewForm({
 
       </label>
 
+
+      {/* =================================================
+          WARNINGS / ERRORS
+      ================================================= */}
 
       {!canSubmit && (
         <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -682,13 +771,13 @@ export function ReviewForm({
           ACTIONS
       ================================================= */}
 
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+      <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
 
         <Link
           href={
             previousStepHref
           }
-          className="rounded-xl border border-border bg-surface px-5 py-3 text-sm font-semibold transition hover:bg-page-muted"
+          className="inline-flex justify-center rounded-xl border border-border bg-surface px-5 py-3 text-sm font-semibold transition hover:bg-page-muted"
         >
           ← Volver a Imagen
         </Link>
@@ -704,7 +793,7 @@ export function ReviewForm({
           onClick={
             handleSubmit
           }
-          className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
 
           {isSubmitting ? (

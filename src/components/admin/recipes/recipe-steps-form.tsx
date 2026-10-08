@@ -1,6 +1,22 @@
 "use client";
 
 import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Clock3,
+  Copy,
+  Lightbulb,
+  ListOrdered,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
+
+import Link from "next/link";
+
+import {
   useState,
 } from "react";
 
@@ -38,10 +54,17 @@ type EditableStep =
 
 const emptyStep:
 RecipeStepFormData = {
-  title: "",
-  instructions: "",
-  durationMinutes: "",
-  tip: "",
+  title:
+    "",
+
+  instructions:
+    "",
+
+  durationMinutes:
+    "",
+
+  tip:
+    "",
 };
 
 
@@ -57,7 +80,9 @@ function createEditableSteps(
     RecipeStepsFormData["steps"],
 ): EditableStep[] {
   return steps.map(
-    (step) => ({
+    (
+      step,
+    ) => ({
       clientId:
         createClientId(),
 
@@ -73,6 +98,14 @@ export function RecipeStepsForm({
 }: RecipeStepsFormProps) {
   const router =
     useRouter();
+
+
+  const previousStepHref =
+    `/admin/recipes/${recipeId}/edit?step=ingredients`;
+
+
+  const nextStepHref =
+    `/admin/recipes/${recipeId}/edit?step=times`;
 
 
   const [
@@ -115,6 +148,15 @@ export function RecipeStepsForm({
 
 
   const [
+    validationError,
+    setValidationError,
+  ] =
+    useState<string | null>(
+      null,
+    );
+
+
+  const [
     message,
     setMessage,
   ] =
@@ -141,14 +183,65 @@ export function RecipeStepsForm({
     );
 
 
+  const cookingMinutes =
+    steps.reduce(
+      (
+        total,
+        step,
+      ) => {
+        const duration =
+          Number(
+            step.durationMinutes,
+          );
+
+
+        if (
+          !Number.isFinite(
+            duration,
+          ) ||
+          duration <
+            0
+        ) {
+          return total;
+        }
+
+
+        return (
+          total +
+          duration
+        );
+      },
+      0,
+    );
+
+
+  function markDirty() {
+    setIsDirty(
+      true,
+    );
+
+
+    setMessage(
+      null,
+    );
+
+
+    setValidationError(
+      null,
+    );
+  }
+
+
   function clearEditor() {
     setStepDraft({
       ...emptyStep,
     });
 
+
     setEditingIndex(
       null,
     );
+
 
     setEditorError(
       null,
@@ -163,7 +256,9 @@ export function RecipeStepsForm({
       );
 
 
-    if (!validation.success) {
+    if (
+      !validation.success
+    ) {
       setEditorError(
         validation.error
           .issues[0]
@@ -217,25 +312,26 @@ export function RecipeStepsForm({
     }
 
 
-    setIsDirty(
-      true,
-    );
+    markDirty();
 
-    setMessage(
-      null,
-    );
 
     clearEditor();
   }
 
 
   function editStep(
-    index: number,
+    index:
+      number,
   ) {
     const step =
-      steps[index];
+      steps[
+        index
+      ];
 
-    if (!step) {
+
+    if (
+      !step
+    ) {
       return;
     }
 
@@ -259,6 +355,7 @@ export function RecipeStepsForm({
       index,
     );
 
+
     setEditorError(
       null,
     );
@@ -266,12 +363,18 @@ export function RecipeStepsForm({
 
 
   function duplicateStep(
-    index: number,
+    index:
+      number,
   ) {
     const step =
-      steps[index];
+      steps[
+        index
+      ];
 
-    if (!step) {
+
+    if (
+      !step
+    ) {
       return;
     }
 
@@ -295,6 +398,7 @@ export function RecipeStepsForm({
       null,
     );
 
+
     setEditorError(
       null,
     );
@@ -302,7 +406,8 @@ export function RecipeStepsForm({
 
 
   function removeStep(
-    index: number,
+    index:
+      number,
   ) {
     setSteps(
       (
@@ -318,19 +423,35 @@ export function RecipeStepsForm({
         ),
     );
 
-    setIsDirty(
-      true,
-    );
 
-    setMessage(
-      null,
-    );
+    if (
+      editingIndex ===
+      index
+    ) {
+      clearEditor();
+    } else if (
+      editingIndex !==
+        null &&
+      editingIndex >
+        index
+    ) {
+      setEditingIndex(
+        editingIndex -
+          1,
+      );
+    }
+
+
+    markDirty();
   }
 
 
   function moveStep(
-    from: number,
-    to: number,
+    from:
+      number,
+
+    to:
+      number,
   ) {
     if (
       to < 0 ||
@@ -349,6 +470,7 @@ export function RecipeStepsForm({
           ...current,
         ];
 
+
         const [
           moved,
         ] =
@@ -358,7 +480,9 @@ export function RecipeStepsForm({
           );
 
 
-        if (!moved) {
+        if (
+          !moved
+        ) {
           return current;
         }
 
@@ -375,13 +499,45 @@ export function RecipeStepsForm({
     );
 
 
-    setIsDirty(
-      true,
-    );
+    if (
+      editingIndex ===
+      from
+    ) {
+      setEditingIndex(
+        to,
+      );
+    } else if (
+      editingIndex !==
+        null &&
+      from <
+        to &&
+      editingIndex >
+        from &&
+      editingIndex <=
+        to
+    ) {
+      setEditingIndex(
+        editingIndex -
+          1,
+      );
+    } else if (
+      editingIndex !==
+        null &&
+      to <
+        from &&
+      editingIndex >=
+        to &&
+      editingIndex <
+        from
+    ) {
+      setEditingIndex(
+        editingIndex +
+          1,
+      );
+    }
 
-    setMessage(
-      null,
-    );
+
+    markDirty();
   }
 
 
@@ -390,7 +546,9 @@ export function RecipeStepsForm({
     return {
       steps:
         steps.map(
-          (step) => ({
+          (
+            step,
+          ) => ({
             title:
               step.title,
 
@@ -408,8 +566,13 @@ export function RecipeStepsForm({
   }
 
 
-  async function handleSave() {
+  async function handleContinue() {
     setMessage(
+      null,
+    );
+
+
+    setValidationError(
       null,
     );
 
@@ -424,12 +587,44 @@ export function RecipeStepsForm({
       );
 
 
-    if (!validation.success) {
-      setMessage(
+    if (
+      !validation.success
+    ) {
+      setValidationError(
         validation.error
           .issues[0]
           ?.message ??
           "Hay pasos que no son válidos.",
+      );
+
+      return;
+    }
+
+
+    if (
+      validation.data
+        .steps
+        .length ===
+      0
+    ) {
+      setValidationError(
+        "Añade al menos un paso de elaboración para continuar.",
+      );
+
+      return;
+    }
+
+
+    /*
+     * Si la elaboración ya estaba guardada
+     * y no hemos cambiado nada,
+     * simplemente avanzamos.
+     */
+    if (
+      !isDirty
+    ) {
+      router.push(
+        nextStepHref,
       );
 
       return;
@@ -449,10 +644,12 @@ export function RecipeStepsForm({
         );
 
 
-      if (!result.success) {
+      if (
+        !result.success
+      ) {
         setMessage(
           result.message ??
-            "No se pudo guardar la elaboración.",
+          "No se pudo guardar la elaboración.",
         );
 
         return;
@@ -464,13 +661,15 @@ export function RecipeStepsForm({
       );
 
 
-      setMessage(
-        result.message ??
-          "Elaboración guardada.",
+      /*
+       * El backend sincroniza automáticamente
+       * cooking_minutes a partir de la duración
+       * de los pasos guardados.
+       */
+      router.push(
+        nextStepHref,
       );
 
-
-      router.refresh();
     } finally {
       setIsSubmitting(
         false,
@@ -480,31 +679,135 @@ export function RecipeStepsForm({
 
 
   return (
-    <section className="rounded-xl border p-6">
+    <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-7">
 
-      <div>
-        <h2 className="text-xl font-semibold">
-          Elaboración
-        </h2>
+      {/* =================================================
+          HEADER
+      ================================================= */}
 
-        <p className="mt-1 text-sm">
-          Añade los pasos de la receta en el orden en el que deben realizarse.
-        </p>
+      <div className="flex items-start gap-4">
+
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
+
+          <ListOrdered
+            className="size-5"
+            aria-hidden="true"
+          />
+
+        </span>
+
+
+        <div>
+
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
+            Paso 5 de 10
+          </p>
+
+
+          <h2 className="mt-2 font-serif text-2xl font-semibold text-foreground">
+            Elaboración
+          </h2>
+
+
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Añade los pasos de la receta
+            en el orden exacto en el que
+            deben realizarse.
+          </p>
+
+        </div>
+
       </div>
 
 
-      {/* =============================================
-          STEP LIST
-      ============================================= */}
+      {/* =================================================
+          COOKING TIME INFO
+      ================================================= */}
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-7 rounded-2xl border border-brand/20 bg-brand/5 p-5">
+
+        <div className="flex items-start justify-between gap-5">
+
+          <div className="flex items-start gap-4">
+
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface text-brand shadow-sm">
+
+              <Clock3
+                className="size-5"
+                aria-hidden="true"
+              />
+
+            </span>
+
+
+            <div>
+
+              <h3 className="font-semibold text-foreground">
+                Tiempo de cocinado automático
+              </h3>
+
+
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                CociHub sumará la duración
+                indicada en todos los pasos y
+                utilizará ese resultado como
+                tiempo de cocinado de la receta.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div className="shrink-0 rounded-xl border border-border bg-surface px-4 py-3 text-right">
+
+            <p className="text-xl font-semibold text-brand">
+              {
+                cookingMinutes
+              }{" "}
+              <span className="text-sm font-normal text-muted-foreground">
+                min
+              </span>
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {/* =================================================
+          STEP LIST
+      ================================================= */}
+
+      <div className="mt-7 space-y-3">
 
         {steps.length ===
         0 ? (
-          <p className="text-sm">
-            Todavía no hay pasos de elaboración.
-          </p>
+
+          <div className="rounded-2xl border border-dashed border-border bg-page-muted/20 px-6 py-8 text-center">
+
+            <ListOrdered
+              className="mx-auto size-7 text-brand"
+              aria-hidden="true"
+            />
+
+
+            <h3 className="mt-4 font-semibold text-foreground">
+              Todavía no hay pasos
+            </h3>
+
+
+            <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
+              Añade al menos un paso para
+              poder completar la elaboración.
+            </p>
+
+          </div>
+
         ) : (
+
           steps.map(
             (
               step,
@@ -514,47 +817,99 @@ export function RecipeStepsForm({
                 key={
                   step.clientId
                 }
-                className="rounded-lg border p-4"
+                className="rounded-2xl border border-border bg-page-muted/20 p-5"
               >
+
                 <div className="flex flex-wrap items-start justify-between gap-4">
 
                   <div className="min-w-0 flex-1">
 
-                    <p className="text-sm font-medium">
-                      Paso {index + 1}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-3">
+
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-semibold text-inverse">
+                        {
+                          index +
+                          1
+                        }
+                      </span>
 
 
-                    {step.title && (
-                      <h3 className="mt-1 font-semibold">
-                        {step.title}
-                      </h3>
-                    )}
+                      {step.title ? (
+
+                        <h3 className="font-semibold text-foreground">
+                          {
+                            step.title
+                          }
+                        </h3>
+
+                      ) : (
+
+                        <h3 className="font-semibold text-muted-foreground">
+                          Paso{" "}
+                          {
+                            index +
+                            1
+                          }
+                        </h3>
+
+                      )}
 
 
-                    <p className="mt-2 whitespace-pre-wrap text-sm">
+                      {step.durationMinutes && (
+
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-muted-foreground">
+
+                          <Clock3
+                            className="size-3.5 text-brand"
+                            aria-hidden="true"
+                          />
+
+                          {
+                            step.durationMinutes
+                          }{" "}
+                          min
+
+                        </span>
+
+                      )}
+
+                    </div>
+
+
+                    <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-foreground">
                       {
                         step.instructions
                       }
                     </p>
 
 
-                    {step.durationMinutes && (
-                      <p className="mt-2 text-xs">
-                        Duración:{" "}
-                        {
-                          step.durationMinutes
-                        }{" "}
-                        min
-                      </p>
-                    )}
-
-
                     {step.tip && (
-                      <p className="mt-2 text-sm">
-                        Consejo:{" "}
-                        {step.tip}
-                      </p>
+
+                      <div className="mt-4 flex items-start gap-3 rounded-xl border border-border bg-surface p-4">
+
+                        <Lightbulb
+                          className="mt-0.5 size-4 shrink-0 text-brand"
+                          aria-hidden="true"
+                        />
+
+
+                        <div>
+
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                            Consejo
+                          </p>
+
+
+                          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                            {
+                              step.tip
+                            }
+                          </p>
+
+                        </div>
+
+                      </div>
+
                     )}
 
                   </div>
@@ -565,17 +920,26 @@ export function RecipeStepsForm({
                     <button
                       type="button"
                       disabled={
-                        index === 0
+                        index ===
+                        0
                       }
-                      onClick={() =>
-                        moveStep(
-                          index,
-                          index - 1,
-                        )
+                      onClick={
+                        () =>
+                          moveStep(
+                            index,
+                            index -
+                              1,
+                          )
                       }
-                      className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40"
+                      className="inline-flex size-9 items-center justify-center rounded-lg border border-border bg-surface transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-40"
+                      aria-label="Mover paso hacia arriba"
                     >
-                      ↑
+
+                      <ArrowUp
+                        className="size-4"
+                        aria-hidden="true"
+                      />
+
                     </button>
 
 
@@ -586,58 +950,89 @@ export function RecipeStepsForm({
                         steps.length -
                           1
                       }
-                      onClick={() =>
-                        moveStep(
-                          index,
-                          index + 1,
-                        )
+                      onClick={
+                        () =>
+                          moveStep(
+                            index,
+                            index +
+                              1,
+                          )
                       }
-                      className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40"
+                      className="inline-flex size-9 items-center justify-center rounded-lg border border-border bg-surface transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-40"
+                      aria-label="Mover paso hacia abajo"
                     >
-                      ↓
+
+                      <ArrowDown
+                        className="size-4"
+                        aria-hidden="true"
+                      />
+
                     </button>
 
 
                     <button
                       type="button"
-                      onClick={() =>
-                        editStep(
-                          index,
-                        )
+                      onClick={
+                        () =>
+                          editStep(
+                            index,
+                          )
                       }
-                      className="rounded-lg border px-3 py-2 text-sm"
+                      className="inline-flex size-9 items-center justify-center rounded-lg border border-border bg-surface transition hover:bg-page-muted"
+                      aria-label="Editar paso"
                     >
-                      Editar
+
+                      <Pencil
+                        className="size-4 text-brand"
+                        aria-hidden="true"
+                      />
+
                     </button>
 
 
                     <button
                       type="button"
-                      onClick={() =>
-                        duplicateStep(
-                          index,
-                        )
+                      onClick={
+                        () =>
+                          duplicateStep(
+                            index,
+                          )
                       }
-                      className="rounded-lg border px-3 py-2 text-sm"
+                      className="inline-flex size-9 items-center justify-center rounded-lg border border-border bg-surface transition hover:bg-page-muted"
+                      aria-label="Duplicar paso"
                     >
-                      Duplicar
+
+                      <Copy
+                        className="size-4"
+                        aria-hidden="true"
+                      />
+
                     </button>
 
 
                     <button
                       type="button"
-                      onClick={() =>
-                        removeStep(
-                          index,
-                        )
+                      onClick={
+                        () =>
+                          removeStep(
+                            index,
+                          )
                       }
-                      className="rounded-lg border px-3 py-2 text-sm"
+                      className="inline-flex size-9 items-center justify-center rounded-lg border border-red-200 bg-surface text-red-600 transition hover:bg-red-50"
+                      aria-label="Eliminar paso"
                     >
-                      Eliminar
+
+                      <Trash2
+                        className="size-4"
+                        aria-hidden="true"
+                      />
+
                     </button>
 
                   </div>
+
                 </div>
+
               </article>
             ),
           )
@@ -646,34 +1041,66 @@ export function RecipeStepsForm({
       </div>
 
 
-      {/* =============================================
+      {/* =================================================
           SINGLE STEP EDITOR
-      ============================================= */}
+      ================================================= */}
 
-      <div className="mt-6 rounded-lg border p-5">
+      <div className="mt-7 rounded-2xl border border-border bg-page-muted/20 p-5 sm:p-6">
 
-        <h3 className="font-semibold">
-          {editingIndex ===
-          null
-            ? "Nuevo paso"
-            : `Editar paso ${editingIndex + 1}`}
-        </h3>
+        <div className="flex items-center gap-3">
 
+          <span className="flex size-9 items-center justify-center rounded-xl bg-surface text-brand shadow-sm">
 
-        <div className="mt-5 space-y-5">
+            <Plus
+              className="size-4"
+              aria-hidden="true"
+            />
+
+          </span>
+
 
           <div>
+
+            <h3 className="font-semibold text-foreground">
+
+              {editingIndex ===
+              null
+                ? "Nuevo paso"
+                : `Editar paso ${editingIndex + 1}`}
+
+            </h3>
+
+
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Describe una única acción o
+              fase de la elaboración.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div className="mt-6 space-y-5">
+
+          {/* TITLE */}
+
+          <div>
+
             <label
               htmlFor="step-title"
-              className="mb-2 block font-medium"
+              className="text-sm font-semibold text-foreground"
             >
               Título
             </label>
 
+
             <input
               id="step-title"
               type="text"
-              maxLength={120}
+              maxLength={
+                120
+              }
               value={
                 stepDraft.title
               }
@@ -687,30 +1114,37 @@ export function RecipeStepsForm({
                     ...current,
 
                     title:
-                      event
-                        .target
-                        .value,
+                      event.target.value,
                   }),
                 )
               }
-              className="w-full rounded-lg border px-4 py-3"
-              placeholder="Opcional. Ej. Preparar las patatas"
+              className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+              placeholder="Opcional. Ej. Dorar el cerdo"
             />
+
           </div>
 
 
+          {/* INSTRUCTIONS */}
+
           <div>
+
             <label
               htmlFor="step-instructions"
-              className="mb-2 block font-medium"
+              className="text-sm font-semibold text-foreground"
             >
               Instrucciones
             </label>
 
+
             <textarea
               id="step-instructions"
-              rows={6}
-              maxLength={2500}
+              rows={
+                6
+              }
+              maxLength={
+                2500
+              }
               value={
                 stepDraft.instructions
               }
@@ -724,33 +1158,45 @@ export function RecipeStepsForm({
                     ...current,
 
                     instructions:
-                      event
-                        .target
-                        .value,
+                      event.target.value,
                   }),
                 )
               }
-              className="w-full rounded-lg border px-4 py-3"
+              className="mt-2 w-full resize-y rounded-xl border border-border bg-surface px-4 py-3 leading-6 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
               placeholder="Describe detalladamente qué debe hacerse en este paso."
             />
+
+
+            <p className="mt-2 text-xs text-muted-foreground">
+              Máximo 2500 caracteres.
+            </p>
+
           </div>
 
 
+          {/* DURATION */}
+
           <div>
+
             <label
               htmlFor="step-duration"
-              className="mb-2 block font-medium"
+              className="text-sm font-semibold text-foreground"
             >
               Duración aproximada
             </label>
 
-            <div className="flex max-w-xs items-center gap-3">
+
+            <div className="mt-2 flex max-w-xs items-center gap-3">
 
               <input
                 id="step-duration"
                 type="number"
-                min={0}
-                step={1}
+                min={
+                  0
+                }
+                step={
+                  1
+                }
                 inputMode="numeric"
                 value={
                   stepDraft.durationMinutes
@@ -765,72 +1211,98 @@ export function RecipeStepsForm({
                       ...current,
 
                       durationMinutes:
-                        event
-                          .target
-                          .value,
+                        event.target.value,
                     }),
                   )
                 }
-                className="w-full rounded-lg border px-4 py-3"
+                className="w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
                 placeholder="Ej. 10"
               />
 
-              <span className="text-sm">
+
+              <span className="shrink-0 text-sm text-muted-foreground">
                 min
               </span>
 
             </div>
+
+
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              Se sumará automáticamente al
+              tiempo total de cocinado.
+            </p>
+
           </div>
 
 
+          {/* TIP */}
+
           <div>
+
             <label
               htmlFor="step-tip"
-              className="mb-2 block font-medium"
+              className="text-sm font-semibold text-foreground"
             >
               Consejo
             </label>
 
+
             <textarea
               id="step-tip"
-              rows={3}
-              maxLength={800}
+              rows={
+                3
+              }
+              maxLength={
+                800
+              }
               value={
                 stepDraft.tip
               }
               onChange={(
                 event,
               ) =>
-                setStepDraft(
-                  (
-                    current,
-                  ) => ({
-                    ...current,
+                  setStepDraft(
+                    (
+                      current,
+                    ) => ({
+                      ...current,
 
-                    tip:
-                      event
-                        .target
-                        .value,
-                  }),
-                )
+                      tip:
+                        event.target.value,
+                    }),
+                  )
               }
-              className="w-full rounded-lg border px-4 py-3"
+              className="mt-2 w-full resize-y rounded-xl border border-border bg-surface px-4 py-3 leading-6 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
               placeholder="Opcional. Ej. No subas demasiado el fuego."
             />
+
+
+            <p className="mt-2 text-xs text-muted-foreground">
+              Opcional · Máximo 800 caracteres.
+            </p>
+
           </div>
 
         </div>
 
 
+        {/* EDITOR ERROR */}
+
         {editorError && (
+
           <p
             role="alert"
-            className="mt-4 text-sm"
+            className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
           >
-            {editorError}
+            {
+              editorError
+            }
           </p>
+
         )}
 
+
+        {/* EDITOR ACTIONS */}
 
         <div className="mt-5 flex flex-wrap gap-3">
 
@@ -839,26 +1311,36 @@ export function RecipeStepsForm({
             onClick={
               saveStep
             }
-            className="rounded-lg bg-black px-4 py-2 text-white"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-semibold text-inverse transition hover:bg-brand-hover"
           >
+
+            <Plus
+              className="size-4"
+              aria-hidden="true"
+            />
+
+
             {editingIndex ===
             null
               ? "Añadir paso"
               : "Guardar cambios"}
+
           </button>
 
 
           {editingIndex !==
             null && (
+
             <button
               type="button"
               onClick={
                 clearEditor
               }
-              className="rounded-lg border px-4 py-2"
+              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-border bg-surface px-4 text-sm font-semibold transition hover:bg-page-muted"
             >
               Cancelar edición
             </button>
+
           )}
 
         </div>
@@ -866,37 +1348,89 @@ export function RecipeStepsForm({
       </div>
 
 
-      {/* =============================================
-          SAVE ALL
-      ============================================= */}
+      {/* =================================================
+          VALIDATION
+      ================================================= */}
 
-      <div className="mt-6 flex flex-wrap items-center gap-4">
+      {validationError && (
+
+        <p
+          role="alert"
+          className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {
+            validationError
+          }
+        </p>
+
+      )}
+
+
+      {message && (
+
+        <p
+          role="status"
+          className="mt-6 rounded-xl border border-border bg-page-muted/40 px-4 py-3 text-sm text-muted-foreground"
+        >
+          {
+            message
+          }
+        </p>
+
+      )}
+
+
+      {/* =================================================
+          NAVIGATION
+      ================================================= */}
+
+      <div className="mt-7 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+
+        <Link
+          href={
+            previousStepHref
+          }
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition hover:bg-page-muted"
+        >
+
+          <ArrowLeft
+            className="size-4"
+            aria-hidden="true"
+          />
+
+          Anterior
+
+        </Link>
+
 
         <button
           type="button"
           disabled={
-            isSubmitting ||
-            !isDirty
+            isSubmitting
           }
           onClick={
-            handleSave
+            handleContinue
           }
-          className="rounded-lg bg-black px-5 py-3 text-white disabled:opacity-50"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-5 font-semibold text-inverse shadow-sm transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
+
           {isSubmitting
             ? "Guardando..."
-            : "Guardar elaboración"}
+            : isDirty
+              ? "Guardar y continuar"
+              : "Continuar"}
+
+
+          {!isSubmitting && (
+
+            <ArrowRight
+              className="size-4"
+              aria-hidden="true"
+            />
+
+          )}
+
         </button>
-
-
-        {message && (
-          <p
-            role="status"
-            className="text-sm"
-          >
-            {message}
-          </p>
-        )}
 
       </div>
 

@@ -1,11 +1,18 @@
 "use client";
 
 import {
+  ArrowRight,
+  Save,
+} from "lucide-react";
+
+import {
   useEffect,
   useState,
 } from "react";
 
-import { useRouter } from "next/navigation";
+import {
+  useRouter,
+} from "next/navigation";
 
 import {
   useForm,
@@ -16,11 +23,6 @@ import {
 } from "@hookform/resolvers/zod";
 
 import {
-  recipeBasicInfoSchema,
-  type RecipeBasicInfoFormData,
-} from "@/schemas/recipe-basic-info-schema";
-
-import {
   updateRecipeBasicInfoAction,
 } from "@/app/admin/recipes/[id]/edit/actions";
 
@@ -28,28 +30,61 @@ import {
   slugify,
 } from "@/lib/recipes/slugify";
 
+import {
+  recipeBasicInfoSchema,
+  type RecipeBasicInfoFormData,
+} from "@/schemas/recipe-basic-info-schema";
+
+
 type RecipeBasicInfoFormProps = {
-  recipeId: string;
+  recipeId:
+    string;
 
   initialValues: {
-    title: string;
-    slug: string;
-    shortDescription: string | null;
-    introduction: string | null;
+    title:
+      string;
+
+    slug:
+      string;
+
+    shortDescription:
+      string | null;
+
+    introduction:
+      string | null;
   };
+
+  nextStepHref:
+    string;
 };
+
 
 export function RecipeBasicInfoForm({
   recipeId,
   initialValues,
+  nextStepHref,
 }: RecipeBasicInfoFormProps) {
-  const router = useRouter();
+  const router =
+    useRouter();
 
-  const [message, setMessage] =
-    useState<string | null>(null);
 
-  const [slugEditedManually, setSlugEditedManually] =
-    useState(true);
+  const [
+    message,
+    setMessage,
+  ] =
+    useState<string | null>(
+      null,
+    );
+
+
+  const [
+    slugEditedManually,
+    setSlugEditedManually,
+  ] =
+    useState(
+      true,
+    );
+
 
   const {
     register,
@@ -57,61 +92,112 @@ export function RecipeBasicInfoForm({
     watch,
     setValue,
     setError,
+    reset,
 
     formState: {
       errors,
       isSubmitting,
       isDirty,
     },
-  } = useForm<RecipeBasicInfoFormData>({
-    resolver:
-      zodResolver(
-        recipeBasicInfoSchema,
-      ),
+  } =
+    useForm<RecipeBasicInfoFormData>({
+      resolver:
+        zodResolver(
+          recipeBasicInfoSchema,
+        ),
 
-    defaultValues: {
-      title:
-        initialValues.title,
+      defaultValues: {
+        title:
+          initialValues.title,
 
-      slug:
-        initialValues.slug,
+        slug:
+          initialValues.slug,
 
-      shortDescription:
-        initialValues.shortDescription ??
-        "",
+        shortDescription:
+          initialValues
+            .shortDescription ??
+          "",
 
-      introduction:
-        initialValues.introduction ??
-        "",
-    },
-  });
+        introduction:
+          initialValues
+            .introduction ??
+          "",
+      },
+    });
+
 
   const title =
-    watch("title");
+    watch(
+      "title",
+    );
 
-  useEffect(() => {
-    if (
-      !slugEditedManually
-    ) {
-      setValue(
-        "slug",
-        slugify(title ?? ""),
-        {
-          shouldValidate: true,
-          shouldDirty: true,
-        },
-      );
-    }
-  }, [
-    title,
-    slugEditedManually,
-    setValue,
-  ]);
+
+  const slug =
+    watch(
+      "slug",
+    );
+
+
+  useEffect(
+    () => {
+      if (
+        !slugEditedManually
+      ) {
+        setValue(
+          "slug",
+          slugify(
+            title ??
+            "",
+          ),
+          {
+            shouldValidate:
+              true,
+
+            shouldDirty:
+              true,
+          },
+        );
+      }
+    },
+    [
+      title,
+      slugEditedManually,
+      setValue,
+    ],
+  );
+
+
+  function generateSlugFromTitle() {
+    setSlugEditedManually(
+      false,
+    );
+
+
+    setValue(
+      "slug",
+      slugify(
+        title ??
+        "",
+      ),
+      {
+        shouldValidate:
+          true,
+
+        shouldDirty:
+          true,
+      },
+    );
+  }
+
 
   async function onSubmit(
-    values: RecipeBasicInfoFormData,
+    values:
+      RecipeBasicInfoFormData,
   ) {
-    setMessage(null);
+    setMessage(
+      null,
+    );
+
 
     const result =
       await updateRecipeBasicInfoAction(
@@ -119,185 +205,266 @@ export function RecipeBasicInfoForm({
         values,
       );
 
-    if (!result.success) {
+
+    if (
+      !result.success
+    ) {
       if (
         result.fieldErrors
       ) {
         Object.entries(
           result.fieldErrors,
         ).forEach(
-          ([field, messages]) => {
-            const message =
+          ([
+            field,
+            messages,
+          ]) => {
+            const fieldMessage =
               messages?.[0];
 
-            if (!message) {
+
+            if (
+              !fieldMessage
+            ) {
               return;
             }
+
 
             setError(
               field as keyof RecipeBasicInfoFormData,
               {
-                type: "server",
-                message,
+                type:
+                  "server",
+
+                message:
+                  fieldMessage,
               },
             );
           },
         );
       }
 
-      if (result.message) {
-        setMessage(
-          result.message,
-        );
-      }
+
+      setMessage(
+        result.message ??
+        "No se pudieron guardar los cambios.",
+      );
+
 
       return;
     }
 
-    setMessage(
-      result.message ??
-        "Cambios guardados.",
+
+    /*
+     * Marcamos los valores actuales como guardados.
+     * Así react-hook-form deja de considerar
+     * el formulario como dirty.
+     */
+    reset(
+      values,
     );
 
+
     router.refresh();
+
+
+    router.push(
+      nextStepHref,
+    );
   }
 
+
   return (
-    <section className="rounded-xl border p-6">
+    <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-7">
+
+      {/* =================================================
+          HEADER
+      ================================================= */}
+
       <div>
-        <h2 className="text-xl font-semibold">
+
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
+          Paso 1 de 10
+        </p>
+
+
+        <h2 className="mt-2 font-serif text-2xl font-semibold text-foreground">
           Información básica
         </h2>
 
-        <p className="mt-1 text-sm">
-          Datos principales utilizados para identificar y presentar la receta.
+
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+          Define cómo se identificará y
+          presentará la receta dentro de
+          CociHub.
         </p>
+
       </div>
+
 
       <form
         onSubmit={
-          handleSubmit(onSubmit)
+          handleSubmit(
+            onSubmit,
+          )
         }
-        className="mt-6 space-y-6"
+        className="mt-7 space-y-6"
       >
-        {/* TITLE */}
+
+        {/* =================================================
+            TITLE
+        ================================================= */}
 
         <div>
+
           <label
             htmlFor="title"
-            className="mb-2 block font-medium"
+            className="text-sm font-semibold text-foreground"
           >
             Título
           </label>
 
+
           <input
             id="title"
             type="text"
-            maxLength={120}
-            {...register("title")}
-            className="w-full rounded-lg border px-4 py-3"
+            maxLength={
+              120
+            }
+            {...register(
+              "title",
+            )}
+            className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
           />
 
+
           {errors.title && (
-            <p className="mt-2 text-sm">
-              {errors.title.message}
+            <p
+              role="alert"
+              className="mt-2 text-sm text-red-600"
+            >
+              {
+                errors
+                  .title
+                  .message
+              }
             </p>
           )}
+
         </div>
 
 
-        {/* SLUG */}
+        {/* =================================================
+            SLUG
+        ================================================= */}
 
         <div>
-          <div className="mb-2 flex items-center justify-between gap-3">
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+
             <label
               htmlFor="slug"
-              className="font-medium"
+              className="text-sm font-semibold text-foreground"
             >
               Slug
             </label>
 
+
             <button
               type="button"
-              className="text-sm underline"
-              onClick={() => {
-                setSlugEditedManually(
-                  false,
-                );
-
-                setValue(
-                  "slug",
-                  slugify(
-                    title ?? "",
-                  ),
-                  {
-                    shouldValidate:
-                      true,
-                    shouldDirty:
-                      true,
-                  },
-                );
-              }}
+              onClick={
+                generateSlugFromTitle
+              }
+              className="text-sm font-medium text-brand transition hover:text-brand-hover"
             >
               Generar desde título
             </button>
+
           </div>
+
 
           <input
             id="slug"
             type="text"
-            maxLength={140}
             {...register(
               "slug",
               {
-                onChange: () => {
-                  setSlugEditedManually(
-                    true,
-                  );
-                },
+                onChange:
+                  () => {
+                    setSlugEditedManually(
+                      true,
+                    );
+                  },
               },
             )}
-            className="w-full rounded-lg border px-4 py-3"
+            className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
           />
 
-          <p className="mt-2 text-sm">
-            /recipes/{watch("slug")}
+
+          <p className="mt-2 text-xs text-muted-foreground">
+            /recipes/
+            {
+              slug
+            }
           </p>
 
+
           {errors.slug && (
-            <p className="mt-2 text-sm">
-              {errors.slug.message}
+            <p
+              role="alert"
+              className="mt-2 text-sm text-red-600"
+            >
+              {
+                errors
+                  .slug
+                  .message
+              }
             </p>
           )}
+
         </div>
 
 
-        {/* SHORT DESCRIPTION */}
+        {/* =================================================
+            SHORT DESCRIPTION
+        ================================================= */}
 
         <div>
+
           <label
             htmlFor="shortDescription"
-            className="mb-2 block font-medium"
+            className="text-sm font-semibold text-foreground"
           >
             Descripción corta
           </label>
 
+
           <textarea
             id="shortDescription"
-            rows={3}
-            maxLength={180}
+            rows={
+              3
+            }
+            maxLength={
+              180
+            }
             {...register(
               "shortDescription",
             )}
-            className="w-full rounded-lg border px-4 py-3"
+            className="mt-2 w-full resize-y rounded-xl border border-border bg-surface px-4 py-3 leading-6 text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+            placeholder="Una descripción breve y apetecible de la receta."
           />
 
-          <p className="mt-2 text-sm">
+
+          <p className="mt-2 text-xs text-muted-foreground">
             Máximo 180 caracteres.
           </p>
 
+
           {errors.shortDescription && (
-            <p className="mt-2 text-sm">
+            <p
+              role="alert"
+              className="mt-2 text-sm text-red-600"
+            >
               {
                 errors
                   .shortDescription
@@ -305,35 +472,59 @@ export function RecipeBasicInfoForm({
               }
             </p>
           )}
+
         </div>
 
 
-        {/* INTRODUCTION */}
+        {/* =================================================
+            INTRODUCTION
+        ================================================= */}
 
         <div>
+
           <label
             htmlFor="introduction"
-            className="mb-2 block font-medium"
+            className="text-sm font-semibold text-foreground"
           >
             Introducción
           </label>
 
+
           <textarea
             id="introduction"
-            rows={7}
-            maxLength={1500}
+            rows={
+              7
+            }
+            maxLength={
+              1500
+            }
             {...register(
               "introduction",
             )}
-            className="w-full rounded-lg border px-4 py-3"
+            className="mt-2 w-full resize-y rounded-xl border border-border bg-surface px-4 py-3 leading-6 text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+            placeholder="Contexto, historia, características o cualquier información útil sobre la receta."
           />
 
-          <p className="mt-2 text-sm">
-            Máximo 1500 caracteres.
-          </p>
+
+          <div className="mt-2 flex justify-between gap-4">
+
+            <p className="text-xs text-muted-foreground">
+              Opcional
+            </p>
+
+
+            <p className="text-xs text-muted-foreground">
+              Máximo 1500 caracteres.
+            </p>
+
+          </div>
+
 
           {errors.introduction && (
-            <p className="mt-2 text-sm">
+            <p
+              role="alert"
+              className="mt-2 text-sm text-red-600"
+            >
               {
                 errors
                   .introduction
@@ -341,35 +532,67 @@ export function RecipeBasicInfoForm({
               }
             </p>
           )}
+
         </div>
 
 
-        {/* ACTIONS */}
+        {/* =================================================
+            MESSAGE
+        ================================================= */}
 
-        <div className="flex flex-wrap items-center gap-4">
+        {message && (
+          <p
+            role="status"
+            className="rounded-xl border border-border bg-page-muted/40 px-4 py-3 text-sm text-muted-foreground"
+          >
+            {
+              message
+            }
+          </p>
+        )}
+
+
+        {/* =================================================
+            ACTIONS
+        ================================================= */}
+
+        <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-end">
+
           <button
             type="submit"
             disabled={
               isSubmitting ||
               !isDirty
             }
-            className="rounded-lg bg-black px-5 py-3 text-white disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-5 font-semibold text-inverse shadow-sm transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSubmitting
-              ? "Guardando..."
-              : "Guardar cambios"}
+
+            {isSubmitting ? (
+              <>
+                <Save
+                  className="size-4"
+                  aria-hidden="true"
+                />
+
+                Guardando...
+              </>
+            ) : (
+              <>
+                Guardar y continuar
+
+                <ArrowRight
+                  className="size-4"
+                  aria-hidden="true"
+                />
+              </>
+            )}
+
           </button>
 
-          {message && (
-            <p
-              role="status"
-              className="text-sm"
-            >
-              {message}
-            </p>
-          )}
         </div>
+
       </form>
+
     </section>
   );
 }

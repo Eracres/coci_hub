@@ -37,6 +37,10 @@ import {
 } from "@/components/admin/recipes/recipe-publication-form";
 
 import {
+  RecipeReviewForm,
+} from "@/components/admin/recipes/recipe-review-form";
+
+import {
   RecipeServingsForm,
 } from "@/components/admin/recipes/recipe-servings-form";
 
@@ -51,6 +55,10 @@ import {
 import {
   getPublicationReadiness,
 } from "@/lib/recipes/get-publication-readiness";
+
+import {
+  getAdminRecipeReviewInfo,
+} from "@/services/recipes/recipe-review-service";
 
 import {
   getAdminRecipeById,
@@ -89,6 +97,7 @@ export default async function EditRecipePage({
     recipeSteps,
     allergenOptions,
     recipeAllergens,
+    reviewInfo,
   ] =
     await Promise.all([
       getAdminRecipeById(
@@ -114,24 +123,51 @@ export default async function EditRecipePage({
       getRecipeAllergens(
         id,
       ),
+
+      getAdminRecipeReviewInfo(
+        id,
+      ),
     ]);
 
 
   if (
-    !recipe
+    !recipe ||
+    !reviewInfo
   ) {
     notFound();
   }
 
 
+  /*
+   * IMPORTANTE:
+   *
+   * recipe.status utiliza todavía el tipo administrativo
+   * antiguo RecipeStatus, que no contempla pending_review.
+   *
+   * reviewInfo.status sí representa todos los estados reales
+   * de una receta comunitaria, incluido pending_review.
+   */
+
+  const moderationStatus =
+    reviewInfo.status;
+
+
   const statusLabel =
-    recipe.status ===
-    "draft"
+    moderationStatus ===
+      "draft"
       ? "Borrador"
-      : recipe.status ===
-          "published"
-        ? "Publicada"
-        : "Archivada";
+      : moderationStatus ===
+          "pending_review"
+        ? "En revisión"
+        : moderationStatus ===
+            "published"
+          ? "Publicada"
+          : "Archivada";
+
+
+  const isPendingReview =
+    moderationStatus ===
+    "pending_review";
 
 
   const ingredientCount =
@@ -141,7 +177,9 @@ export default async function EditRecipePage({
         group,
       ) =>
         total +
-        group.ingredients.length,
+        group
+          .ingredients
+          .length,
       0,
     );
 
@@ -164,7 +202,13 @@ export default async function EditRecipePage({
 
   return (
     <main className="mx-auto max-w-5xl p-8">
+
+      {/* =================================================
+          NAVIGATION
+      ================================================= */}
+
       <div className="flex flex-wrap items-center justify-between gap-4">
+
         <Link
           href="/admin/recipes"
           className="text-sm underline"
@@ -179,15 +223,39 @@ export default async function EditRecipePage({
         >
           Vista previa
         </Link>
+
       </div>
 
 
+      {/* =================================================
+          HEADER
+      ================================================= */}
+
       <header className="mt-6">
-        <p className="text-sm">
-          {
-            statusLabel
-          }
-        </p>
+
+        <div className="flex flex-wrap items-center gap-3">
+
+          <span
+            className={
+              isPendingReview
+                ? "inline-flex rounded-full border border-brand/20 bg-brand/5 px-3 py-1 text-sm font-semibold text-brand"
+                : "text-sm"
+            }
+          >
+            {
+              statusLabel
+            }
+          </span>
+
+
+          {isPendingReview && (
+            <span className="text-sm text-muted-foreground">
+              Pendiente de decisión administrativa
+            </span>
+          )}
+
+        </div>
+
 
         <h1 className="mt-2 text-3xl font-bold">
           {
@@ -195,45 +263,73 @@ export default async function EditRecipePage({
           }
         </h1>
 
+
         <p className="mt-2 text-sm">
           /recipes/
           {
             recipe.slug
           }
         </p>
+
       </header>
 
 
-      <div className="mt-10 space-y-8">
-        {/* 01. INFORMACIÓN BÁSICA */}
+      {/* =================================================
+          PENDING REVIEW MODE
+      ================================================= */}
 
-        <RecipeBasicInfoForm
-          recipeId={
-            recipe.id
-          }
+      {isPendingReview ? (
 
-          initialValues={{
-            title:
-              recipe.title,
+        <div className="mt-10">
 
-            slug:
-              recipe.slug,
+          <RecipeReviewForm
+            recipeId={
+              recipe.id
+            }
+            recipeTitle={
+              recipe.title
+            }
+            submittedAt={
+              reviewInfo
+                .submitted_at
+            }
+          />
 
-            shortDescription:
-              recipe.short_description,
+        </div>
 
-            introduction:
-              recipe.introduction,
-          }}
-        />
+      ) : (
+
+        /* =================================================
+           NORMAL ADMIN EDITOR
+        ================================================= */
+
+        <div className="mt-10 space-y-8">
+
+          {/* 01. INFORMACIÓN BÁSICA */}
+
+          <RecipeBasicInfoForm
+            recipeId={
+              recipe.id
+            }
+
+            initialValues={{
+              title:
+                recipe.title,
+
+              slug:
+                recipe.slug,
+
+              shortDescription:
+                recipe.short_description,
+
+              introduction:
+                recipe.introduction,
+            }}
+          />
 
 
-        {/* 02. IMAGEN PRINCIPAL */}
+          {/* 02. IMAGEN PRINCIPAL */}
 
-        <div
-          id="publication-main-image"
-          className="rounded-xl"
-        >
           <RecipeImageUploader
             recipeId={
               recipe.id
@@ -243,91 +339,86 @@ export default async function EditRecipePage({
               recipe.image_path
             }
           />
-        </div>
 
 
-        {/* 03. CLASIFICACIÓN */}
+          {/* 03. CLASIFICACIÓN */}
 
-        <RecipeClassificationForm
-          recipeId={
-            recipe.id
-          }
+          <RecipeClassificationForm
+            recipeId={
+              recipe.id
+            }
 
-          recipeTypes={
-            classificationOptions
-              .recipeTypes
-          }
+            recipeTypes={
+              classificationOptions
+                .recipeTypes
+            }
 
-          categories={
-            classificationOptions
-              .categories
-          }
+            categories={
+              classificationOptions
+                .categories
+            }
 
-          tags={
-            classificationOptions
-              .tags
-          }
+            tags={
+              classificationOptions
+                .tags
+            }
 
-          initialValues={{
-            recipeTypeId:
-              recipe.recipe_type_id,
+            initialValues={{
+              recipeTypeId:
+                recipe.recipe_type_id,
 
-            difficulty:
-              recipe.difficulty,
+              difficulty:
+                recipe.difficulty,
 
-            categoryIds:
-              classificationRelations
-                .categoryIds,
+              categoryIds:
+                classificationRelations
+                  .categoryIds,
 
-            tagIds:
-              classificationRelations
-                .tagIds,
+              tagIds:
+                classificationRelations
+                  .tagIds,
 
-            featured:
-              recipe.featured,
-          }}
-        />
-
-
-        {/* 04. RACIONES */}
-
-        <RecipeServingsForm
-          recipeId={
-            recipe.id
-          }
-
-          initialValue={
-            recipe.base_servings
-          }
-        />
+              featured:
+                recipe.featured,
+            }}
+          />
 
 
-        {/* 05. TIEMPOS */}
+          {/* 04. RACIONES */}
 
-        <RecipeTimesForm
-          recipeId={
-            recipe.id
-          }
+          <RecipeServingsForm
+            recipeId={
+              recipe.id
+            }
 
-          initialValues={{
-            preparationMinutes:
-              recipe.preparation_minutes,
-
-            cookingMinutes:
-              recipe.cooking_minutes,
-
-            additionalMinutes:
-              recipe.additional_minutes,
-          }}
-        />
+            initialValue={
+              recipe.base_servings
+            }
+          />
 
 
-        {/* 06. INGREDIENTES */}
+          {/* 05. TIEMPOS */}
 
-        <div
-          id="publication-ingredient"
-          className="rounded-xl"
-        >
+          <RecipeTimesForm
+            recipeId={
+              recipe.id
+            }
+
+            initialValues={{
+              preparationMinutes:
+                recipe.preparation_minutes,
+
+              cookingMinutes:
+                recipe.cooking_minutes,
+
+              additionalMinutes:
+                recipe.additional_minutes,
+            }}
+          />
+
+
+          {/* 06. INGREDIENTES */}
+
           <RecipeIngredientsForm
             recipeId={
               recipe.id
@@ -337,15 +428,10 @@ export default async function EditRecipePage({
               ingredientGroups
             }
           />
-        </div>
 
 
-        {/* 07. ELABORACIÓN */}
+          {/* 07. ELABORACIÓN */}
 
-        <div
-          id="publication-step"
-          className="rounded-xl"
-        >
           <RecipeStepsForm
             recipeId={
               recipe.id
@@ -355,103 +441,105 @@ export default async function EditRecipePage({
               recipeSteps
             }
           />
+
+
+          {/* 08. INFORMACIÓN ADICIONAL */}
+
+          <RecipeAdditionalInfoForm
+            recipeId={
+              recipe.id
+            }
+
+            initialValues={{
+              tips:
+                recipe.tips,
+
+              substitutions:
+                recipe.substitutions,
+
+              storage:
+                recipe.storage,
+
+              freezing:
+                recipe.freezing,
+
+              reheating:
+                recipe.reheating,
+
+              sourceType:
+                recipe.source_type,
+
+              sourceTitle:
+                recipe.source_title,
+
+              sourceAuthor:
+                recipe.source_author,
+
+              sourcePage:
+                recipe.source_page,
+
+              sourceUrl:
+                recipe.source_url,
+
+              sourceNotes:
+                recipe.source_notes,
+            }}
+          />
+
+
+          {/* 09. ALÉRGENOS */}
+
+          <RecipeAllergensForm
+            recipeId={
+              recipe.id
+            }
+
+            allergens={
+              allergenOptions
+            }
+
+            initialValues={
+              recipeAllergens
+            }
+          />
+
+
+          {/* 10. PUBLICACIÓN */}
+
+          <RecipePublicationForm
+            recipeId={
+              recipe.id
+            }
+
+            status={
+              recipe.status
+            }
+
+            readiness={
+              publicationReadiness
+            }
+          />
+
+
+          {/* ZONA PELIGROSA */}
+
+          <RecipeDeleteForm
+            recipeId={
+              recipe.id
+            }
+
+            recipeTitle={
+              recipe.title
+            }
+
+            status={
+              recipe.status
+            }
+          />
+
         </div>
+      )}
 
-
-        {/* 08. INFORMACIÓN ADICIONAL */}
-
-        <RecipeAdditionalInfoForm
-          recipeId={
-            recipe.id
-          }
-
-          initialValues={{
-            tips:
-              recipe.tips,
-
-            substitutions:
-              recipe.substitutions,
-
-            storage:
-              recipe.storage,
-
-            freezing:
-              recipe.freezing,
-
-            reheating:
-              recipe.reheating,
-
-            sourceType:
-              recipe.source_type,
-
-            sourceTitle:
-              recipe.source_title,
-
-            sourceAuthor:
-              recipe.source_author,
-
-            sourcePage:
-              recipe.source_page,
-
-            sourceUrl:
-              recipe.source_url,
-
-            sourceNotes:
-              recipe.source_notes,
-          }}
-        />
-
-
-        {/* 09. ALÉRGENOS */}
-
-        <RecipeAllergensForm
-          recipeId={
-            recipe.id
-          }
-
-          allergens={
-            allergenOptions
-          }
-
-          initialValues={
-            recipeAllergens
-          }
-        />
-
-
-        {/* 10. PUBLICACIÓN */}
-
-        <RecipePublicationForm
-          recipeId={
-            recipe.id
-          }
-
-          status={
-            recipe.status
-          }
-
-          readiness={
-            publicationReadiness
-          }
-        />
-
-
-        {/* ZONA PELIGROSA */}
-
-        <RecipeDeleteForm
-          recipeId={
-            recipe.id
-          }
-
-          recipeTitle={
-            recipe.title
-          }
-
-          status={
-            recipe.status
-          }
-        />
-      </div>
     </main>
   );
 }

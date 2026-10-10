@@ -1,6 +1,19 @@
 "use server";
 
 import {
+  cookies,
+} from "next/headers";
+
+import {
+  redirect,
+} from "next/navigation";
+
+import {
+  getEmailConfirmationRedirectUrl,
+  PENDING_CONFIRMATION_EMAIL_COOKIE,
+} from "@/lib/auth/email-confirmation";
+
+import {
   createClient,
 } from "@/lib/supabase/server";
 
@@ -215,6 +228,14 @@ export async function register(
 
 
   // =======================================================
+  // CONFIRMATION REDIRECT
+  // =======================================================
+
+  const confirmationRedirectUrl =
+    await getEmailConfirmationRedirectUrl();
+
+
+  // =======================================================
   // SUPABASE AUTH REGISTRATION
   // =======================================================
 
@@ -231,6 +252,9 @@ export async function register(
       password,
 
       options: {
+        emailRedirectTo:
+          confirmationRedirectUrl,
+
         data: {
           username,
 
@@ -259,53 +283,60 @@ export async function register(
 
 
   // =======================================================
-  // SUCCESS
+  // EMAIL CONFIRMATION DISABLED
+  // =======================================================
+  //
+  // Durante desarrollo o en una configuración donde Supabase
+  // tenga la confirmación desactivada, signUp() devuelve una
+  // sesión directamente.
+  //
+  // En ese caso no mostramos la pantalla de confirmación.
   // =======================================================
 
   if (
     signUpData.session
   ) {
-    return {
-      status:
-        "success",
-
-      message:
-        "Tu cuenta se ha creado correctamente y tu sesión ya está activa.",
-
-      values: {
-        displayName:
-          "",
-
-        username:
-          "",
-
-        email:
-          "",
-      },
-
-      attempt,
-    };
+    redirect(
+      "/",
+    );
   }
 
 
-  return {
-    status:
-      "success",
+  // =======================================================
+  // EMAIL CONFIRMATION REQUIRED
+  // =======================================================
 
-    message:
-      "Te hemos enviado un correo de confirmación. Abre el enlace para activar tu cuenta antes de iniciar sesión.",
+  const cookieStore =
+    await cookies();
 
-    values: {
-      displayName:
-        "",
 
-      username:
-        "",
+  cookieStore.set(
+    PENDING_CONFIRMATION_EMAIL_COOKIE,
+    email,
+    {
+      httpOnly:
+        true,
 
-      email:
-        "",
+      sameSite:
+        "lax",
+
+      secure:
+        process.env
+          .NODE_ENV ===
+        "production",
+
+      path:
+        "/",
+
+      maxAge:
+        60 *
+        60 *
+        24,
     },
+  );
 
-    attempt,
-  };
+
+  redirect(
+    "/register/check-email",
+  );
 }

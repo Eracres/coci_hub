@@ -5,6 +5,15 @@ import {
 } from "next/cache";
 
 import {
+  getAppOrigin,
+} from "@/lib/auth/email-confirmation";
+
+import {
+  sendRecipeApprovedToAuthorNotification,
+  sendRecipeReturnedToAuthorNotification,
+} from "@/lib/email/recipe-notifications";
+
+import {
   errorHasCode,
 } from "@/lib/errors/supabase-error";
 
@@ -21,6 +30,34 @@ export type RecipeReviewActionResult = {
     string;
 };
 
+
+type RecipeNotificationContext = {
+  recipe_id:
+    string;
+
+  recipe_title:
+    string;
+
+  recipe_slug:
+    string;
+
+  author_id:
+    string;
+
+  author_email:
+    string | null;
+
+  author_display_name:
+    string | null;
+
+  author_username:
+    string | null;
+};
+
+
+/* =========================================================
+   REVALIDATION
+========================================================= */
 
 function revalidateReviewPaths(
   recipeId:
@@ -56,6 +93,10 @@ function revalidateReviewPaths(
   );
 }
 
+
+/* =========================================================
+   ERROR MAPPING
+========================================================= */
 
 function getReviewErrorMessage(
   error:
@@ -99,6 +140,150 @@ function getReviewErrorMessage(
 
 
 /* =========================================================
+   NOTIFICATION CONTEXT
+========================================================= */
+
+async function getRecipeNotificationContext(
+  recipeId:
+    string,
+): Promise<
+  RecipeNotificationContext
+> {
+  const supabase =
+    await createClient();
+
+
+  const {
+    data,
+    error,
+  } =
+    await supabase
+      .rpc(
+        "get_recipe_notification_context",
+        {
+          p_recipe_id:
+            recipeId,
+        },
+      )
+      .single();
+
+
+  if (
+    error ||
+    !data
+  ) {
+    throw new Error(
+      `Could not obtain recipe notification context: ${
+        error?.message ??
+        "recipe context not found"
+      }`,
+    );
+  }
+
+
+  return (
+    data as
+      RecipeNotificationContext
+  );
+}
+
+
+/* =========================================================
+   NOTIFY AUTHOR: RETURNED
+========================================================= */
+
+async function notifyAuthorAboutReturnedRecipe(
+  recipeId:
+    string,
+
+  reviewNotes:
+    string,
+) {
+  const context =
+    await getRecipeNotificationContext(
+      recipeId,
+    );
+
+
+  if (
+    !context.author_email
+  ) {
+    throw new Error(
+      "Recipe author does not have an email address.",
+    );
+  }
+
+
+  const origin =
+    await getAppOrigin();
+
+
+  await sendRecipeReturnedToAuthorNotification({
+    authorEmail:
+      context.author_email,
+
+    authorDisplayName:
+      context.author_display_name ??
+      context.author_username ??
+      "cocinero de CociHub",
+
+    recipeTitle:
+      context.recipe_title,
+
+    reviewNotes,
+
+    editRecipeUrl:
+      `${origin}/mi-cocihub/recetas/${recipeId}/editar`,
+  });
+}
+
+
+/* =========================================================
+   NOTIFY AUTHOR: APPROVED
+========================================================= */
+
+async function notifyAuthorAboutApprovedRecipe(
+  recipeId:
+    string,
+) {
+  const context =
+    await getRecipeNotificationContext(
+      recipeId,
+    );
+
+
+  if (
+    !context.author_email
+  ) {
+    throw new Error(
+      "Recipe author does not have an email address.",
+    );
+  }
+
+
+  const origin =
+    await getAppOrigin();
+
+
+  await sendRecipeApprovedToAuthorNotification({
+    authorEmail:
+      context.author_email,
+
+    authorDisplayName:
+      context.author_display_name ??
+      context.author_username ??
+      "cocinero de CociHub",
+
+    recipeTitle:
+      context.recipe_title,
+
+    publicRecipeUrl:
+      `${origin}/recipes/${context.recipe_slug}`,
+  });
+}
+
+
+/* =========================================================
    APPROVE
 ========================================================= */
 
@@ -131,20 +316,6 @@ export async function approveRecipeReviewAction(
       throw error;
     }
 
-
-    revalidateReviewPaths(
-      recipeId,
-    );
-
-
-    return {
-      success:
-        true,
-
-      message:
-        "Receta aprobada y publicada correctamente.",
-    };
-
   } catch (
     error
   ) {
@@ -165,6 +336,40 @@ export async function approveRecipeReviewAction(
         ),
     };
   }
+
+
+  /*
+   * Email is intentionally outside the moderation
+   * operation. A delivery failure must never undo or
+   * invalidate an already approved recipe.
+   */
+
+  try {
+    await notifyAuthorAboutApprovedRecipe(
+      recipeId,
+    );
+  } catch (
+    notificationError
+  ) {
+    console.error(
+      "RECIPE APPROVED AUTHOR EMAIL ERROR:",
+      notificationError,
+    );
+  }
+
+
+  revalidateReviewPaths(
+    recipeId,
+  );
+
+
+  return {
+    success:
+      true,
+
+    message:
+      "Receta aprobada y publicada correctamente.",
+  };
 }
 
 
@@ -239,20 +444,6 @@ export async function returnRecipeReviewAction(
       throw error;
     }
 
-
-    revalidateReviewPaths(
-      recipeId,
-    );
-
-
-    return {
-      success:
-        true,
-
-      message:
-        "La receta ha sido devuelta al autor con las observaciones indicadas.",
-    };
-
   } catch (
     error
   ) {
@@ -273,4 +464,40 @@ export async function returnRecipeReviewAction(
         ),
     };
   }
+
+
+  /*
+   * Same rule as approval:
+   *
+   * the database operation has already succeeded.
+   * Email delivery is best-effort and cannot revert it.
+   */
+
+  try {
+    await notifyAuthorAboutReturnedRecipe(
+      recipeId,
+      normalizedNotes,
+    );
+  } catch (
+    notificationError
+  ) {
+    console.error(
+      "RECIPE RETURNED AUTHOR EMAIL ERROR:",
+      notificationError,
+    );
+  }
+
+
+  revalidateReviewPaths(
+    recipeId,
+  );
+
+
+  return {
+    success:
+      true,
+
+    message:
+      "La receta ha sido devuelta al autor con las observaciones indicadas.",
+  };
 }

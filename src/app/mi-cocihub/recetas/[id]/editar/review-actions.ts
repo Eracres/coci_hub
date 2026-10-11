@@ -5,6 +5,14 @@ import {
 } from "next/cache";
 
 import {
+  getAppOrigin,
+} from "@/lib/auth/email-confirmation";
+
+import {
+  sendRecipeSubmittedToAdminNotification,
+} from "@/lib/email/recipe-notifications";
+
+import {
   errorHasCode,
 } from "@/lib/errors/supabase-error";
 
@@ -20,6 +28,121 @@ export type SubmitRecipeReviewResult = {
   message?:
     string;
 };
+
+
+/* =========================================================
+   NOTIFY ADMIN
+========================================================= */
+
+async function notifyAdminAboutSubmittedRecipe(
+  recipeId:
+    string,
+
+  userId:
+    string,
+) {
+  const supabase =
+    await createClient();
+
+
+  const [
+    {
+      data:
+        recipe,
+
+      error:
+        recipeError,
+    },
+
+    {
+      data:
+        profile,
+
+      error:
+        profileError,
+    },
+  ] =
+    await Promise.all([
+      supabase
+        .from(
+          "recipes",
+        )
+        .select(
+          "id, title",
+        )
+        .eq(
+          "id",
+          recipeId,
+        )
+        .eq(
+          "author_id",
+          userId,
+        )
+        .single(),
+
+      supabase
+        .from(
+          "profiles",
+        )
+        .select(
+          "display_name, username",
+        )
+        .eq(
+          "id",
+          userId,
+        )
+        .single(),
+    ]);
+
+
+  if (
+    recipeError ||
+    !recipe
+  ) {
+    throw new Error(
+      `Could not load submitted recipe for email notification: ${
+        recipeError?.message ??
+        "recipe not found"
+      }`,
+    );
+  }
+
+
+  if (
+    profileError ||
+    !profile
+  ) {
+    throw new Error(
+      `Could not load recipe author for email notification: ${
+        profileError?.message ??
+        "profile not found"
+      }`,
+    );
+  }
+
+
+  const origin =
+    await getAppOrigin();
+
+
+  await sendRecipeSubmittedToAdminNotification({
+    recipeId,
+
+    recipeTitle:
+      recipe.title,
+
+    authorDisplayName:
+      profile.display_name ??
+      profile.username ??
+      "Usuario de CociHub",
+
+    authorUsername:
+      profile.username,
+
+    adminRecipeUrl:
+      `${origin}/admin/recipes/${recipeId}/edit`,
+  });
+}
 
 
 /* =========================================================
@@ -144,6 +267,28 @@ export async function submitMyRecipeForReviewAction(
       message:
         "No se pudo enviar la receta a revisión.",
     };
+  }
+
+
+  /*
+   * El correo NO forma parte de la operación funcional.
+   *
+   * Si falla Resend, la receta debe seguir correctamente
+   * enviada a revisión.
+   */
+
+  try {
+    await notifyAdminAboutSubmittedRecipe(
+      recipeId,
+      userId,
+    );
+  } catch (
+    notificationError
+  ) {
+    console.error(
+      "RECIPE REVIEW ADMIN EMAIL ERROR:",
+      notificationError,
+    );
   }
 
 

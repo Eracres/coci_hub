@@ -21,6 +21,10 @@ type RecipeSubmittedToAdminNotification = {
 
   adminRecipeUrl:
     string;
+
+  submissionType:
+    | "new"
+    | "resubmission";
 };
 
 
@@ -546,18 +550,44 @@ export async function sendRecipeSubmittedToAdminNotification(
       : input.authorDisplayName;
 
 
+  const isResubmission =
+    input.submissionType ===
+    "resubmission";
+
+
+  const subject =
+    isResubmission
+      ? `Receta corregida y reenviada: ${input.recipeTitle}`
+      : `Nueva receta pendiente de revisión: ${input.recipeTitle}`;
+
+
+  const title =
+    isResubmission
+      ? "Receta corregida y reenviada"
+      : "Nueva receta pendiente de revisión";
+
+
+  const intro =
+    isResubmission
+      ? "El autor ha corregido una receta que había sido devuelta anteriormente y la ha enviado de nuevo para revisión."
+      : "Un miembro de la comunidad ha enviado una receta para que sea revisada por el equipo de CociHub.";
+
+
   await sendTransactionalEmail({
     to:
       getAdminEmail(),
 
-    subject:
-      `Nueva receta pendiente de revisión: ${input.recipeTitle}`,
+    subject,
 
     text: [
-      "Nueva receta pendiente de revisión",
+      title,
       "",
       `Receta: ${input.recipeTitle}`,
       `Autor: ${authorText}`,
+      "",
+      isResubmission
+        ? "La receta ha sido corregida después de una revisión anterior."
+        : "Es la primera vez que esta receta se envía a revisión.",
       "",
       "Puedes revisarla desde el panel de administración:",
       input.adminRecipeUrl,
@@ -570,11 +600,9 @@ export async function sendRecipeSubmittedToAdminNotification(
         eyebrow:
           "Panel de moderación",
 
-        title:
-          "Nueva receta pendiente de revisión",
+        title,
 
-        intro:
-          "Un miembro de la comunidad ha enviado una receta para que sea revisada por el equipo de CociHub.",
+        intro,
 
         details: [
           {
@@ -584,6 +612,7 @@ export async function sendRecipeSubmittedToAdminNotification(
             value:
               input.recipeTitle,
           },
+
           {
             label:
               "Autor",

@@ -40,6 +40,10 @@ async function notifyAdminAboutSubmittedRecipe(
 
   userId:
     string,
+
+  submissionType:
+    | "new"
+    | "resubmission",
 ) {
   const supabase =
     await createClient();
@@ -141,6 +145,8 @@ async function notifyAdminAboutSubmittedRecipe(
 
     adminRecipeUrl:
       `${origin}/admin/recipes/${recipeId}/edit`,
+
+    submissionType,
   });
 }
 
@@ -190,6 +196,68 @@ export async function submitMyRecipeForReviewAction(
     };
   }
 
+
+  // =======================================================
+  // DETECT FIRST SUBMISSION OR RESUBMISSION
+  // =======================================================
+  //
+  // submit_my_recipe_for_review() clears review_notes.
+  //
+  // Therefore we must inspect them BEFORE calling the RPC.
+  //
+  // If review_notes contains data, the draft came from
+  // a previous moderation return and is being submitted
+  // again after corrections.
+  // =======================================================
+
+  const {
+    data:
+      recipeBeforeSubmission,
+
+    error:
+      recipeBeforeSubmissionError,
+  } =
+    await supabase
+      .from(
+        "recipes",
+      )
+      .select(
+        "review_notes",
+      )
+      .eq(
+        "id",
+        recipeId,
+      )
+      .eq(
+        "author_id",
+        userId,
+      )
+      .maybeSingle();
+
+
+  if (
+    recipeBeforeSubmissionError
+  ) {
+    console.error(
+      "GET RECIPE REVIEW HISTORY ERROR:",
+      recipeBeforeSubmissionError,
+    );
+  }
+
+
+  const submissionType:
+    | "new"
+    | "resubmission" =
+      recipeBeforeSubmission
+        ?.review_notes
+        ?.trim()
+        ? "resubmission"
+        : "new";
+
+
+  // =======================================================
+  // SUBMIT RECIPE
+  // =======================================================
 
   const {
     error,
@@ -270,18 +338,24 @@ export async function submitMyRecipeForReviewAction(
   }
 
 
-  /*
-   * El correo NO forma parte de la operación funcional.
-   *
-   * Si falla Resend, la receta debe seguir correctamente
-   * enviada a revisión.
-   */
+  // =======================================================
+  // ADMIN NOTIFICATION
+  // =======================================================
+  //
+  // Email delivery is intentionally independent from the
+  // functional state change.
+  //
+  // If Resend fails, the recipe must remain correctly
+  // submitted for review.
+  // =======================================================
 
   try {
     await notifyAdminAboutSubmittedRecipe(
       recipeId,
       userId,
+      submissionType,
     );
+
   } catch (
     notificationError
   ) {
@@ -291,6 +365,10 @@ export async function submitMyRecipeForReviewAction(
     );
   }
 
+
+  // =======================================================
+  // CACHE
+  // =======================================================
 
   revalidatePath(
     `/mi-cocihub/recetas/${recipeId}/editar`,
@@ -307,11 +385,18 @@ export async function submitMyRecipeForReviewAction(
   );
 
 
+  // =======================================================
+  // RESULT
+  // =======================================================
+
   return {
     success:
       true,
 
     message:
-      "La receta se ha enviado a revisión.",
+      submissionType ===
+        "resubmission"
+        ? "La receta corregida se ha enviado de nuevo a revisión."
+        : "La receta se ha enviado a revisión.",
   };
 }

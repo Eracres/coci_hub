@@ -554,11 +554,15 @@ export default async function MiCociHubPage() {
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-              <article className="rounded-2xl border border-border bg-page p-5">
+              <Link
+                href="/mi-cocihub/recetas?status=draft"
+                aria-label="Ver recetas en borrador"
+                className="group rounded-2xl border border-border bg-page p-5 transition hover:-translate-y-0.5 hover:border-brand hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
 
                 <div className="flex items-center justify-between">
 
-                  <span className="flex size-10 items-center justify-center rounded-xl bg-page-muted">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-page-muted transition group-hover:bg-surface">
 
                     <FilePenLine
                       className="size-5"
@@ -575,7 +579,7 @@ export default async function MiCociHubPage() {
                 </div>
 
 
-                <h3 className="mt-5 font-semibold">
+                <h3 className="mt-5 font-semibold transition group-hover:text-brand">
                   Borradores
                 </h3>
 
@@ -585,14 +589,18 @@ export default async function MiCociHubPage() {
                   seguir editando.
                 </p>
 
-              </article>
+              </Link>
 
 
-              <article className="rounded-2xl border border-border bg-page p-5">
+              <Link
+                href="/mi-cocihub/recetas?status=pending_review"
+                aria-label="Ver recetas en revisión"
+                className="group rounded-2xl border border-border bg-page p-5 transition hover:-translate-y-0.5 hover:border-brand hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
 
                 <div className="flex items-center justify-between">
 
-                  <span className="flex size-10 items-center justify-center rounded-xl bg-page-muted">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-page-muted transition group-hover:bg-surface">
 
                     <Clock3
                       className="size-5"
@@ -609,7 +617,7 @@ export default async function MiCociHubPage() {
                 </div>
 
 
-                <h3 className="mt-5 font-semibold">
+                <h3 className="mt-5 font-semibold transition group-hover:text-brand">
                   En revisión
                 </h3>
 
@@ -619,14 +627,18 @@ export default async function MiCociHubPage() {
                   por administración.
                 </p>
 
-              </article>
+              </Link>
 
 
-              <article className="rounded-2xl border border-border bg-page p-5">
+              <Link
+                href="/mi-cocihub/recetas?status=published"
+                aria-label="Ver recetas publicadas"
+                className="group rounded-2xl border border-border bg-page p-5 transition hover:-translate-y-0.5 hover:border-brand hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
 
                 <div className="flex items-center justify-between">
 
-                  <span className="flex size-10 items-center justify-center rounded-xl bg-page-muted">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-page-muted transition group-hover:bg-surface">
 
                     <Send
                       className="size-5"
@@ -643,7 +655,7 @@ export default async function MiCociHubPage() {
                 </div>
 
 
-                <h3 className="mt-5 font-semibold">
+                <h3 className="mt-5 font-semibold transition group-hover:text-brand">
                   Publicadas
                 </h3>
 
@@ -653,14 +665,18 @@ export default async function MiCociHubPage() {
                   la comunidad.
                 </p>
 
-              </article>
+              </Link>
 
 
-              <article className="rounded-2xl border border-border bg-page p-5">
+              <Link
+                href="/mi-cocihub/recetas?status=archived"
+                aria-label="Ver recetas archivadas"
+                className="group rounded-2xl border border-border bg-page p-5 transition hover:-translate-y-0.5 hover:border-brand hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
 
                 <div className="flex items-center justify-between">
 
-                  <span className="flex size-10 items-center justify-center rounded-xl bg-page-muted">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-page-muted transition group-hover:bg-surface">
 
                     <Archive
                       className="size-5"
@@ -677,7 +693,7 @@ export default async function MiCociHubPage() {
                 </div>
 
 
-                <h3 className="mt-5 font-semibold">
+                <h3 className="mt-5 font-semibold transition group-hover:text-brand">
                   Archivadas
                 </h3>
 
@@ -687,7 +703,7 @@ export default async function MiCociHubPage() {
                   publicación activa.
                 </p>
 
-              </article>
+              </Link>
 
             </div>
 

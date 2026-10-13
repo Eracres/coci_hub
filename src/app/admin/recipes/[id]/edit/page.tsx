@@ -421,7 +421,9 @@ export default async function EditRecipePage({
       recipe.preparation_minutes !==
         null &&
       recipe.preparation_minutes >
-        0,
+        0 &&
+      recipe.elaboration_minutes !==
+        null,
 
     image:
       Boolean(

@@ -106,9 +106,7 @@ export type Recipe = {
 
   preparationMinutes: number | null;
 
-  cookingMinutes: number | null;
-
-  additionalMinutes: number | null;
+  elaborationMinutes: number | null;
 
   recipeTypeId: string | null;
 

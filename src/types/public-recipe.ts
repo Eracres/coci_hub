@@ -44,10 +44,7 @@ export type PublicRecipeListItem = {
   preparationMinutes:
     number | null;
 
-  cookingMinutes:
-    number | null;
-
-  additionalMinutes:
+  elaborationMinutes:
     number | null;
 
   totalMinutes:

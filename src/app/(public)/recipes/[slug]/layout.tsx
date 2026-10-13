@@ -239,11 +239,6 @@ function createRecipeJsonLd(
         recipe.preparationMinutes,
       ),
 
-    cookTime:
-      minutesToIsoDuration(
-        recipe.cookingMinutes,
-      ),
-
     totalTime:
       minutesToIsoDuration(
         recipe.totalMinutes,

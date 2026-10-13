@@ -707,7 +707,7 @@ export function StepsForm({
             <p className="text-xs leading-5 text-muted-foreground">
               Si indicas la duración de los pasos,
               CociHub calculará automáticamente el tiempo
-              de cocinado de la receta.
+              de elaboración de la receta.
             </p>
 
           </div>
@@ -1137,7 +1137,7 @@ export function StepsForm({
 
             <p className="mt-2 text-xs leading-5 text-muted-foreground">
               Opcional. La suma de las duraciones se utiliza
-              para calcular automáticamente el tiempo de cocinado.
+              para calcular automáticamente el tiempo de elaboración.
             </p>
 
           </div>

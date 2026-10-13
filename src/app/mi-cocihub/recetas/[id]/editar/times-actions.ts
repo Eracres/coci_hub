@@ -29,9 +29,6 @@ export type UpdateMyRecipeTimesResult = {
   fieldErrors?: {
     preparationMinutes?:
       string[];
-
-    additionalMinutes?:
-      string[];
   };
 };
 
@@ -84,6 +81,12 @@ export async function updateMyRecipeTimesAction(
   // =======================================================
   // PERSIST
   // =======================================================
+  //
+  // Only preparation time is entered manually.
+  //
+  // elaboration_minutes is derived automatically in the
+  // database from recipe_steps.duration_minutes.
+  // =======================================================
 
   const supabase =
     await createClient();
@@ -93,7 +96,7 @@ export async function updateMyRecipeTimesAction(
     error,
   } =
     await supabase.rpc(
-      "update_my_recipe_times",
+      "update_my_recipe_preparation_time",
       {
         p_recipe_id:
           recipeId,
@@ -101,10 +104,6 @@ export async function updateMyRecipeTimesAction(
         p_preparation_minutes:
           normalized
             .preparationMinutes,
-
-        p_additional_minutes:
-          normalized
-            .additionalMinutes,
       },
     );
 
@@ -159,7 +158,7 @@ export async function updateMyRecipeTimesAction(
         false,
 
       message:
-        "No se pudieron guardar los tiempos.",
+        "No se pudo guardar el tiempo de preparación.",
     };
   }
 

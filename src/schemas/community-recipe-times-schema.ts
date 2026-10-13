@@ -51,39 +51,10 @@ const preparationMinutesSchema =
     );
 
 
-const additionalMinutesSchema =
-  integerMinutesSchema
-    .refine(
-      (
-        value,
-      ) => {
-        const minutes =
-          Number(
-            value,
-          );
-
-
-        return (
-          minutes >=
-            0 &&
-          minutes <=
-            10080
-        );
-      },
-      {
-        message:
-          "El tiempo adicional debe estar entre 0 y 10080 minutos.",
-      },
-    );
-
-
 export const communityRecipeTimesSchema =
   z.object({
     preparationMinutes:
       preparationMinutesSchema,
-
-    additionalMinutes:
-      additionalMinutesSchema,
   });
 
 
@@ -96,9 +67,6 @@ export type CommunityRecipeTimesFormData =
 export type CommunityRecipeTimesData = {
   preparationMinutes:
     number;
-
-  additionalMinutes:
-    number;
 };
 
 
@@ -110,11 +78,6 @@ export function normalizeCommunityRecipeTimes(
     preparationMinutes:
       Number(
         data.preparationMinutes,
-      ),
-
-    additionalMinutes:
-      Number(
-        data.additionalMinutes,
       ),
   };
 }

@@ -12,7 +12,6 @@ import {
 
 import {
   Clock3,
-  Flame,
   Hourglass,
   Timer,
 } from "lucide-react";
@@ -43,10 +42,7 @@ type TimesFormProps = {
     preparationMinutes:
       number | null;
 
-    cookingMinutes:
-      number | null;
-
-    additionalMinutes:
+    elaborationMinutes:
       number | null;
   };
 
@@ -130,16 +126,6 @@ export function TimesForm({
                 initialValues
                   .preparationMinutes,
               ),
-
-        additionalMinutes:
-          initialValues
-            .additionalMinutes ===
-          null
-            ? ""
-            : String(
-                initialValues
-                  .additionalMinutes,
-              ),
       },
     });
 
@@ -150,15 +136,9 @@ export function TimesForm({
     );
 
 
-  const additionalMinutes =
-    watch(
-      "additionalMinutes",
-    );
-
-
-  const cookingMinutes =
+  const elaborationMinutes =
     initialValues
-      .cookingMinutes;
+      .elaborationMinutes;
 
 
   const totalMinutes =
@@ -166,11 +146,8 @@ export function TimesForm({
       preparationMinutes,
     ) +
     (
-      cookingMinutes ??
+      elaborationMinutes ??
       0
-    ) +
-    parseMinutes(
-      additionalMinutes,
     );
 
 
@@ -187,11 +164,11 @@ export function TimesForm({
 
 
     if (
-      cookingMinutes ===
+      elaborationMinutes ===
       null
     ) {
       setMessage(
-        "Completa la duración de todos los pasos de elaboración para calcular el tiempo de cocinado.",
+        "Completa la duración de todos los pasos de elaboración para calcular el tiempo de elaboración.",
       );
 
       return;
@@ -272,10 +249,6 @@ export function TimesForm({
   return (
     <section className="rounded-2xl border border-border bg-surface p-6">
 
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
       <div>
 
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
@@ -299,9 +272,10 @@ export function TimesForm({
 
 
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Indica cuánto tiempo necesitas antes y después
-          del cocinado. El tiempo de cocinado se obtiene
-          automáticamente desde la elaboración.
+          Indica cuánto tiempo necesitas para preparar
+          los ingredientes. El tiempo de elaboración se
+          obtiene automáticamente sumando la duración de
+          todos los pasos.
         </p>
 
       </div>
@@ -315,10 +289,6 @@ export function TimesForm({
         }
         className="mt-8 space-y-5"
       >
-
-        {/* =================================================
-            PREPARATION
-        ================================================= */}
 
         <div className="rounded-2xl border border-border bg-page-muted/30 p-5">
 
@@ -342,7 +312,7 @@ export function TimesForm({
 
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
                 Tiempo necesario para preparar los
-                ingredientes antes de empezar a cocinar.
+                ingredientes antes de comenzar la elaboración.
               </p>
 
 
@@ -396,15 +366,11 @@ export function TimesForm({
         </div>
 
 
-        {/* =================================================
-            COOKING — DERIVED
-        ================================================= */}
-
         <div className="rounded-2xl border border-brand/20 bg-brand/5 p-5">
 
           <div className="flex items-start gap-3">
 
-            <Flame
+            <Hourglass
               className="mt-0.5 size-5 shrink-0 text-brand"
               aria-hidden="true"
             />
@@ -415,7 +381,7 @@ export function TimesForm({
               <div className="flex flex-wrap items-center gap-2">
 
                 <p className="font-semibold">
-                  Tiempo de cocinado
+                  Tiempo de elaboración
                 </p>
 
 
@@ -427,14 +393,16 @@ export function TimesForm({
 
 
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Se calcula sumando la duración de todos
-                los pasos de elaboración.
+                CociHub suma las duraciones de todos los
+                pasos de elaboración, incluidos reposos,
+                fermentaciones, maceraciones, horneados y
+                cualquier otro tiempo indicado en ellos.
               </p>
 
 
               <div className="mt-4">
 
-                {cookingMinutes ===
+                {elaborationMinutes ===
                 null ? (
                   <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
 
@@ -454,7 +422,7 @@ export function TimesForm({
 
                     <span className="font-semibold leading-none text-brand">
                       {
-                        cookingMinutes
+                        elaborationMinutes
                       }
                     </span>
 
@@ -475,91 +443,6 @@ export function TimesForm({
         </div>
 
 
-        {/* =================================================
-            ADDITIONAL
-        ================================================= */}
-
-        <div className="rounded-2xl border border-border bg-page-muted/30 p-5">
-
-          <div className="flex items-start gap-3">
-
-            <Hourglass
-              className="mt-0.5 size-5 shrink-0 text-brand"
-              aria-hidden="true"
-            />
-
-
-            <div className="min-w-0 flex-1">
-
-              <label
-                htmlFor="additionalMinutes"
-                className="block font-semibold"
-              >
-                Tiempo adicional
-              </label>
-
-
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Reposo, marinado, enfriado u otros
-                tiempos que no forman parte del cocinado.
-                Si no existe, escribe 0.
-              </p>
-
-
-              <div className="mt-4 flex max-w-xs items-center gap-3">
-
-                <input
-                  id="additionalMinutes"
-                  type="number"
-                  min={
-                    0
-                  }
-                  max={
-                    10080
-                  }
-                  step={
-                    1
-                  }
-                  inputMode="numeric"
-                  {...register(
-                    "additionalMinutes",
-                  )}
-                  className="w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
-                  placeholder="Ej. 0"
-                />
-
-
-                <span className="shrink-0 text-sm text-muted-foreground">
-                  min
-                </span>
-
-              </div>
-
-
-              {errors.additionalMinutes && (
-                <p
-                  role="alert"
-                  className="mt-2 text-sm text-red-700"
-                >
-                  {
-                    errors
-                      .additionalMinutes
-                      .message
-                  }
-                </p>
-              )}
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        {/* =================================================
-            TOTAL
-        ================================================= */}
-
         <div className="rounded-xl border border-border bg-page-muted/20 px-5 py-4">
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -572,7 +455,7 @@ export function TimesForm({
 
 
               <p className="mt-1 text-xs text-muted-foreground">
-                Preparación + cocinado + tiempo adicional
+                Preparación + elaboración
               </p>
 
             </div>
@@ -598,10 +481,6 @@ export function TimesForm({
         </div>
 
 
-        {/* =================================================
-            ERROR
-        ================================================= */}
-
         {message && (
           <p
             role="alert"
@@ -613,10 +492,6 @@ export function TimesForm({
           </p>
         )}
 
-
-        {/* =================================================
-            NAVIGATION
-        ================================================= */}
 
         <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
 

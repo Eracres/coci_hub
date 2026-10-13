@@ -94,10 +94,7 @@ type RecipeTimesRow = {
   preparation_minutes:
     number | null;
 
-  cooking_minutes:
-    number | null;
-
-  additional_minutes:
+  elaboration_minutes:
     number | null;
 };
 
@@ -266,8 +263,7 @@ export default async function EditMyRecipePage({
         )
         .select(`
           preparation_minutes,
-          cooking_minutes,
-          additional_minutes
+          elaboration_minutes
         `)
         .eq(
           "id",
@@ -384,10 +380,7 @@ export default async function EditMyRecipePage({
       .preparation_minutes >
       0 &&
     recipeTimes
-      .cooking_minutes !==
-      null &&
-    recipeTimes
-      .additional_minutes !==
+      .elaboration_minutes !==
       null;
 
 
@@ -413,12 +406,7 @@ export default async function EditMyRecipePage({
     ) +
     (
       recipeTimes
-        .cooking_minutes ??
-      0
-    ) +
-    (
-      recipeTimes
-        .additional_minutes ??
+        .elaboration_minutes ??
       0
     );
 
@@ -960,13 +948,9 @@ export default async function EditMyRecipePage({
                       recipeTimes
                         .preparation_minutes,
 
-                    cookingMinutes:
+                    elaborationMinutes:
                       recipeTimes
-                        .cooking_minutes,
-
-                    additionalMinutes:
-                      recipeTimes
-                        .additional_minutes,
+                        .elaboration_minutes,
                   }}
                   previousStepHref={
                     `/mi-cocihub/recetas/${recipe.id}/editar?step=steps`
@@ -1046,13 +1030,9 @@ export default async function EditMyRecipePage({
                       recipeTimes
                         .preparation_minutes,
 
-                    cookingMinutes:
+                    elaborationMinutes:
                       recipeTimes
-                        .cooking_minutes,
-
-                    additionalMinutes:
-                      recipeTimes
-                        .additional_minutes,
+                        .elaboration_minutes,
 
                     totalMinutes,
                   }}

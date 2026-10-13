@@ -75,10 +75,7 @@ type ReviewFormProps = {
     preparationMinutes:
       number | null;
 
-    cookingMinutes:
-      number | null;
-
-    additionalMinutes:
+    elaborationMinutes:
       number | null;
 
     totalMinutes:
@@ -477,7 +474,7 @@ export function ReviewForm({
         </div>
 
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
 
           <div className="rounded-xl border border-border bg-surface px-4 py-3">
 
@@ -502,33 +499,13 @@ export function ReviewForm({
           <div className="rounded-xl border border-border bg-surface px-4 py-3">
 
             <p className="text-xs text-muted-foreground">
-              Cocinado
+              Elaboración
             </p>
 
 
             <p className="mt-1 text-sm font-semibold text-brand">
               {
-                times.cookingMinutes ??
-                0
-              }{" "}
-              <span className="font-normal text-muted-foreground">
-                min
-              </span>
-            </p>
-
-          </div>
-
-
-          <div className="rounded-xl border border-border bg-surface px-4 py-3">
-
-            <p className="text-xs text-muted-foreground">
-              Adicional
-            </p>
-
-
-            <p className="mt-1 text-sm font-semibold">
-              {
-                times.additionalMinutes ??
+                times.elaborationMinutes ??
                 0
               }{" "}
               <span className="font-normal text-muted-foreground">

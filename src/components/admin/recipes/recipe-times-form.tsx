@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Clock3,
-  Flame,
   Hourglass,
   Timer,
 } from "lucide-react";
@@ -45,10 +44,7 @@ type RecipeTimesFormProps = {
     preparationMinutes:
       number | null;
 
-    cookingMinutes:
-      number | null;
-
-    additionalMinutes:
+    elaborationMinutes:
       number | null;
   };
 };
@@ -143,26 +139,6 @@ export function RecipeTimesForm({
                 initialValues
                   .preparationMinutes,
               ),
-
-        cookingMinutes:
-          initialValues
-            .cookingMinutes ===
-          null
-            ? ""
-            : String(
-                initialValues
-                  .cookingMinutes,
-              ),
-
-        additionalMinutes:
-          initialValues
-            .additionalMinutes ===
-          null
-            ? ""
-            : String(
-                initialValues
-                  .additionalMinutes,
-              ),
       },
     });
 
@@ -173,40 +149,23 @@ export function RecipeTimesForm({
     );
 
 
-  const cookingMinutes =
-    watch(
-      "cookingMinutes",
-    );
-
-
-  const additionalMinutes =
-    watch(
-      "additionalMinutes",
-    );
-
-
   const preparationValue =
     parseMinutes(
       preparationMinutes,
     );
 
 
-  const cookingValue =
-    parseMinutes(
-      cookingMinutes,
-    );
-
-
-  const additionalValue =
-    parseMinutes(
-      additionalMinutes,
-    );
+  const elaborationMinutes =
+    initialValues
+      .elaborationMinutes;
 
 
   const totalMinutes =
     preparationValue +
-    cookingValue +
-    additionalValue;
+    (
+      elaborationMinutes ??
+      0
+    );
 
 
   async function onSubmit(
@@ -219,16 +178,6 @@ export function RecipeTimesForm({
 
 
     clearErrors();
-
-
-    /*
-     * En el editor administrativo queremos
-     * completar expresamente estos dos
-     * tiempos. Si no existe tiempo adicional,
-     * debe indicarse 0.
-     */
-    let hasMissingFields =
-      false;
 
 
     if (
@@ -249,68 +198,30 @@ export function RecipeTimesForm({
       );
 
 
-      hasMissingFields =
-        true;
-    }
-
-
-    if (
-      values
-        .additionalMinutes
-        .trim() ===
-      ""
-    ) {
-      setError(
-        "additionalMinutes",
-        {
-          type:
-            "manual",
-
-          message:
-            "Indica el tiempo adicional. Si no existe, escribe 0.",
-        },
-      );
-
-
-      hasMissingFields =
-        true;
-    }
-
-
-    if (
-      values
-        .cookingMinutes
-        .trim() ===
-      ""
-    ) {
-      setMessage(
-        "El tiempo de cocinado todavía no está disponible. Añade una duración a los pasos de elaboración.",
-      );
-
-
-      hasMissingFields =
-        true;
-    }
-
-
-    if (
-      hasMissingFields
-    ) {
       return;
     }
 
 
-    /*
-     * Si ya estaba todo guardado
-     * y no hemos cambiado nada,
-     * avanzamos directamente.
-     */
+    if (
+      elaborationMinutes ===
+      null
+    ) {
+      setMessage(
+        "El tiempo de elaboración todavía no está disponible. Añade una duración a todos los pasos de elaboración.",
+      );
+
+
+      return;
+    }
+
+
     if (
       !isDirty
     ) {
       router.push(
         nextStepHref,
       );
+
 
       return;
     }
@@ -389,10 +300,6 @@ export function RecipeTimesForm({
   return (
     <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-7">
 
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
       <div className="flex items-start gap-4">
 
         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
@@ -418,11 +325,9 @@ export function RecipeTimesForm({
 
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Indica cuánto tiempo necesita
-            la preparación antes y después
-            del cocinado. El tiempo de
-            cocinado procede automáticamente
-            de la elaboración.
+            Indica el tiempo necesario para preparar los
+            ingredientes. El tiempo de elaboración se obtiene
+            automáticamente sumando la duración de todos los pasos.
           </p>
 
         </div>
@@ -438,22 +343,6 @@ export function RecipeTimesForm({
         }
         className="mt-7 space-y-5"
       >
-
-        {/* =================================================
-            COOKING MINUTES - HIDDEN FIELD
-        ================================================= */}
-
-        <input
-          type="hidden"
-          {...register(
-            "cookingMinutes",
-          )}
-        />
-
-
-        {/* =================================================
-            PREPARATION
-        ================================================= */}
 
         <div className="rounded-2xl border border-border bg-page-muted/20 p-5 sm:p-6">
 
@@ -473,9 +362,8 @@ export function RecipeTimesForm({
 
 
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Tiempo necesario para
-                preparar los ingredientes
-                antes de empezar a cocinar.
+                Tiempo necesario para preparar los ingredientes
+                antes de comenzar la elaboración.
               </p>
 
 
@@ -527,86 +415,7 @@ export function RecipeTimesForm({
         </div>
 
 
-        {/* =================================================
-            COOKING
-        ================================================= */}
-
         <div className="rounded-2xl border border-brand/20 bg-brand/5 p-5 sm:p-6">
-
-          <div className="flex items-start gap-4">
-
-            <Flame
-              className="mt-0.5 size-5 shrink-0 text-brand"
-              aria-hidden="true"
-            />
-
-
-            <div className="flex-1">
-
-              <div className="flex flex-wrap items-center gap-2">
-
-                <h3 className="font-semibold text-foreground">
-                  Tiempo de cocinado
-                </h3>
-
-
-                <span className="rounded-full border border-brand/20 bg-surface px-2.5 py-1 text-xs font-semibold text-brand">
-                  Automático
-                </span>
-
-              </div>
-
-
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Se calcula sumando la
-                duración de todos los pasos
-                de elaboración.
-              </p>
-
-
-              <div className="mt-4 inline-flex items-baseline gap-2 rounded-xl border border-border bg-surface px-4 py-3">
-
-                <span className="text-xl font-semibold text-brand">
-                  {
-                    cookingValue
-                  }
-                </span>
-
-
-                <span className="text-sm text-muted-foreground">
-                  min
-                </span>
-
-              </div>
-
-
-              {errors.cookingMinutes && (
-
-                <p
-                  role="alert"
-                  className="mt-2 text-sm text-red-600"
-                >
-                  {
-                    errors
-                      .cookingMinutes
-                      .message
-                  }
-                </p>
-
-              )}
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        {/* =================================================
-            ADDITIONAL
-        ================================================= */}
-
-        <div className="rounded-2xl border border-border bg-page-muted/20 p-5 sm:p-6">
 
           <div className="flex items-start gap-4">
 
@@ -618,59 +427,61 @@ export function RecipeTimesForm({
 
             <div className="flex-1">
 
-              <h3 className="font-semibold text-foreground">
-                Tiempo adicional
-              </h3>
+              <div className="flex flex-wrap items-center gap-2">
+
+                <h3 className="font-semibold text-foreground">
+                  Tiempo de elaboración
+                </h3>
 
 
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Reposo, marinado, enfriado
-                u otros tiempos que no forman
-                parte del cocinado.
-                Si no existe, escribe 0.
-              </p>
-
-
-              <div className="mt-4 flex max-w-xs items-center gap-3">
-
-                <input
-                  type="number"
-                  min={
-                    0
-                  }
-                  step={
-                    1
-                  }
-                  inputMode="numeric"
-                  {...register(
-                    "additionalMinutes",
-                  )}
-                  className="w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
-                  placeholder="Ej. 0"
-                />
-
-
-                <span className="shrink-0 text-sm text-muted-foreground">
-                  min
+                <span className="rounded-full border border-brand/20 bg-surface px-2.5 py-1 text-xs font-semibold text-brand">
+                  Automático
                 </span>
 
               </div>
 
 
-              {errors.additionalMinutes && (
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                CociHub suma las duraciones de todos los pasos,
+                incluidos reposos, fermentaciones, maceraciones,
+                horneados y cualquier otro tiempo indicado en ellos.
+              </p>
 
-                <p
-                  role="alert"
-                  className="mt-2 text-sm text-red-600"
-                >
-                  {
-                    errors
-                      .additionalMinutes
-                      .message
-                  }
-                </p>
 
-              )}
+              <div className="mt-4">
+
+                {elaborationMinutes ===
+                null ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+
+                    <p className="text-sm font-medium text-amber-900">
+                      Tiempo pendiente de cálculo
+                    </p>
+
+
+                    <p className="mt-1 text-xs leading-5 text-amber-800">
+                      Añade una duración a todos los pasos de elaboración.
+                    </p>
+
+                  </div>
+                ) : (
+                  <div className="inline-flex items-baseline gap-2 rounded-xl border border-border bg-surface px-4 py-3">
+
+                    <span className="text-xl font-semibold text-brand">
+                      {
+                        elaborationMinutes
+                      }
+                    </span>
+
+
+                    <span className="text-sm text-muted-foreground">
+                      min
+                    </span>
+
+                  </div>
+                )}
+
+              </div>
 
             </div>
 
@@ -678,10 +489,6 @@ export function RecipeTimesForm({
 
         </div>
 
-
-        {/* =================================================
-            TOTAL
-        ================================================= */}
 
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand/20 bg-brand/5 p-5">
 
@@ -693,7 +500,7 @@ export function RecipeTimesForm({
 
 
             <p className="mt-1 text-xs text-muted-foreground">
-              Preparación + cocinado + tiempo adicional
+              Preparación + elaboración
             </p>
 
           </div>
@@ -717,10 +524,6 @@ export function RecipeTimesForm({
         </div>
 
 
-        {/* =================================================
-            MESSAGE
-        ================================================= */}
-
         {message && (
 
           <p
@@ -734,10 +537,6 @@ export function RecipeTimesForm({
 
         )}
 
-
-        {/* =================================================
-            NAVIGATION
-        ================================================= */}
 
         <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
 

@@ -153,12 +153,7 @@ export default async function RecipePreviewPage({
     ) +
     (
       recipe
-        .cooking_minutes ??
-      0
-    ) +
-    (
-      recipe
-        .additional_minutes ??
+        .elaboration_minutes ??
       0
     );
 
@@ -374,14 +369,14 @@ export default async function RecipePreviewPage({
 
           <div className="rounded-xl border border-[#DED3C8] bg-white p-4">
             <p className="text-sm text-[#6F675F]">
-              Cocción
+              Elaboración
             </p>
 
             <p className="mt-1 font-semibold">
               {
                 formatMinutes(
                   recipe
-                    .cooking_minutes,
+                    .elaboration_minutes,
                 ) ??
                 "—"
               }

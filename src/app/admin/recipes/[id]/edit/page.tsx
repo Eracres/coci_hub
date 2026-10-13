@@ -912,11 +912,8 @@ export default async function EditRecipePage({
                   preparationMinutes:
                     recipe.preparation_minutes,
 
-                  cookingMinutes:
-                    recipe.cooking_minutes,
-
-                  additionalMinutes:
-                    recipe.additional_minutes,
+                  elaborationMinutes:
+                    recipe.elaboration_minutes,
                 }}
               />
             )}

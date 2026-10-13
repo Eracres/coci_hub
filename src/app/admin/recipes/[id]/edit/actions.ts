@@ -663,11 +663,6 @@ export type UpdateRecipeTimesResult = {
     preparationMinutes?:
       string[];
 
-    cookingMinutes?:
-      string[];
-
-    additionalMinutes?:
-      string[];
   };
 };
 

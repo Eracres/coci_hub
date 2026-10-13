@@ -18,12 +18,6 @@ const optionalMinutesSchema = z
 export const recipeTimesSchema = z.object({
   preparationMinutes:
     optionalMinutesSchema,
-
-  cookingMinutes:
-    optionalMinutesSchema,
-
-  additionalMinutes:
-    optionalMinutesSchema,
 });
 
 
@@ -35,12 +29,6 @@ export type RecipeTimesFormData =
 
 export type RecipeTimesData = {
   preparationMinutes:
-    number | null;
-
-  cookingMinutes:
-    number | null;
-
-  additionalMinutes:
     number | null;
 };
 
@@ -54,20 +42,6 @@ export function normalizeRecipeTimes(
         ? null
         : Number(
             data.preparationMinutes,
-          ),
-
-    cookingMinutes:
-      data.cookingMinutes === ""
-        ? null
-        : Number(
-            data.cookingMinutes,
-          ),
-
-    additionalMinutes:
-      data.additionalMinutes === ""
-        ? null
-        : Number(
-            data.additionalMinutes,
           ),
   };
 }

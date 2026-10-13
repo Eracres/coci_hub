@@ -183,7 +183,7 @@ export function RecipeStepsForm({
     );
 
 
-  const cookingMinutes =
+  const elaborationMinutes =
     steps.reduce(
       (
         total,
@@ -663,7 +663,7 @@ export function RecipeStepsForm({
 
       /*
        * El backend sincroniza automáticamente
-       * cooking_minutes a partir de la duración
+       * elaboration_minutes a partir de la duración
        * de los pasos guardados.
        */
       router.push(
@@ -743,7 +743,7 @@ export function RecipeStepsForm({
             <div>
 
               <h3 className="font-semibold text-foreground">
-                Tiempo de cocinado automático
+                Tiempo de elaboración automático
               </h3>
 
 
@@ -751,7 +751,7 @@ export function RecipeStepsForm({
                 CociHub sumará la duración
                 indicada en todos los pasos y
                 utilizará ese resultado como
-                tiempo de cocinado de la receta.
+                tiempo de elaboración de la receta.
               </p>
 
             </div>
@@ -763,7 +763,7 @@ export function RecipeStepsForm({
 
             <p className="text-xl font-semibold text-brand">
               {
-                cookingMinutes
+                elaborationMinutes
               }{" "}
               <span className="text-sm font-normal text-muted-foreground">
                 min
@@ -1229,7 +1229,7 @@ export function RecipeStepsForm({
 
             <p className="mt-2 text-xs leading-5 text-muted-foreground">
               Se sumará automáticamente al
-              tiempo total de cocinado.
+              tiempo total de elaboración.
             </p>
 
           </div>

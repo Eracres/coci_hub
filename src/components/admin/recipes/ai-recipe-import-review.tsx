@@ -533,6 +533,35 @@ export function AiRecipeImportReview({
   }
 
 
+  const hasCompleteStepDurations =
+    recipe.steps.length >
+      0 &&
+    recipe.steps.every(
+      (
+        step,
+      ) =>
+        step.durationMinutes !==
+        null,
+    );
+
+
+  const elaborationMinutes =
+    hasCompleteStepDurations
+      ? recipe.steps.reduce(
+          (
+            total,
+            step,
+          ) =>
+            total +
+            (
+              step.durationMinutes ??
+              0
+            ),
+          0,
+        )
+      : null;
+
+
   return (
     <section className="rounded-2xl border border-border bg-white p-6 shadow-sm">
       <div className="flex items-start gap-3">
@@ -936,86 +965,31 @@ export function AiRecipeImportReview({
 
 
             <div>
-              <label
-                htmlFor="ai-cooking-minutes"
-                className="text-sm font-semibold text-foreground"
-              >
-                Cocción
-              </label>
+              <p className="text-sm font-semibold text-foreground">
+                Elaboración
+              </p>
 
-              <input
-                id="ai-cooking-minutes"
-                type="number"
-                min={
-                  0
-                }
-                step={
-                  1
-                }
-                value={
-                  recipe.cookingMinutes ??
-                  ""
-                }
-                onChange={
-                  (
-                    event,
-                  ) =>
-                    updateRecipe(
+              <div className="mt-2 flex min-h-11 items-center rounded-xl border border-border bg-secondary/30 px-4 text-foreground">
+                {elaborationMinutes ===
+                null
+                  ? (
+                    <span className="text-sm text-muted-foreground">
+                      Completa la duración de todos los pasos
+                    </span>
+                  )
+                  : (
+                    <span className="font-semibold">
                       {
-                        cookingMinutes:
-                          parseNullableInteger(
-                            event
-                              .target
-                              .value,
-                          ),
-                      },
-                    )
-                }
-                placeholder="Minutos"
-                className="mt-2 min-h-11 w-full rounded-xl border border-border bg-white px-4 text-foreground outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
-              />
-            </div>
+                        elaborationMinutes
+                      } min
+                    </span>
+                  )}
+              </div>
 
-
-            <div>
-              <label
-                htmlFor="ai-additional-minutes"
-                className="text-sm font-semibold text-foreground"
-              >
-                Tiempo adicional
-              </label>
-
-              <input
-                id="ai-additional-minutes"
-                type="number"
-                min={
-                  0
-                }
-                step={
-                  1
-                }
-                value={
-                  recipe.additionalMinutes ??
-                  ""
-                }
-                onChange={
-                  (
-                    event,
-                  ) =>
-                    updateRecipe(
-                      {
-                        additionalMinutes:
-                          parseNullableInteger(
-                            event
-                              .target
-                              .value,
-                          ),
-                      },
-                    )
-                }
-                placeholder="Minutos"
-                className="mt-2 min-h-11 w-full rounded-xl border border-border bg-white px-4 text-foreground outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
-              />
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                Automático: suma de las duraciones indicadas
+                en los pasos de elaboración.
+              </p>
             </div>
           </div>
         </section>

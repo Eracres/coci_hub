@@ -320,20 +320,6 @@ export const aiRecipeImportSchema =
             .nonnegative()
             .nullable(),
 
-        cookingMinutes:
-          z
-            .number()
-            .int()
-            .nonnegative()
-            .nullable(),
-
-        additionalMinutes:
-          z
-            .number()
-            .int()
-            .nonnegative()
-            .nullable(),
-
         ingredientGroups:
           z.array(
             aiRecipeIngredientGroupSchema,

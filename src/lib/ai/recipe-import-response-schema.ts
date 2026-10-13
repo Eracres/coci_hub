@@ -90,12 +90,6 @@ export const RECIPE_IMPORT_RESPONSE_SCHEMA =
       preparationMinutes:
         nullableInteger,
 
-      cookingMinutes:
-        nullableInteger,
-
-      additionalMinutes:
-        nullableInteger,
-
       ingredientGroups: {
         type:
           "array",
@@ -378,8 +372,6 @@ export const RECIPE_IMPORT_RESPONSE_SCHEMA =
       "baseServings",
       "difficulty",
       "preparationMinutes",
-      "cookingMinutes",
-      "additionalMinutes",
       "ingredientGroups",
       "steps",
       "allergens",

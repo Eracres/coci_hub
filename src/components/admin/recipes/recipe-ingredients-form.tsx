@@ -1,6 +1,21 @@
 "use client";
 
 import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Copy,
+  Pencil,
+  Plus,
+  ShieldCheck,
+  Trash2,
+  Utensils,
+} from "lucide-react";
+
+import Link from "next/link";
+
+import {
   useState,
 } from "react";
 
@@ -21,7 +36,8 @@ import {
 
 
 type RecipeIngredientsFormProps = {
-  recipeId: string;
+  recipeId:
+    string;
 
   initialGroups:
     RecipeIngredientsFormData["groups"];
@@ -30,14 +46,17 @@ type RecipeIngredientsFormProps = {
 
 type EditableIngredient =
   RecipeIngredientFormData & {
-    clientId: string;
+    clientId:
+      string;
   };
 
 
 type EditableGroup = {
-  clientId: string;
+  clientId:
+    string;
 
-  name: string;
+  name:
+    string;
 
   ingredients:
     EditableIngredient[];
@@ -103,16 +122,26 @@ type IngredientGroupEditorProps = {
 
 const emptyIngredient:
 RecipeIngredientFormData = {
-  name: "",
-  quantity: "",
-  unit: "",
-  notes: "",
-  scalable: true,
+  name:
+    "",
+
+  quantity:
+    "",
+
+  unit:
+    "",
+
+  notes:
+    "",
+
+  scalable:
+    true,
 };
 
 
 function createClientId(
-  prefix: string,
+  prefix:
+    string,
 ) {
   return `${prefix}-${Date.now()}-${Math.random()
     .toString(36)
@@ -125,7 +154,9 @@ function createEditableGroups(
     RecipeIngredientsFormData["groups"],
 ): EditableGroup[] {
   return groups.map(
-    (group) => ({
+    (
+      group,
+    ) => ({
       clientId:
         createClientId(
           "group",
@@ -136,7 +167,9 @@ function createEditableGroups(
 
       ingredients:
         group.ingredients.map(
-          (ingredient) => ({
+          (
+            ingredient,
+          ) => ({
             clientId:
               createClientId(
                 "ingredient",
@@ -194,9 +227,11 @@ function IngredientGroupEditor({
       ...emptyIngredient,
     });
 
+
     setEditingIndex(
       null,
     );
+
 
     setEditorError(
       null,
@@ -247,7 +282,8 @@ function IngredientGroupEditor({
 
 
   function editIngredient(
-    ingredientIndex: number,
+    ingredientIndex:
+      number,
   ) {
     const ingredient =
       group.ingredients[
@@ -284,6 +320,7 @@ function IngredientGroupEditor({
       ingredientIndex,
     );
 
+
     setEditorError(
       null,
     );
@@ -291,7 +328,8 @@ function IngredientGroupEditor({
 
 
   function duplicateIngredient(
-    ingredientIndex: number,
+    ingredientIndex:
+      number,
   ) {
     const ingredient =
       group.ingredients[
@@ -306,12 +344,6 @@ function IngredientGroupEditor({
     }
 
 
-    /*
-     * Cargamos una copia en el editor.
-     *
-     * No se añade hasta que el usuario
-     * pulse "Añadir ingrediente".
-     */
     setIngredientDraft({
       name:
         ingredient.name,
@@ -334,6 +366,7 @@ function IngredientGroupEditor({
       null,
     );
 
+
     setEditorError(
       null,
     );
@@ -341,26 +374,30 @@ function IngredientGroupEditor({
 
 
   return (
-    <article className="rounded-xl border p-5">
+    <article className="rounded-2xl border border-border bg-page-muted/20 p-5 sm:p-6">
 
-      {/* =============================================
+      {/* =================================================
           GROUP HEADER
-      ============================================= */}
+      ================================================= */}
 
       <div className="flex flex-wrap items-start justify-between gap-4">
 
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
+
           <label
             htmlFor={`group-${group.clientId}-name`}
-            className="mb-2 block font-medium"
+            className="text-sm font-semibold text-foreground"
           >
             Nombre del grupo
           </label>
 
+
           <input
             id={`group-${group.clientId}-name`}
             type="text"
-            maxLength={100}
+            maxLength={
+              100
+            }
             value={
               group.name
             }
@@ -372,9 +409,10 @@ function IngredientGroupEditor({
                 event.target.value,
               )
             }
-            className="w-full rounded-lg border px-4 py-3"
+            className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
             placeholder="Ej. Ingredientes principales"
           />
+
         </div>
 
 
@@ -386,16 +424,22 @@ function IngredientGroupEditor({
               groupIndex ===
               0
             }
-            onClick={() =>
-              onMoveGroup(
-                groupIndex,
-                groupIndex - 1,
-              )
+            onClick={
+              () =>
+                onMoveGroup(
+                  groupIndex,
+                  groupIndex - 1,
+                )
             }
-            className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40"
+            className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-surface transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-40"
             aria-label="Mover grupo hacia arriba"
           >
-            ↑
+
+            <ArrowUp
+              className="size-4"
+              aria-hidden="true"
+            />
+
           </button>
 
 
@@ -405,47 +449,65 @@ function IngredientGroupEditor({
               groupIndex ===
               groupCount - 1
             }
-            onClick={() =>
-              onMoveGroup(
-                groupIndex,
-                groupIndex + 1,
-              )
+            onClick={
+              () =>
+                onMoveGroup(
+                  groupIndex,
+                  groupIndex + 1,
+                )
             }
-            className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40"
+            className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-surface transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-40"
             aria-label="Mover grupo hacia abajo"
           >
-            ↓
+
+            <ArrowDown
+              className="size-4"
+              aria-hidden="true"
+            />
+
           </button>
 
 
           <button
             type="button"
-            onClick={() =>
-              onRemoveGroup(
-                groupIndex,
-              )
+            onClick={
+              () =>
+                onRemoveGroup(
+                  groupIndex,
+                )
             }
-            className="rounded-lg border px-3 py-2 text-sm"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-surface px-3 text-sm font-medium text-red-600 transition hover:bg-red-50"
           >
+
+            <Trash2
+              className="size-4"
+              aria-hidden="true"
+            />
+
             Eliminar grupo
+
           </button>
 
         </div>
+
       </div>
 
 
-      {/* =============================================
+      {/* =================================================
           INGREDIENT LIST
-      ============================================= */}
+      ================================================= */}
 
       <div className="mt-6 space-y-3">
 
         {group.ingredients.length ===
         0 ? (
-          <p className="text-sm">
+
+          <div className="rounded-xl border border-dashed border-border bg-surface p-5 text-sm text-muted-foreground">
             Este grupo todavía no tiene ingredientes.
-          </p>
+          </div>
+
         ) : (
+
           group.ingredients.map(
             (
               ingredient,
@@ -455,12 +517,14 @@ function IngredientGroupEditor({
                 key={
                   ingredient.clientId
                 }
-                className="rounded-lg border p-4"
+                className="rounded-xl border border-border bg-surface p-4"
               >
+
                 <div className="flex flex-wrap items-start justify-between gap-4">
 
-                  <div>
-                    <p className="font-medium">
+                  <div className="min-w-0">
+
+                    <p className="font-semibold text-foreground">
 
                       {ingredient.quantity &&
                         `${ingredient.quantity} `}
@@ -468,13 +532,15 @@ function IngredientGroupEditor({
                       {ingredient.unit &&
                         `${ingredient.unit} `}
 
-                      {ingredient.name}
+                      {
+                        ingredient.name
+                      }
 
                     </p>
 
 
                     {ingredient.notes && (
-                      <p className="mt-1 text-sm">
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
                         {
                           ingredient.notes
                         }
@@ -482,11 +548,14 @@ function IngredientGroupEditor({
                     )}
 
 
-                    <p className="mt-1 text-xs">
+                    <p className="mt-2 text-xs text-muted-foreground">
+
                       {ingredient.scalable
-                        ? "Se adapta a los comensales"
-                        : "No se recalcula"}
+                        ? "La cantidad se adapta al número de comensales."
+                        : "La cantidad no se recalcula."}
+
                     </p>
+
                   </div>
 
 
@@ -498,18 +567,24 @@ function IngredientGroupEditor({
                         ingredientIndex ===
                         0
                       }
-                      onClick={() =>
-                        onMoveIngredient(
-                          groupIndex,
-                          ingredientIndex,
-                          ingredientIndex -
-                            1,
-                        )
+                      onClick={
+                        () =>
+                          onMoveIngredient(
+                            groupIndex,
+                            ingredientIndex,
+                            ingredientIndex -
+                              1,
+                          )
                       }
-                      className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40"
+                      className="inline-flex size-9 items-center justify-center rounded-lg border border-border transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-40"
                       aria-label="Mover ingrediente hacia arriba"
                     >
-                      ↑
+
+                      <ArrowUp
+                        className="size-4"
+                        aria-hidden="true"
+                      />
+
                     </button>
 
 
@@ -520,62 +595,91 @@ function IngredientGroupEditor({
                         group.ingredients.length -
                           1
                       }
-                      onClick={() =>
-                        onMoveIngredient(
-                          groupIndex,
-                          ingredientIndex,
-                          ingredientIndex +
-                            1,
-                        )
+                      onClick={
+                        () =>
+                          onMoveIngredient(
+                            groupIndex,
+                            ingredientIndex,
+                            ingredientIndex +
+                              1,
+                          )
                       }
-                      className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40"
+                      className="inline-flex size-9 items-center justify-center rounded-lg border border-border transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-40"
                       aria-label="Mover ingrediente hacia abajo"
                     >
-                      ↓
+
+                      <ArrowDown
+                        className="size-4"
+                        aria-hidden="true"
+                      />
+
                     </button>
 
 
                     <button
                       type="button"
-                      onClick={() =>
-                        editIngredient(
-                          ingredientIndex,
-                        )
+                      onClick={
+                        () =>
+                          editIngredient(
+                            ingredientIndex,
+                          )
                       }
-                      className="rounded-lg border px-3 py-2 text-sm"
+                      className="inline-flex size-9 items-center justify-center rounded-lg border border-border transition hover:bg-page-muted"
+                      aria-label="Editar ingrediente"
                     >
-                      Editar
+
+                      <Pencil
+                        className="size-4 text-brand"
+                        aria-hidden="true"
+                      />
+
                     </button>
 
 
                     <button
                       type="button"
-                      onClick={() =>
-                        duplicateIngredient(
-                          ingredientIndex,
-                        )
+                      onClick={
+                        () =>
+                          duplicateIngredient(
+                            ingredientIndex,
+                          )
                       }
-                      className="rounded-lg border px-3 py-2 text-sm"
+                      className="inline-flex size-9 items-center justify-center rounded-lg border border-border transition hover:bg-page-muted"
+                      aria-label="Duplicar ingrediente"
                     >
-                      Duplicar
+
+                      <Copy
+                        className="size-4"
+                        aria-hidden="true"
+                      />
+
                     </button>
 
 
                     <button
                       type="button"
-                      onClick={() =>
-                        onRemoveIngredient(
-                          groupIndex,
-                          ingredientIndex,
-                        )
+                      onClick={
+                        () =>
+                          onRemoveIngredient(
+                            groupIndex,
+                            ingredientIndex,
+                          )
                       }
-                      className="rounded-lg border px-3 py-2 text-sm"
+                      className="inline-flex size-9 items-center justify-center rounded-lg border border-red-200 text-red-600 transition hover:bg-red-50"
+                      aria-label="Eliminar ingrediente"
                     >
-                      Eliminar
+
+                      <Trash2
+                        className="size-4"
+                        aria-hidden="true"
+                      />
+
                     </button>
 
                   </div>
+
                 </div>
+
               </div>
             ),
           )
@@ -584,31 +688,58 @@ function IngredientGroupEditor({
       </div>
 
 
-      {/* =============================================
-          SINGLE INGREDIENT EDITOR
-      ============================================= */}
+      {/* =================================================
+          INGREDIENT EDITOR
+      ================================================= */}
 
-      <div className="mt-6 rounded-lg border p-4">
+      <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
 
-        <h4 className="font-semibold">
-          {editingIndex ===
-          null
-            ? "Añadir ingrediente"
-            : "Editar ingrediente"}
-        </h4>
+        <div className="flex items-center gap-3">
+
+          <span className="flex size-9 items-center justify-center rounded-xl bg-brand/10 text-brand">
+
+            <Plus
+              className="size-4"
+              aria-hidden="true"
+            />
+
+          </span>
 
 
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div>
+
+            <h4 className="font-semibold text-foreground">
+
+              {editingIndex ===
+              null
+                ? "Añadir ingrediente"
+                : "Editar ingrediente"}
+
+            </h4>
+
+
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              El nombre se utilizará también para analizar posibles alérgenos.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
 
           {/* QUANTITY */}
 
           <div>
+
             <label
               htmlFor={`ingredient-${group.clientId}-quantity`}
-              className="mb-2 block text-sm font-medium"
+              className="text-sm font-semibold text-foreground"
             >
               Cantidad
             </label>
+
 
             <input
               id={`ingredient-${group.clientId}-quantity`}
@@ -627,32 +758,35 @@ function IngredientGroupEditor({
                     ...current,
 
                     quantity:
-                      event
-                        .target
-                        .value,
+                      event.target.value,
                   }),
                 )
               }
-              className="w-full rounded-lg border px-4 py-3"
+              className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
               placeholder="Ej. 250"
             />
+
           </div>
 
 
           {/* UNIT */}
 
           <div>
+
             <label
               htmlFor={`ingredient-${group.clientId}-unit`}
-              className="mb-2 block text-sm font-medium"
+              className="text-sm font-semibold text-foreground"
             >
               Unidad
             </label>
 
+
             <input
               id={`ingredient-${group.clientId}-unit`}
               type="text"
-              maxLength={40}
+              maxLength={
+                40
+              }
               value={
                 ingredientDraft.unit
               }
@@ -666,32 +800,35 @@ function IngredientGroupEditor({
                     ...current,
 
                     unit:
-                      event
-                        .target
-                        .value,
+                      event.target.value,
                   }),
                 )
               }
-              className="w-full rounded-lg border px-4 py-3"
+              className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
               placeholder="g, ml, cucharadas..."
             />
+
           </div>
 
 
           {/* NAME */}
 
           <div className="md:col-span-2">
+
             <label
               htmlFor={`ingredient-${group.clientId}-name`}
-              className="mb-2 block text-sm font-medium"
+              className="text-sm font-semibold text-foreground"
             >
               Ingrediente
             </label>
 
+
             <input
               id={`ingredient-${group.clientId}-name`}
               type="text"
-              maxLength={120}
+              maxLength={
+                120
+              }
               value={
                 ingredientDraft.name
               }
@@ -705,32 +842,42 @@ function IngredientGroupEditor({
                     ...current,
 
                     name:
-                      event
-                        .target
-                        .value,
+                      event.target.value,
                   }),
                 )
               }
-              className="w-full rounded-lg border px-4 py-3"
-              placeholder="Ej. Patatas"
+              className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+              placeholder="Ej. Salsa de soja"
             />
+
+
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              Utiliza un nombre claro y reconocible.
+              CociHub intentará relacionarlo con su
+              catálogo alimentario.
+            </p>
+
           </div>
 
 
           {/* NOTES */}
 
           <div className="md:col-span-2">
+
             <label
               htmlFor={`ingredient-${group.clientId}-notes`}
-              className="mb-2 block text-sm font-medium"
+              className="text-sm font-semibold text-foreground"
             >
               Notas
             </label>
 
+
             <input
               id={`ingredient-${group.clientId}-notes`}
               type="text"
-              maxLength={250}
+              maxLength={
+                250
+              }
               value={
                 ingredientDraft.notes
               }
@@ -744,15 +891,14 @@ function IngredientGroupEditor({
                     ...current,
 
                     notes:
-                      event
-                        .target
-                        .value,
+                      event.target.value,
                   }),
                 )
               }
-              className="w-full rounded-lg border px-4 py-3"
-              placeholder="Ej. cortadas finas, al gusto..."
+              className="mt-2 w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+              placeholder="Ej. cortado en tiras finas, al gusto..."
             />
+
           </div>
 
         </div>
@@ -760,7 +906,7 @@ function IngredientGroupEditor({
 
         {/* SCALABLE */}
 
-        <label className="mt-4 flex items-center gap-3">
+        <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-page-muted/30 p-4">
 
           <input
             type="checkbox"
@@ -777,30 +923,46 @@ function IngredientGroupEditor({
                   ...current,
 
                   scalable:
-                    event
-                      .target
-                      .checked,
+                    event.target.checked,
                 }),
               )
             }
+            className="mt-0.5 size-4 accent-brand"
           />
 
+
           <span>
-            Adaptar cantidad al número de comensales
+
+            <span className="block text-sm font-semibold text-foreground">
+              Adaptar cantidad al número de comensales
+            </span>
+
+
+            <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+              Desactívalo para ingredientes cuya
+              cantidad deba permanecer fija.
+            </span>
+
           </span>
 
         </label>
 
 
+        {/* LOCAL ERROR */}
+
         {editorError && (
           <p
             role="alert"
-            className="mt-4 text-sm"
+            className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
           >
-            {editorError}
+            {
+              editorError
+            }
           </p>
         )}
 
+
+        {/* EDITOR ACTIONS */}
 
         <div className="mt-5 flex flex-wrap gap-3">
 
@@ -809,26 +971,36 @@ function IngredientGroupEditor({
             onClick={
               saveIngredient
             }
-            className="rounded-lg bg-black px-4 py-2 text-white"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-semibold text-inverse transition hover:bg-brand-hover"
           >
+
+            <Plus
+              className="size-4"
+              aria-hidden="true"
+            />
+
+
             {editingIndex ===
             null
               ? "Añadir ingrediente"
               : "Guardar cambios"}
+
           </button>
 
 
           {editingIndex !==
             null && (
+
             <button
               type="button"
               onClick={
                 clearIngredientEditor
               }
-              className="rounded-lg border px-4 py-2"
+              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-border px-4 text-sm font-semibold transition hover:bg-page-muted"
             >
               Cancelar edición
             </button>
+
           )}
 
         </div>
@@ -846,6 +1018,14 @@ export function RecipeIngredientsForm({
 }: RecipeIngredientsFormProps) {
   const router =
     useRouter();
+
+
+  const previousStepHref =
+    `/admin/recipes/${recipeId}/edit?step=classification`;
+
+
+  const nextStepHref =
+    `/admin/recipes/${recipeId}/edit?step=steps`;
 
 
   const [
@@ -901,7 +1081,13 @@ export function RecipeIngredientsForm({
       true,
     );
 
+
     setMessage(
+      null,
+    );
+
+
+    setValidationError(
       null,
     );
   }
@@ -932,13 +1118,17 @@ export function RecipeIngredientsForm({
       ],
     );
 
+
     markDirty();
   }
 
 
   function changeGroupName(
-    groupIndex: number,
-    name: string,
+    groupIndex:
+      number,
+
+    name:
+      string,
   ) {
     setGroups(
       (
@@ -959,12 +1149,14 @@ export function RecipeIngredientsForm({
         ),
     );
 
+
     markDirty();
   }
 
 
   function removeGroup(
-    groupIndex: number,
+    groupIndex:
+      number,
   ) {
     setGroups(
       (
@@ -980,13 +1172,17 @@ export function RecipeIngredientsForm({
         ),
     );
 
+
     markDirty();
   }
 
 
   function moveGroup(
-    from: number,
-    to: number,
+    from:
+      number,
+
+    to:
+      number,
   ) {
     if (
       to < 0 ||
@@ -1004,6 +1200,7 @@ export function RecipeIngredientsForm({
         const copy = [
           ...current,
         ];
+
 
         const [
           moved,
@@ -1038,7 +1235,9 @@ export function RecipeIngredientsForm({
 
 
   function addIngredient(
-    groupIndex: number,
+    groupIndex:
+      number,
+
     ingredient:
       RecipeIngredientFormData,
   ) {
@@ -1079,8 +1278,12 @@ export function RecipeIngredientsForm({
 
 
   function updateIngredient(
-    groupIndex: number,
-    ingredientIndex: number,
+    groupIndex:
+      number,
+
+    ingredientIndex:
+      number,
+
     ingredient:
       RecipeIngredientFormData,
   ) {
@@ -1131,8 +1334,11 @@ export function RecipeIngredientsForm({
 
 
   function removeIngredient(
-    groupIndex: number,
-    ingredientIndex: number,
+    groupIndex:
+      number,
+
+    ingredientIndex:
+      number,
   ) {
     setGroups(
       (
@@ -1174,9 +1380,14 @@ export function RecipeIngredientsForm({
 
 
   function moveIngredient(
-    groupIndex: number,
-    from: number,
-    to: number,
+    groupIndex:
+      number,
+
+    from:
+      number,
+
+    to:
+      number,
   ) {
     setGroups(
       (
@@ -1234,7 +1445,6 @@ export function RecipeIngredientsForm({
 
             return {
               ...group,
-
               ingredients,
             };
           },
@@ -1251,7 +1461,9 @@ export function RecipeIngredientsForm({
     return {
       groups:
         groups.map(
-          (group) => ({
+          (
+            group,
+          ) => ({
             name:
               group.name,
 
@@ -1282,10 +1494,27 @@ export function RecipeIngredientsForm({
   }
 
 
-  async function handleSave() {
+  function getIngredientCount(
+    payload:
+      RecipeIngredientsFormData,
+  ) {
+    return payload.groups.reduce(
+      (
+        total,
+        group,
+      ) =>
+        total +
+        group.ingredients.length,
+      0,
+    );
+  }
+
+
+  async function handleContinue() {
     setMessage(
       null,
     );
+
 
     setValidationError(
       null,
@@ -1316,6 +1545,35 @@ export function RecipeIngredientsForm({
     }
 
 
+    if (
+      getIngredientCount(
+        validation.data,
+      ) ===
+      0
+    ) {
+      setValidationError(
+        "Añade al menos un ingrediente para continuar.",
+      );
+
+      return;
+    }
+
+
+    /*
+     * Si no existe ningún cambio pendiente,
+     * simplemente avanzamos.
+     */
+    if (
+      !isDirty
+    ) {
+      router.push(
+        nextStepHref,
+      );
+
+      return;
+    }
+
+
     setIsSubmitting(
       true,
     );
@@ -1334,25 +1592,30 @@ export function RecipeIngredientsForm({
       ) {
         setMessage(
           result.message ??
-            "No se pudieron guardar los ingredientes.",
+          "No se pudieron guardar los ingredientes.",
         );
 
         return;
       }
 
 
+      /*
+       * En este punto replace_recipe_ingredients
+       * ya ha sincronizado automáticamente los
+       * alérgenos conocidos de la receta.
+       */
       setIsDirty(
         false,
       );
 
 
-      setMessage(
-        result.message ??
-          "Ingredientes guardados correctamente.",
+      router.refresh();
+
+
+      router.push(
+        nextStepHref,
       );
 
-
-      router.refresh();
     } finally {
       setIsSubmitting(
         false,
@@ -1362,22 +1625,47 @@ export function RecipeIngredientsForm({
 
 
   return (
-    <section className="rounded-xl border p-6">
+    <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-7">
 
-      {/* =============================================
+      {/* =================================================
           HEADER
-      ============================================= */}
+      ================================================= */}
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-5">
 
-        <div>
-          <h2 className="text-xl font-semibold">
-            Ingredientes
-          </h2>
+        <div className="flex items-start gap-4">
 
-          <p className="mt-1 text-sm">
-            Organiza los ingredientes por grupos y define qué cantidades deben adaptarse al número de comensales.
-          </p>
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
+
+            <Utensils
+              className="size-5"
+              aria-hidden="true"
+            />
+
+          </span>
+
+
+          <div>
+
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
+              Paso 4 de 10
+            </p>
+
+
+            <h2 className="mt-2 font-serif text-2xl font-semibold text-foreground">
+              Ingredientes
+            </h2>
+
+
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Organiza los ingredientes por
+              grupos y define qué cantidades
+              deben adaptarse al número de
+              comensales.
+            </p>
+
+          </div>
+
         </div>
 
 
@@ -1386,26 +1674,101 @@ export function RecipeIngredientsForm({
           onClick={
             addGroup
           }
-          className="rounded-lg border px-4 py-2"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold transition hover:bg-page-muted"
         >
+
+          <Plus
+            className="size-4 text-brand"
+            aria-hidden="true"
+          />
+
           Añadir grupo
+
         </button>
 
       </div>
 
 
-      {/* =============================================
-          GROUPS
-      ============================================= */}
+      {/* =================================================
+          ALLERGEN ENGINE
+      ================================================= */}
 
-      <div className="mt-6 space-y-6">
+      <div className="mt-7 rounded-2xl border border-brand/20 bg-brand/5 p-5">
+
+        <div className="flex items-start gap-4">
+
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface text-brand shadow-sm">
+
+            <ShieldCheck
+              className="size-5"
+              aria-hidden="true"
+            />
+
+          </span>
+
+
+          <div>
+
+            <h3 className="font-semibold text-foreground">
+              Detección automática de alérgenos
+            </h3>
+
+
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Al guardar los ingredientes,
+              CociHub intentará reconocer cada
+              alimento en su catálogo y
+              actualizará automáticamente los
+              alérgenos conocidos de la receta.
+            </p>
+
+
+            <p className="mt-2 text-sm font-medium leading-6 text-foreground">
+              Un ingrediente que CociHub no
+              reconozca no se considerará libre
+              de alérgenos.
+            </p>
+
+
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              Más adelante, en el apartado
+              «Alérgenos», podrás revisar la
+              detección y añadir información
+              manual como posibles trazas.
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {/* =================================================
+          GROUPS
+      ================================================= */}
+
+      <div className="mt-7 space-y-6">
 
         {groups.length ===
         0 ? (
-          <div className="rounded-lg border p-5">
 
-            <p className="text-sm">
-              Todavía no hay grupos de ingredientes.
+          <div className="rounded-2xl border border-dashed border-border bg-page-muted/20 px-6 py-10 text-center">
+
+            <Utensils
+              className="mx-auto size-7 text-brand"
+              aria-hidden="true"
+            />
+
+
+            <h3 className="mt-4 font-semibold text-foreground">
+              Todavía no hay ingredientes
+            </h3>
+
+
+            <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
+              Crea un grupo y añade los alimentos
+              necesarios para preparar esta receta.
             </p>
 
 
@@ -1414,13 +1777,22 @@ export function RecipeIngredientsForm({
               onClick={
                 addGroup
               }
-              className="mt-4 rounded-lg border px-4 py-2"
+              className="mt-5 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-semibold text-inverse transition hover:bg-brand-hover"
             >
+
+              <Plus
+                className="size-4"
+                aria-hidden="true"
+              />
+
               Crear primer grupo
+
             </button>
 
           </div>
+
         ) : (
+
           groups.map(
             (
               group,
@@ -1478,51 +1850,89 @@ export function RecipeIngredientsForm({
       </div>
 
 
-      {/* =============================================
+      {/* =================================================
           VALIDATION
-      ============================================= */}
+      ================================================= */}
 
       {validationError && (
+
         <p
           role="alert"
-          className="mt-6 text-sm"
+          className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
         >
-          {validationError}
+          {
+            validationError
+          }
         </p>
+
       )}
 
 
-      {/* =============================================
-          SAVE
-      ============================================= */}
+      {message && (
 
-      <div className="mt-6 flex flex-wrap items-center gap-4">
+        <p
+          role="status"
+          className="mt-6 rounded-xl border border-border bg-page-muted/40 px-4 py-3 text-sm text-muted-foreground"
+        >
+          {
+            message
+          }
+        </p>
+
+      )}
+
+
+      {/* =================================================
+          NAVIGATION
+      ================================================= */}
+
+      <div className="mt-7 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+
+        <Link
+          href={
+            previousStepHref
+          }
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition hover:bg-page-muted"
+        >
+
+          <ArrowLeft
+            className="size-4"
+            aria-hidden="true"
+          />
+
+          Anterior
+
+        </Link>
+
 
         <button
           type="button"
           disabled={
-            isSubmitting ||
-            !isDirty
+            isSubmitting
           }
           onClick={
-            handleSave
+            handleContinue
           }
-          className="rounded-lg bg-black px-5 py-3 text-white disabled:opacity-50"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-5 font-semibold text-inverse shadow-sm transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
+
           {isSubmitting
             ? "Guardando..."
-            : "Guardar ingredientes"}
+            : isDirty
+              ? "Guardar y continuar"
+              : "Continuar"}
+
+
+          {!isSubmitting && (
+
+            <ArrowRight
+              className="size-4"
+              aria-hidden="true"
+            />
+
+          )}
+
         </button>
-
-
-        {message && (
-          <p
-            role="status"
-            className="text-sm"
-          >
-            {message}
-          </p>
-        )}
 
       </div>
 

@@ -43,6 +43,9 @@ type PublicationRecipeData = {
 
   preparation_minutes:
     number | null;
+
+  elaboration_minutes:
+    number | null;
 };
 
 
@@ -183,6 +186,19 @@ PublicationReadiness {
           recipe
             .preparation_minutes >
             0,
+      },
+
+      {
+        key:
+          "elaboration-time",
+
+        label:
+          "Tiempo de elaboración",
+
+        valid:
+          recipe
+            .elaboration_minutes !==
+          null,
       },
 
       {

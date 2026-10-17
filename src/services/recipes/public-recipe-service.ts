@@ -54,10 +54,7 @@ type PublishedRecipeRow = {
   preparation_minutes:
     number | null;
 
-  cooking_minutes:
-    number | null;
-
-  additional_minutes:
+  elaboration_minutes:
     number | null;
 
   recipe_type_id:
@@ -201,8 +198,7 @@ function calculateTotalMinutes(
   recipe: Pick<
     PublishedRecipeRow,
     | "preparation_minutes"
-    | "cooking_minutes"
-    | "additional_minutes"
+    | "elaboration_minutes"
   >,
 ) {
   return (
@@ -211,11 +207,7 @@ function calculateTotalMinutes(
       0
     ) +
     (
-      recipe.cooking_minutes ??
-      0
-    ) +
-    (
-      recipe.additional_minutes ??
+      recipe.elaboration_minutes ??
       0
     )
   );
@@ -285,11 +277,8 @@ function mapRecipeListItem(
     preparationMinutes:
       recipe.preparation_minutes,
 
-    cookingMinutes:
-      recipe.cooking_minutes,
-
-    additionalMinutes:
-      recipe.additional_minutes,
+    elaborationMinutes:
+      recipe.elaboration_minutes,
 
     totalMinutes:
       calculateTotalMinutes(
@@ -332,8 +321,7 @@ export async function getPublishedRecipes(): Promise<
           difficulty,
           base_servings,
           preparation_minutes,
-          cooking_minutes,
-          additional_minutes,
+          elaboration_minutes,
           recipe_type_id,
           featured,
           tips,
@@ -439,8 +427,7 @@ export const getPublishedRecipeBySlug =
               difficulty,
               base_servings,
               preparation_minutes,
-              cooking_minutes,
-              additional_minutes,
+              elaboration_minutes,
               recipe_type_id,
               featured,
               tips,

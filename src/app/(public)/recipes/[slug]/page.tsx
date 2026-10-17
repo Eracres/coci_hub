@@ -883,31 +883,15 @@ export default async function RecipePage({
                   ) : null}
 
 
-                  {recipe.cookingMinutes ? (
+                  {recipe.elaborationMinutes ? (
                     <div className="flex justify-between gap-4 py-3">
                       <dt className="text-muted-foreground">
-                        Cocción
+                        Elaboración
                       </dt>
 
                       <dd className="font-semibold text-foreground">
                         {
-                          recipe.cookingMinutes
-                        }{" "}
-                        min
-                      </dd>
-                    </div>
-                  ) : null}
-
-
-                  {recipe.additionalMinutes ? (
-                    <div className="flex justify-between gap-4 py-3">
-                      <dt className="text-muted-foreground">
-                        Adicional
-                      </dt>
-
-                      <dd className="font-semibold text-foreground">
-                        {
-                          recipe.additionalMinutes
+                          recipe.elaborationMinutes
                         }{" "}
                         min
                       </dd>

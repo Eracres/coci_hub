@@ -88,10 +88,7 @@ export type AdminRecipe = {
   preparation_minutes:
     number | null;
 
-  cooking_minutes:
-    number | null;
-
-  additional_minutes:
+  elaboration_minutes:
     number | null;
 
   status:
@@ -344,8 +341,7 @@ export async function getAdminRecipeById(
         difficulty,
         base_servings,
         preparation_minutes,
-        cooking_minutes,
-        additional_minutes,
+        elaboration_minutes,
         status,
         image_path,
         image_alt,
@@ -733,12 +729,6 @@ export async function updateRecipeTimes(
       .update({
         preparation_minutes:
           input.preparationMinutes,
-
-        cooking_minutes:
-          input.cookingMinutes,
-
-        additional_minutes:
-          input.additionalMinutes,
       })
       .eq(
         "id",
@@ -747,8 +737,7 @@ export async function updateRecipeTimes(
       .select(`
         id,
         preparation_minutes,
-        cooking_minutes,
-        additional_minutes,
+        elaboration_minutes,
         updated_at
       `)
       .single();

@@ -208,17 +208,7 @@ export const recipeSchema = z.object({
     )
     .nullable(),
 
-  cookingMinutes: z
-    .number()
-    .int(
-      "El tiempo debe indicarse en minutos completos.",
-    )
-    .nonnegative(
-      "El tiempo no puede ser negativo.",
-    )
-    .nullable(),
-
-  additionalMinutes: z
+  elaborationMinutes: z
     .number()
     .int(
       "El tiempo debe indicarse en minutos completos.",
@@ -382,6 +372,20 @@ export const publishedRecipeSchema =
           ],
           message:
             "Indica el tiempo de preparación antes de publicar.",
+        });
+      }
+
+
+      if (
+        recipe.elaborationMinutes === null
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: [
+            "elaborationMinutes",
+          ],
+          message:
+            "Completa la duración de todos los pasos antes de publicar.",
         });
       }
 

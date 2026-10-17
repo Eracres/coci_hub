@@ -696,12 +696,6 @@ export async function createAiRecipeDraft(
           preparation_minutes:
             recipe.preparationMinutes,
 
-          cooking_minutes:
-            recipe.cookingMinutes,
-
-          additional_minutes:
-            recipe.additionalMinutes,
-
           featured:
             false,
 

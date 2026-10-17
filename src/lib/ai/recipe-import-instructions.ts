@@ -90,17 +90,35 @@ difficulty = null
 
 TIEMPOS
 
-Los campos disponibles son:
+El único tiempo global que debes extraer es:
 
 preparationMinutes
-cookingMinutes
-additionalMinutes
+
+preparationMinutes representa el tiempo de preparación previo a la elaboración
+cuando aparezca explícitamente en la fuente.
+
+No devuelvas un tiempo global de cocción, horneado, reposo, fermentación,
+maceración ni ningún otro tiempo de elaboración.
+
+Los tiempos de elaboración pertenecen a cada paso mediante:
+
+steps[].durationMinutes
+
+Cuando un paso incluya explícitamente una duración, conviértela a minutos y
+guárdala en durationMinutes.
+
+Si la fuente muestra un tiempo global de cocción o elaboración pero no puede
+asociarse de forma inequívoca a un paso, no inventes su ubicación: indícalo
+en warnings para que pueda revisarlo una persona.
 
 Convierte horas a minutos cuando sea necesario.
 
 Ejemplo:
 
 1 hora 30 minutos = 90
+
+CociHub calculará automáticamente el tiempo total de elaboración sumando las
+duraciones de todos los pasos.
 
 No calcules tiempos basándote únicamente en tu conocimiento culinario.
 

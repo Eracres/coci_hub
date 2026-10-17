@@ -1,8 +1,20 @@
 "use client";
 
 import {
+  ArrowLeft,
+  ArrowRight,
+  UsersRound,
+} from "lucide-react";
+
+import Link from "next/link";
+
+import {
   useState,
 } from "react";
+
+import {
+  useRouter,
+} from "next/navigation";
 
 import {
   useForm,
@@ -28,13 +40,25 @@ type RecipeServingsFormProps = {
 
   initialValue:
     number | null;
+
+  previousStepHref:
+    string;
+
+  nextStepHref:
+    string;
 };
 
 
 export function RecipeServingsForm({
   recipeId,
   initialValue,
+  previousStepHref,
+  nextStepHref,
 }: RecipeServingsFormProps) {
+  const router =
+    useRouter();
+
+
   const [
     message,
     setMessage,
@@ -43,10 +67,13 @@ export function RecipeServingsForm({
       null,
     );
 
+
   const {
     register,
     handleSubmit,
     setError,
+    clearErrors,
+    reset,
 
     formState: {
       errors,
@@ -62,7 +89,8 @@ export function RecipeServingsForm({
 
       defaultValues: {
         baseServings:
-          initialValue === null
+          initialValue ===
+          null
             ? ""
             : String(
                 initialValue,
@@ -79,19 +107,42 @@ export function RecipeServingsForm({
       null,
     );
 
+
+    clearErrors();
+
+
+    /*
+     * Si el apartado ya estaba guardado
+     * y no hemos cambiado nada,
+     * simplemente avanzamos.
+     */
+    if (
+      !isDirty
+    ) {
+      router.push(
+        nextStepHref,
+      );
+
+      return;
+    }
+
+
     const result =
       await updateRecipeServingsAction(
         recipeId,
         values,
       );
 
+
     if (
       !result.success
     ) {
       const fieldMessage =
-        result.fieldErrors
+        result
+          .fieldErrors
           ?.baseServings
           ?.[0];
+
 
       if (
         fieldMessage
@@ -108,32 +159,77 @@ export function RecipeServingsForm({
         );
       }
 
+
       setMessage(
         result.message ??
-          null,
+        "No se pudieron guardar las raciones.",
       );
+
 
       return;
     }
 
-    setMessage(
-      result.message ??
-        "Raciones guardadas.",
+
+    /*
+     * Los valores actuales pasan a
+     * considerarse guardados.
+     */
+    reset(
+      values,
+    );
+
+
+    router.push(
+      nextStepHref,
     );
   }
 
 
   return (
-    <section className="rounded-xl border p-6">
-      <div>
-        <h2 className="text-xl font-semibold">
-          Raciones
-        </h2>
+    <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-7">
 
-        <p className="mt-1 text-sm">
-          Indica para cuántas personas están calculadas las cantidades originales de la receta.
-        </p>
+      {/* =================================================
+          HEADER
+      ================================================= */}
+
+      <div className="flex items-start gap-4">
+
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
+
+          <UsersRound
+            className="size-5"
+            aria-hidden="true"
+          />
+
+        </span>
+
+
+        <div>
+
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
+            Paso 2 de 10
+          </p>
+
+
+          <h2 className="mt-2 font-serif text-2xl font-semibold text-foreground">
+            Raciones
+          </h2>
+
+
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Indica para cuántas personas
+            están calculadas las cantidades
+            originales de la receta.
+          </p>
+
+        </div>
+
       </div>
+
+
+      {/* =================================================
+          FORM
+      ================================================= */}
 
       <form
         onSubmit={
@@ -141,44 +237,61 @@ export function RecipeServingsForm({
             onSubmit,
           )
         }
-        className="mt-6 space-y-6"
+        className="mt-7"
       >
-        <div>
+
+        <div className="rounded-2xl border border-border bg-page-muted/30 p-5 sm:p-6">
+
           <label
             htmlFor="baseServings"
-            className="mb-2 block font-medium"
+            className="text-sm font-semibold text-foreground"
           >
             Raciones base
           </label>
 
-          <div className="flex max-w-xs items-center gap-3">
+
+          <div className="mt-3 flex max-w-sm items-center gap-3">
+
             <input
               id="baseServings"
               type="number"
-              min={1}
-              max={100}
-              step={1}
+              min={
+                1
+              }
+              max={
+                100
+              }
+              step={
+                1
+              }
               inputMode="numeric"
               {...register(
                 "baseServings",
               )}
-              className="w-full rounded-lg border px-4 py-3"
+              className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
               placeholder="Ej. 4"
             />
 
-            <span className="text-sm">
+
+            <span className="shrink-0 text-sm text-muted-foreground">
               personas
             </span>
+
           </div>
 
-          <p className="mt-2 text-sm">
-            Esta cantidad servirá como base para recalcular posteriormente los ingredientes según el número de comensales.
+
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Esta cantidad servirá como base
+            para recalcular posteriormente
+            los ingredientes según el número
+            de comensales.
           </p>
+
 
           {errors.baseServings && (
             <p
               role="alert"
-              className="mt-2 text-sm"
+              className="mt-3 text-sm text-red-600"
             >
               {
                 errors
@@ -187,32 +300,77 @@ export function RecipeServingsForm({
               }
             </p>
           )}
+
         </div>
 
-        <div className="flex items-center gap-4">
+
+        {/* =================================================
+            MESSAGE
+        ================================================= */}
+
+        {message && (
+          <p
+            role="status"
+            className="mt-5 rounded-xl border border-border bg-page-muted/40 px-4 py-3 text-sm text-muted-foreground"
+          >
+            {
+              message
+            }
+          </p>
+        )}
+
+
+        {/* =================================================
+            ACTIONS
+        ================================================= */}
+
+        <div className="mt-7 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+
+          <Link
+            href={
+              previousStepHref
+            }
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition hover:bg-page-muted"
+          >
+
+            <ArrowLeft
+              className="size-4"
+              aria-hidden="true"
+            />
+
+            Anterior
+
+          </Link>
+
+
           <button
             type="submit"
             disabled={
-              isSubmitting ||
-              !isDirty
+              isSubmitting
             }
-            className="rounded-lg bg-black px-5 py-3 text-white disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-5 font-semibold text-inverse shadow-sm transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
+
             {isSubmitting
               ? "Guardando..."
-              : "Guardar raciones"}
+              : isDirty
+                ? "Guardar y continuar"
+                : "Continuar"}
+
+
+            {!isSubmitting && (
+              <ArrowRight
+                className="size-4"
+                aria-hidden="true"
+              />
+            )}
+
           </button>
 
-          {message && (
-            <p
-              role="status"
-              className="text-sm"
-            >
-              {message}
-            </p>
-          )}
         </div>
+
       </form>
+
     </section>
   );
 }

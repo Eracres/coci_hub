@@ -1,13 +1,20 @@
 "use client";
 
 import {
-  ArrowRight,
-  Check,
-  X,
+  Archive,
+  ArrowLeft,
+  CheckCircle2,
+  CircleAlert,
+  Eye,
+  FileCheck2,
+  RotateCcw,
+  Send,
+  XCircle,
 } from "lucide-react";
 
+import Link from "next/link";
+
 import {
-  useEffect,
   useState,
 } from "react";
 
@@ -40,43 +47,6 @@ type RecipePublicationFormProps = {
 };
 
 
-const requirementTargets:
-Record<string, string> = {
-  title:
-    "title",
-
-  slug:
-    "slug",
-
-  "short-description":
-    "shortDescription",
-
-  "main-image":
-    "publication-main-image",
-
-  "recipe-type":
-    "recipeTypeId",
-
-  difficulty:
-    "difficulty",
-
-  "base-servings":
-    "baseServings",
-
-  "preparation-time":
-    "preparationMinutes",
-
-  category:
-    "publication-category",
-
-  ingredient:
-    "publication-ingredient",
-
-  step:
-    "publication-step",
-};
-
-
 function getStatusLabel(
   status:
     RecipeStatus,
@@ -98,6 +68,30 @@ function getStatusLabel(
 
 
   return "Borrador";
+}
+
+
+function getStatusDescription(
+  status:
+    RecipeStatus,
+) {
+  if (
+    status ===
+    "published"
+  ) {
+    return "La receta es visible públicamente en CociHub.";
+  }
+
+
+  if (
+    status ===
+    "archived"
+  ) {
+    return "La receta está archivada y no aparece públicamente.";
+  }
+
+
+  return "La receta todavía no es visible públicamente.";
 }
 
 
@@ -128,55 +122,26 @@ export function RecipePublicationForm({
     );
 
 
-  /*
-   * Si el usuario corrige un requisito,
-   * guarda el formulario y el servidor
-   * actualiza readiness, quitamos el hash
-   * anterior para que un campo ya válido
-   * no siga apareciendo resaltado en rojo.
-   */
-  useEffect(() => {
-    const currentTarget =
-      window.location.hash.replace(
-        "#",
-        "",
-      );
+  const completedCount =
+    readiness.requirements.filter(
+      (
+        requirement,
+      ) =>
+        requirement.valid,
+    ).length;
 
 
-    if (
-      !currentTarget
-    ) {
-      return;
-    }
+  const missingCount =
+    readiness.requirements.length -
+    completedCount;
 
 
-    const targetRequirement =
-      readiness.requirements.find(
-        (
-          requirement,
-        ) =>
-          requirementTargets[
-            requirement.key
-          ] ===
-          currentTarget,
-      );
+  const previousStepHref =
+    `/admin/recipes/${recipeId}/edit?step=allergens`;
 
 
-    if (
-      !targetRequirement?.valid
-    ) {
-      return;
-    }
-
-
-    window.history.replaceState(
-      null,
-      "",
-      `${window.location.pathname}${window.location.search}`,
-    );
-  }, [
-    readiness,
-  ]);
+  const previewHref =
+    `/admin/recipes/${recipeId}/preview`;
 
 
   async function changeStatus(
@@ -186,6 +151,7 @@ export function RecipePublicationForm({
     setMessage(
       null,
     );
+
 
     setIsSubmitting(
       true,
@@ -202,7 +168,7 @@ export function RecipePublicationForm({
 
       setMessage(
         result.message ??
-          null,
+        null,
       );
 
 
@@ -219,276 +185,523 @@ export function RecipePublicationForm({
   }
 
 
-  const missingCount =
-    readiness.requirements.filter(
-      (
-        requirement,
-      ) =>
-        !requirement.valid,
-    ).length;
-
-
   return (
-    <section className="rounded-xl border p-6">
+    <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-7">
+
+      {/* =================================================
+          HEADER
+      ================================================= */}
+
       <div>
-        <h2 className="text-xl font-semibold">
+
+        <div className="flex flex-wrap items-center gap-3">
+
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
+            Paso 10 de 10
+          </p>
+
+
+          <span className="rounded-full border border-border bg-page-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+            Paso final
+          </span>
+
+        </div>
+
+
+        <h2 className="mt-2 font-serif text-2xl font-semibold text-foreground">
           Publicación
         </h2>
 
-        <p className="mt-1 text-sm">
-          Revisa que la receta esté
-          completa antes de hacerla
-          pública.
+
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+          Revisa que la receta cumple todos
+          los requisitos obligatorios antes
+          de hacerla visible públicamente en
+          CociHub.
         </p>
+
       </div>
 
 
-      {/* =============================================
+      {/* =================================================
           CURRENT STATUS
-      ============================================= */}
+      ================================================= */}
 
-      <div className="mt-6 rounded-lg border p-4">
-        <p className="text-sm">
-          Estado actual
-        </p>
+      <div className="mt-7 rounded-2xl border border-border bg-page-muted/20 p-5 sm:p-6">
 
-        <p className="mt-1 text-xl font-semibold">
-          {getStatusLabel(
-            status,
-          )}
-        </p>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+
+          <div>
+
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              Estado actual
+            </p>
+
+
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+
+              <p className="font-serif text-2xl font-semibold text-foreground">
+                {
+                  getStatusLabel(
+                    status,
+                  )
+                }
+              </p>
+
+
+              {status ===
+                "published" && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-brand/20 bg-brand/5 px-2.5 py-1 text-xs font-semibold text-brand">
+
+                  <CheckCircle2
+                    className="size-3.5"
+                    aria-hidden="true"
+                  />
+
+                  Visible públicamente
+
+                </span>
+              )}
+
+
+              {status ===
+                "archived" && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+
+                  <Archive
+                    className="size-3.5"
+                    aria-hidden="true"
+                  />
+
+                  Archivada
+
+                </span>
+              )}
+
+            </div>
+
+
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              {
+                getStatusDescription(
+                  status,
+                )
+              }
+            </p>
+
+          </div>
+
+
+          <Link
+            href={
+              previewHref
+            }
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground transition hover:bg-page-muted"
+          >
+
+            <Eye
+              className="size-4"
+              aria-hidden="true"
+            />
+
+            Vista previa
+
+          </Link>
+
+        </div>
+
       </div>
 
 
-      {/* =============================================
-          CHECKLIST
-      ============================================= */}
+      {/* =================================================
+          PROGRESS SUMMARY
+      ================================================= */}
 
-      <div className="mt-6">
-        <h3 className="font-semibold">
-          Requisitos para publicar
+      <div className="mt-6 rounded-2xl border border-brand/20 bg-brand/5 p-5">
+
+        <div className="flex flex-wrap items-center justify-between gap-4">
+
+          <div className="flex items-start gap-4">
+
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface text-brand shadow-sm">
+
+              <FileCheck2
+                className="size-5"
+                aria-hidden="true"
+              />
+
+            </span>
+
+
+            <div>
+
+              <h3 className="font-semibold text-foreground">
+                Comprobación de publicación
+              </h3>
+
+
+              <p className="mt-1 text-sm text-muted-foreground">
+
+                {
+                  completedCount
+                }{" "}
+                de{" "}
+                {
+                  readiness
+                    .requirements
+                    .length
+                }{" "}
+                requisitos completos.
+
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div className="rounded-xl border border-border bg-surface px-4 py-3 text-center">
+
+            <p className="text-2xl font-semibold text-brand">
+
+              {
+                completedCount
+              }
+              /
+              {
+                readiness
+                  .requirements
+                  .length
+              }
+
+            </p>
+
+
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              requisitos
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {/* =================================================
+          CHECKLIST
+      ================================================= */}
+
+      <div className="mt-7">
+
+        <h3 className="font-serif text-xl font-semibold text-foreground">
+          Requisitos obligatorios
         </h3>
 
 
-        <p className="mt-1 text-sm text-muted-foreground">
-          Los requisitos pendientes
-          pueden pulsarse para ir
-          directamente al campo que
-          debes completar.
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">
+          Todos deben estar completados para
+          poder publicar la receta.
         </p>
 
 
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+
           {readiness.requirements.map(
             (
               requirement,
-            ) => {
-              const targetId =
-                requirementTargets[
+            ) => (
+              <div
+                key={
                   requirement.key
-                ];
+                }
+                className={
+                  requirement.valid
+                    ? "flex items-center gap-3 rounded-xl border border-brand/20 bg-brand/5 px-4 py-3"
+                    : "flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3"
+                }
+              >
 
+                {requirement.valid ? (
 
-              if (
-                requirement.valid
-              ) {
-                return (
-                  <div
-                    key={
-                      requirement.key
-                    }
-                    className="flex items-center gap-3 rounded-xl border border-success bg-success/5 px-4 py-3"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-success/10 text-success"
-                    >
-                      <Check
-                        className="size-4"
-                        strokeWidth={
-                          3
-                        }
-                      />
-                    </span>
-
-
-                    <span className="font-medium text-foreground">
-                      {
-                        requirement.label
-                      }
-                    </span>
-                  </div>
-                );
-              }
-
-
-              return (
-                <a
-                  key={
-                    requirement.key
-                  }
-                  href={
-                    targetId
-                      ? `#${targetId}`
-                      : "#"
-                  }
-                  className="group flex items-center gap-3 rounded-xl border border-error bg-error/5 px-4 py-3 transition hover:bg-error/10"
-                  aria-label={`Corregir: ${requirement.label}`}
-                >
-                  <span
+                  <CheckCircle2
+                    className="size-5 shrink-0 text-brand"
                     aria-hidden="true"
-                    className="flex size-7 shrink-0 items-center justify-center rounded-full bg-error/10 text-error"
-                  >
-                    <X
-                      className="size-4"
-                      strokeWidth={
-                        3
-                      }
-                    />
-                  </span>
+                  />
+
+                ) : (
+
+                  <XCircle
+                    className="size-5 shrink-0 text-red-600"
+                    aria-hidden="true"
+                  />
+
+                )}
 
 
-                  <span className="min-w-0 flex-1 font-medium text-foreground">
-                    {
-                      requirement.label
-                    }
-                  </span>
+                <span
+                  className={
+                    requirement.valid
+                      ? "text-sm font-medium text-foreground"
+                      : "text-sm font-medium text-red-700"
+                  }
+                >
+                  {
+                    requirement.label
+                  }
+                </span>
 
-
-                  <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-error">
-                    Corregir
-
-                    <ArrowRight
-                      className="size-4 transition-transform group-hover:translate-x-1"
-                      aria-hidden="true"
-                    />
-                  </span>
-                </a>
-              );
-            },
+              </div>
+            ),
           )}
+
         </div>
+
       </div>
 
 
-      {/* =============================================
-          READINESS MESSAGE
-      ============================================= */}
+      {/* =================================================
+          READINESS
+      ================================================= */}
 
-      <div
-        className={
-          readiness.canPublish
-            ? "mt-6 rounded-xl border border-success bg-success/5 p-4"
-            : "mt-6 rounded-xl border border-error bg-error/5 p-4"
-        }
-      >
-        {readiness.canPublish ? (
-          <div className="flex gap-3">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success/10 text-success">
-              <Check
-                className="size-4"
-                strokeWidth={
-                  3
-                }
-                aria-hidden="true"
-              />
-            </span>
+      {readiness.canPublish ? (
+
+        <div className="mt-7 rounded-2xl border border-brand/20 bg-brand/5 p-5">
+
+          <div className="flex items-start gap-4">
+
+            <CheckCircle2
+              className="mt-0.5 size-6 shrink-0 text-brand"
+              aria-hidden="true"
+            />
+
 
             <div>
-              <p className="font-semibold text-success">
+
+              <h3 className="font-semibold text-foreground">
                 La receta está lista
-                para publicarse.
+              </h3>
+
+
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                Todos los requisitos
+                obligatorios están completos.
+                Puedes publicarla cuando quieras.
               </p>
 
-              <p className="mt-1 text-sm text-muted-foreground">
-                Todos los requisitos
-                obligatorios están
-                completos.
-              </p>
             </div>
+
           </div>
-        ) : (
-          <div className="flex gap-3">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-error/10 text-error">
-              <X
-                className="size-4"
-                strokeWidth={
-                  3
-                }
-                aria-hidden="true"
-              />
-            </span>
+
+        </div>
+
+      ) : (
+
+        <div className="mt-7 rounded-2xl border border-red-200 bg-red-50 p-5">
+
+          <div className="flex items-start gap-4">
+
+            <CircleAlert
+              className="mt-0.5 size-6 shrink-0 text-red-600"
+              aria-hidden="true"
+            />
+
 
             <div>
-              <p className="font-semibold text-error">
-                La receta todavía no
-                puede publicarse.
+
+              <h3 className="font-semibold text-red-800">
+                La receta todavía no puede publicarse
+              </h3>
+
+
+              <p className="mt-1 text-sm leading-6 text-red-700">
+
+                Falta completar{" "}
+                {
+                  missingCount
+                }{" "}
+                requisito
+                {
+                  missingCount ===
+                  1
+                    ? ""
+                    : "s"
+                }{" "}
+                obligatorio
+                {
+                  missingCount ===
+                  1
+                    ? ""
+                    : "s"
+                }.
+
               </p>
 
-              <p className="mt-1 text-sm text-muted-foreground">
-                Faltan{" "}
-                {missingCount}{" "}
-                requisito
-                {missingCount ===
-                1
-                  ? ""
-                  : "s"}
-                .
-              </p>
             </div>
+
           </div>
-        )}
+
+        </div>
+
+      )}
+
+
+      {/* =================================================
+          OPTIONAL DATA
+      ================================================= */}
+
+      <div className="mt-6 rounded-xl border border-border bg-page-muted/30 px-4 py-4">
+
+        <p className="text-sm leading-6 text-muted-foreground">
+          La información adicional y la
+          revisión manual de alérgenos son
+          apartados opcionales y no bloquean
+          técnicamente la publicación.
+          Los alérgenos detectados
+          automáticamente se conservan de
+          forma independiente.
+        </p>
+
       </div>
 
 
-      {/* =============================================
-          ACTIONS
-      ============================================= */}
+      {/* =================================================
+          PUBLICATION ACTIONS
+      ================================================= */}
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        {status ===
-          "draft" && (
-          <>
-            <button
-              type="button"
-              disabled={
-                isSubmitting ||
-                !readiness.canPublish
-              }
-              onClick={() =>
-                changeStatus(
-                  "published",
-                )
-              }
-              className="rounded-lg bg-black px-5 py-3 text-white disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {isSubmitting
-                ? "Procesando..."
-                : "Publicar receta"}
-            </button>
+      <div className="mt-7 border-t border-border pt-6">
+
+        <h3 className="font-serif text-xl font-semibold text-foreground">
+          Acciones
+        </h3>
 
 
-            <button
-              type="button"
-              disabled={
-                isSubmitting
-              }
-              onClick={() =>
-                changeStatus(
-                  "archived",
-                )
-              }
-              className="rounded-lg border px-5 py-3"
-            >
-              Archivar
-            </button>
-          </>
-        )}
+        <div className="mt-4 flex flex-wrap gap-3">
+
+          {/* ===============================================
+              DRAFT
+          =============================================== */}
+
+          {status ===
+            "draft" && (
+            <>
+
+              <button
+                type="button"
+                disabled={
+                  isSubmitting ||
+                  !readiness.canPublish
+                }
+                onClick={() =>
+                  changeStatus(
+                    "published",
+                  )
+                }
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-5 font-semibold text-inverse shadow-sm transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
+              >
+
+                <Send
+                  className="size-4"
+                  aria-hidden="true"
+                />
 
 
-        {status ===
-          "published" && (
-          <>
+                {isSubmitting
+                  ? "Publicando..."
+                  : "Publicar receta"}
+
+              </button>
+
+
+              <button
+                type="button"
+                disabled={
+                  isSubmitting
+                }
+                onClick={() =>
+                  changeStatus(
+                    "archived",
+                  )
+                }
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-50"
+              >
+
+                <Archive
+                  className="size-4"
+                  aria-hidden="true"
+                />
+
+                Archivar
+
+              </button>
+
+            </>
+          )}
+
+
+          {/* ===============================================
+              PUBLISHED
+          =============================================== */}
+
+          {status ===
+            "published" && (
+            <>
+
+              <button
+                type="button"
+                disabled={
+                  isSubmitting
+                }
+                onClick={() =>
+                  changeStatus(
+                    "draft",
+                  )
+                }
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-50"
+              >
+
+                <RotateCcw
+                  className="size-4"
+                  aria-hidden="true"
+                />
+
+                Despublicar
+
+              </button>
+
+
+              <button
+                type="button"
+                disabled={
+                  isSubmitting
+                }
+                onClick={() =>
+                  changeStatus(
+                    "archived",
+                  )
+                }
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-50"
+              >
+
+                <Archive
+                  className="size-4"
+                  aria-hidden="true"
+                />
+
+                Archivar
+
+              </button>
+
+            </>
+          )}
+
+
+          {/* ===============================================
+              ARCHIVED
+          =============================================== */}
+
+          {status ===
+            "archived" && (
             <button
               type="button"
               disabled={
@@ -499,68 +712,81 @@ export function RecipePublicationForm({
                   "draft",
                 )
               }
-              className="rounded-lg border px-5 py-3"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-5 font-semibold text-inverse shadow-sm transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Despublicar
+
+              <RotateCcw
+                className="size-4"
+                aria-hidden="true"
+              />
+
+              {isSubmitting
+                ? "Restaurando..."
+                : "Restaurar como borrador"}
+
             </button>
+          )}
 
+        </div>
 
-            <button
-              type="button"
-              disabled={
-                isSubmitting
-              }
-              onClick={() =>
-                changeStatus(
-                  "archived",
-                )
-              }
-              className="rounded-lg border px-5 py-3"
-            >
-              Archivar
-            </button>
-          </>
-        )}
-
-
-        {status ===
-          "archived" && (
-          <button
-            type="button"
-            disabled={
-              isSubmitting
-            }
-            onClick={() =>
-              changeStatus(
-                "draft",
-              )
-            }
-            className="rounded-lg border px-5 py-3"
-          >
-            Restaurar como borrador
-          </button>
-        )}
       </div>
 
+
+      {/* =================================================
+          MESSAGE
+      ================================================= */}
 
       {message && (
         <p
           role="status"
-          className="mt-4 text-sm"
+          aria-live="polite"
+          className="mt-5 rounded-xl border border-border bg-page-muted/40 px-4 py-3 text-sm text-foreground"
         >
-          {message}
+          {
+            message
+          }
         </p>
       )}
 
 
-      <div className="mt-6 rounded-lg border p-4">
-        <p className="text-sm">
-          Los campos de información
-          adicional y alérgenos son
-          opcionales y no bloquean la
-          publicación.
-        </p>
+      {/* =================================================
+          NAVIGATION
+      ================================================= */}
+
+      <div className="mt-7 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+
+        <button
+          type="button"
+          disabled={
+            isSubmitting
+          }
+          onClick={() =>
+            router.push(
+              previousStepHref,
+            )
+          }
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-50"
+        >
+
+          <ArrowLeft
+            className="size-4"
+            aria-hidden="true"
+          />
+
+          Anterior
+
+        </button>
+
+
+        <Link
+          href="/admin/recipes"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition hover:bg-page-muted"
+        >
+          Volver al listado
+        </Link>
+
       </div>
+
     </section>
   );
 }

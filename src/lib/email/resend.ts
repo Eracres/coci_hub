@@ -7,7 +7,7 @@ import {
 
 let resendClient:
   Resend | null =
-    null;
+  null;
 
 
 /* =========================================================
@@ -58,5 +58,13 @@ export function getTransactionalEmailSender() {
   }
 
 
-  return sender;
+  if (
+    sender.includes("<") &&
+    sender.includes(">")
+  ) {
+    return sender;
+  }
+
+
+  return `CociHub <${sender}>`;
 }

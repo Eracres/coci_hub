@@ -12,6 +12,9 @@ export type RecipeRatingSummary = {
 
   currentUserRating:
     number | null;
+
+  isAuthenticated:
+    boolean;
 };
 
 
@@ -74,6 +77,21 @@ export async function getRecipeRatingSummary(
 
 
   const {
+    data:
+      claimsData,
+  } =
+    await supabase.auth.getClaims();
+
+
+  const isAuthenticated =
+    Boolean(
+      claimsData
+        ?.claims
+        ?.sub,
+    );
+
+
+  const {
     data,
     error,
   } =
@@ -120,6 +138,8 @@ export async function getRecipeRatingSummary(
 
       currentUserRating:
         null,
+
+      isAuthenticated,
     };
   }
 
@@ -140,5 +160,77 @@ export async function getRecipeRatingSummary(
       toNumber(
         row.current_user_rating,
       ),
+
+    isAuthenticated,
   };
+}
+
+
+/* =========================================================
+   SET RECIPE RATING
+========================================================= */
+
+export async function setRecipeRating(
+  recipeId:
+    string,
+
+  rating:
+    number,
+) {
+  const supabase =
+    await createClient();
+
+
+  const {
+    error,
+  } =
+    await supabase.rpc(
+      "set_recipe_rating",
+      {
+        p_recipe_id:
+          recipeId,
+
+        p_rating:
+          rating,
+      },
+    );
+
+
+  if (
+    error
+  ) {
+    throw error;
+  }
+}
+
+
+/* =========================================================
+   DELETE RECIPE RATING
+========================================================= */
+
+export async function deleteRecipeRating(
+  recipeId:
+    string,
+) {
+  const supabase =
+    await createClient();
+
+
+  const {
+    error,
+  } =
+    await supabase.rpc(
+      "delete_recipe_rating",
+      {
+        p_recipe_id:
+          recipeId,
+      },
+    );
+
+
+  if (
+    error
+  ) {
+    throw error;
+  }
 }

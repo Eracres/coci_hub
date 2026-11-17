@@ -38,6 +38,10 @@ import {
 } from "@/components/recipes/recipe-ingredients";
 
 import {
+  RecipeRatingSummary,
+} from "@/components/recipes/recipe-rating-summary";
+
+import {
   RecipeShareActions,
 } from "@/components/recipes/recipe-share-actions";
 
@@ -380,6 +384,13 @@ export default async function RecipePage({
                     }
                   </p>
                 ) : null}
+
+
+                <RecipeRatingSummary
+                  recipeId={
+                    recipe.id
+                  }
+                />
 
 
                 <div className="mt-7 grid gap-3 sm:grid-cols-3">

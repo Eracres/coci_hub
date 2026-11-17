@@ -1,4 +1,5 @@
-import Image from "next/image";
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
 
 import {
@@ -13,9 +14,21 @@ import type {
 } from "@/types/public-recipe";
 
 
+type RecipeCardRatingSummary = {
+  ratingCount:
+    number;
+
+  averageRating:
+    number | null;
+};
+
+
 type RecipeCardProps = {
   recipe:
     PublicRecipeListItem;
+
+  ratingSummary?:
+    RecipeCardRatingSummary | null;
 };
 
 
@@ -41,13 +54,34 @@ function getDifficultyLabel(
 }
 
 
+function getRatingCountLabel(
+  count:
+    number,
+) {
+  return count ===
+    1
+    ? "1 valoración"
+    : `${count} valoraciones`;
+}
+
+
 export function RecipeCard({
   recipe,
+  ratingSummary = null,
 }: RecipeCardProps) {
   const difficultyLabel =
     getDifficultyLabel(
       recipe.difficulty,
     );
+
+
+  const hasRatings =
+    ratingSummary !==
+      null &&
+    ratingSummary.ratingCount >
+      0 &&
+    ratingSummary.averageRating !==
+      null;
 
 
   return (
@@ -58,16 +92,14 @@ export function RecipeCard({
       >
         <div className="relative aspect-[4/3] overflow-hidden bg-page-muted">
           {recipe.imageUrl ? (
-            <Image
+            <img
               src={
                 recipe.imageUrl
               }
               alt={
                 recipe.title
               }
-              fill
-              sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
-              className="object-cover transition duration-500 group-hover:scale-[1.04]"
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
             />
           ) : (
             <div className="flex h-full items-center justify-center px-6 text-center">
@@ -103,6 +135,36 @@ export function RecipeCard({
                 recipe.shortDescription
               }
             </p>
+          ) : null}
+
+
+          {hasRatings ? (
+            <div className="mt-4 flex items-center gap-2 text-sm">
+              <Star
+                className="size-4 fill-accent text-accent"
+                aria-hidden="true"
+              />
+
+              <span className="font-semibold text-foreground">
+                {ratingSummary.averageRating!.toLocaleString(
+                  "es-ES",
+                  {
+                    minimumFractionDigits:
+                      1,
+
+                    maximumFractionDigits:
+                      1,
+                  },
+                )}
+              </span>
+
+              <span className="text-muted-foreground">
+                ·{" "}
+                {getRatingCountLabel(
+                  ratingSummary.ratingCount,
+                )}
+              </span>
+            </div>
           ) : null}
 
 

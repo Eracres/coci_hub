@@ -18,6 +18,21 @@ export type RecipeRatingSummary = {
 };
 
 
+export type RecipeRatingListSummary = {
+  ratingCount:
+    number;
+
+  averageRating:
+    number | null;
+};
+
+
+export type RecipeRatingSummaryMap = Record<
+  string,
+  RecipeRatingListSummary
+>;
+
+
 type RecipeRatingSummaryRow = {
   rating_count:
     number | string | null;
@@ -26,6 +41,18 @@ type RecipeRatingSummaryRow = {
     number | string | null;
 
   current_user_rating:
+    number | string | null;
+};
+
+
+type RecipeRatingSummariesRow = {
+  recipe_id:
+    string;
+
+  rating_count:
+    number | string | null;
+
+  average_rating:
     number | string | null;
 };
 
@@ -163,6 +190,91 @@ export async function getRecipeRatingSummary(
 
     isAuthenticated,
   };
+}
+
+
+/* =========================================================
+   GET MULTIPLE RECIPE RATING SUMMARIES
+========================================================= */
+
+export async function getRecipeRatingSummaries(
+  recipeIds:
+    string[],
+): Promise<RecipeRatingSummaryMap> {
+  if (
+    recipeIds.length ===
+    0
+  ) {
+    return {};
+  }
+
+
+  const supabase =
+    await createClient();
+
+
+  const {
+    data,
+    error,
+  } =
+    await supabase.rpc(
+      "get_recipe_rating_summaries",
+      {
+        p_recipe_ids:
+          recipeIds,
+      },
+    );
+
+
+  if (
+    error
+  ) {
+    console.error(
+      "GET RECIPE RATING SUMMARIES ERROR:",
+      error,
+    );
+
+
+    throw new Error(
+      "No se pudieron cargar las valoraciones de las recetas.",
+    );
+  }
+
+
+  const rows =
+    (
+      data ??
+      []
+    ) as RecipeRatingSummariesRow[];
+
+
+  return rows.reduce<
+    RecipeRatingSummaryMap
+  >(
+    (
+      summaries,
+      row,
+    ) => {
+      summaries[
+        row.recipe_id
+      ] = {
+        ratingCount:
+          toNumber(
+            row.rating_count,
+          ) ??
+          0,
+
+        averageRating:
+          toNumber(
+            row.average_rating,
+          ),
+      };
+
+
+      return summaries;
+    },
+    {},
+  );
 }
 
 

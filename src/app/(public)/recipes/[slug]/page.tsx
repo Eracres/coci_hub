@@ -34,6 +34,10 @@ import {
 } from "@/components/recipes/recipe-card";
 
 import {
+  RecipeCommentsSection,
+} from "@/components/recipes/recipe-comments-section";
+
+import {
   RecipeIngredients,
 } from "@/components/recipes/recipe-ingredients";
 
@@ -1021,6 +1025,13 @@ export default async function RecipePage({
               ) : null}
             </aside>
           </div>
+
+
+          <RecipeCommentsSection
+            recipeId={
+              recipe.id
+            }
+          />
 
 
           {relatedRecipes.length >

@@ -25,6 +25,9 @@ export type AdminFoodCatalogItem = {
   aliases:
     string[];
 
+  keywords:
+    string[];
+
   allergenIds:
     string[];
 };
@@ -62,6 +65,7 @@ export async function getAdminFoodCatalogData(): Promise<AdminFoodCatalogData> {
   const [
     foodItemsResult,
     aliasesResult,
+    keywordsResult,
     foodAllergensResult,
     allergensResult,
   ] =
@@ -96,6 +100,22 @@ export async function getAdminFoodCatalogData(): Promise<AdminFoodCatalogData> {
         `)
         .order(
           "alias",
+          {
+            ascending:
+              true,
+          },
+        ),
+
+      supabase
+        .from(
+          "food_keywords",
+        )
+        .select(`
+          food_item_id,
+          keyword
+        `)
+        .order(
+          "keyword",
           {
             ascending:
               true,
@@ -157,6 +177,15 @@ export async function getAdminFoodCatalogData(): Promise<AdminFoodCatalogData> {
 
 
   if (
+    keywordsResult.error
+  ) {
+    throw new Error(
+      `No se pudieron cargar las palabras clave del catálogo: ${keywordsResult.error.message}`,
+    );
+  }
+
+
+  if (
     foodAllergensResult.error
   ) {
     throw new Error(
@@ -200,6 +229,37 @@ export async function getAdminFoodCatalogData(): Promise<AdminFoodCatalogData> {
 
     aliasesByFoodItem.set(
       aliasRow.food_item_id,
+      current,
+    );
+  }
+
+
+  const keywordsByFoodItem =
+    new Map<
+      string,
+      string[]
+    >();
+
+
+  for (
+    const keywordRow
+    of keywordsResult.data ??
+      []
+  ) {
+    const current =
+      keywordsByFoodItem.get(
+        keywordRow.food_item_id,
+      ) ??
+      [];
+
+
+    current.push(
+      keywordRow.keyword,
+    );
+
+
+    keywordsByFoodItem.set(
+      keywordRow.food_item_id,
       current,
     );
   }
@@ -266,6 +326,12 @@ export async function getAdminFoodCatalogData(): Promise<AdminFoodCatalogData> {
 
           aliases:
             aliasesByFoodItem.get(
+              food.id,
+            ) ??
+            [],
+
+          keywords:
+            keywordsByFoodItem.get(
               food.id,
             ) ??
             [],

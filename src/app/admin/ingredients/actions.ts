@@ -22,6 +22,9 @@ export type SaveFoodCatalogItemInput = {
   aliases:
     string[];
 
+  keywords:
+    string[];
+
   allergenIds:
     string[];
 
@@ -111,6 +114,15 @@ function getFoodCatalogErrorMessage(
 
   if (
     message.includes(
+      "Food canonical name conflicts with an existing keyword",
+    )
+  ) {
+    return "Ese nombre ya está registrado como keyword segura de otro alimento.";
+  }
+
+
+  if (
+    message.includes(
       "Food alias conflicts with another canonical food",
     )
   ) {
@@ -129,6 +141,15 @@ function getFoodCatalogErrorMessage(
 
   if (
     message.includes(
+      "Food alias conflicts with another food keyword",
+    )
+  ) {
+    return "Uno de los alias coincide con una keyword segura de otro alimento.";
+  }
+
+
+  if (
+    message.includes(
       "Food aliases contain duplicates",
     )
   ) {
@@ -142,6 +163,51 @@ function getFoodCatalogErrorMessage(
     )
   ) {
     return "El nombre canónico no debe repetirse también como alias.";
+  }
+
+
+  if (
+    message.includes(
+      "Food keywords contain duplicates",
+    )
+  ) {
+    return "Hay keywords seguras duplicadas.";
+  }
+
+
+  if (
+    message.includes(
+      "A food keyword cannot duplicate a food alias",
+    )
+  ) {
+    return "Una keyword segura no debe repetirse también como alias.";
+  }
+
+
+  if (
+    message.includes(
+      "Food keyword conflicts with another canonical food",
+    )
+  ) {
+    return "Una keyword segura coincide con el nombre canónico de otro alimento.";
+  }
+
+
+  if (
+    message.includes(
+      "Food keyword conflicts with another food alias",
+    )
+  ) {
+    return "Una keyword segura coincide con un alias de otro alimento.";
+  }
+
+
+  if (
+    message.includes(
+      "Food keyword already belongs to another food",
+    )
+  ) {
+    return "Una keyword segura ya pertenece a otro alimento del catálogo.";
   }
 
 
@@ -186,6 +252,22 @@ export async function saveFoodCatalogItemAction(
               alias,
             ) =>
               alias.trim(),
+          )
+          .filter(
+            Boolean,
+          ),
+      ),
+    );
+
+  const keywords =
+    Array.from(
+      new Set(
+        input.keywords
+          .map(
+            (
+              keyword,
+            ) =>
+              keyword.trim(),
           )
           .filter(
             Boolean,
@@ -264,7 +346,7 @@ export async function saveFoodCatalogItemAction(
       error,
     } =
       await supabase.rpc(
-        "admin_save_food_catalog_item",
+        "admin_save_food_catalog_item_with_keywords",
         {
           p_name:
             name,
@@ -274,6 +356,9 @@ export async function saveFoodCatalogItemAction(
 
           p_aliases:
             aliases,
+
+          p_keywords:
+            keywords,
 
           p_allergen_ids:
             allergenIds,

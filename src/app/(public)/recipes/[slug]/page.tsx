@@ -34,8 +34,16 @@ import {
 } from "@/components/recipes/recipe-card";
 
 import {
+  RecipeCommentsSection,
+} from "@/components/recipes/recipe-comments-section";
+
+import {
   RecipeIngredients,
 } from "@/components/recipes/recipe-ingredients";
+
+import {
+  RecipeRatingSummary,
+} from "@/components/recipes/recipe-rating-summary";
 
 import {
   RecipeShareActions,
@@ -380,6 +388,13 @@ export default async function RecipePage({
                     }
                   </p>
                 ) : null}
+
+
+                <RecipeRatingSummary
+                  recipeId={
+                    recipe.id
+                  }
+                />
 
 
                 <div className="mt-7 grid gap-3 sm:grid-cols-3">
@@ -1010,6 +1025,13 @@ export default async function RecipePage({
               ) : null}
             </aside>
           </div>
+
+
+          <RecipeCommentsSection
+            recipeId={
+              recipe.id
+            }
+          />
 
 
           {relatedRecipes.length >

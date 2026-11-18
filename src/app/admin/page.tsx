@@ -1,6 +1,7 @@
 import {
   BookOpen,
   ChefHat,
+  MessageCircle,
   Tags,
 } from "lucide-react";
 
@@ -13,7 +14,7 @@ import {
 
 export default function AdminPage() {
   return (
-    <main className="mx-auto max-w-5xl p-8">
+    <main className="mx-auto max-w-6xl p-8">
       <header>
         <p className="text-sm font-semibold uppercase tracking-[0.14em] text-secondary-hover">
           Administración
@@ -24,12 +25,12 @@ export default function AdminPage() {
         </h1>
 
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Gestiona las recetas, la clasificación y el conocimiento alimentario que utiliza CociHub.
+          Gestiona las recetas, la clasificación, la comunidad y el conocimiento alimentario que utiliza CociHub.
         </p>
       </header>
 
 
-      <section className="mt-10 grid gap-4 md:grid-cols-3">
+      <section className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Link
           href="/admin/recipes"
           className="group rounded-2xl border border-border bg-surface p-6 shadow-sm transition hover:border-brand/40"
@@ -89,6 +90,27 @@ export default function AdminPage() {
 
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             Administra alimentos canónicos, alias y alérgenos deterministas.
+          </p>
+        </Link>
+
+
+        <Link
+          href="/admin/comments"
+          className="group rounded-2xl border border-border bg-surface p-6 shadow-sm transition hover:border-brand/40"
+        >
+          <span className="flex size-11 items-center justify-center rounded-xl bg-brand/10 text-brand">
+            <MessageCircle
+              className="size-5"
+              aria-hidden="true"
+            />
+          </span>
+
+          <h2 className="mt-5 font-serif text-xl font-bold text-foreground">
+            Comentarios
+          </h2>
+
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Modera comentarios y fotografías compartidas por la comunidad.
           </p>
         </Link>
       </section>

@@ -62,6 +62,26 @@ function createSlug(
 }
 
 
+function parseLines(
+  value:
+    string,
+) {
+  return value
+    .split(
+      "\n",
+    )
+    .map(
+      (
+        line,
+      ) =>
+        line.trim(),
+    )
+    .filter(
+      Boolean,
+    );
+}
+
+
 export function FoodCatalogEditor({
   foodItem,
   allergens,
@@ -114,6 +134,20 @@ export function FoodCatalogEditor({
     useState(
       (
         foodItem?.aliases ??
+        []
+      ).join(
+        "\n",
+      ),
+    );
+
+
+  const [
+    keywordsText,
+    setKeywordsText,
+  ] =
+    useState(
+      (
+        foodItem?.keywords ??
         []
       ).join(
         "\n",
@@ -234,19 +268,14 @@ export function FoodCatalogEditor({
 
 
     const aliases =
-      aliasesText
-        .split(
-          "\n",
-        )
-        .map(
-          (
-            alias,
-          ) =>
-            alias.trim(),
-        )
-        .filter(
-          Boolean,
-        );
+      parseLines(
+        aliasesText,
+      );
+
+    const keywords =
+      parseLines(
+        keywordsText,
+      );
 
 
     startTransition(
@@ -263,6 +292,8 @@ export function FoodCatalogEditor({
               slug,
 
               aliases,
+
+              keywords,
 
               allergenIds:
                 selectedAllergenIds,
@@ -342,7 +373,7 @@ export function FoodCatalogEditor({
           </h2>
 
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Gestiona el nombre que CociHub reconoce, sus alias exactos y los alérgenos deterministas asociados.
+            Gestiona el nombre que CociHub reconoce, sus alias exactos, sus keywords seguras y los alérgenos deterministas asociados.
           </p>
         </div>
       </div>
@@ -381,7 +412,7 @@ export function FoodCatalogEditor({
                 }
               }
               className="min-h-11 w-full rounded-xl border border-border bg-page px-3 text-sm text-foreground outline-none transition focus:border-brand"
-              placeholder="Ej. Harina de trigo"
+              placeholder="Ej. Mascarpone"
               required
             />
           </label>
@@ -418,7 +449,7 @@ export function FoodCatalogEditor({
                   }
                 }
                 className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-page px-3 text-sm text-foreground outline-none transition focus:border-brand"
-                placeholder="harina-de-trigo"
+                placeholder="mascarpone"
                 required
               />
 
@@ -476,14 +507,48 @@ export function FoodCatalogEditor({
               }
             }
             rows={
-              6
+              5
             }
             className="w-full rounded-xl border border-border bg-page px-3 py-3 text-sm text-foreground outline-none transition focus:border-brand"
-            placeholder={"harina trigo\nharina de trigo común\nharina de trigo comun"}
+            placeholder={"queso mascarpone italiano\nmascarpone italiano"}
           />
 
           <p className="text-xs leading-5 text-muted-foreground">
-            Un alias por línea. Las coincidencias siguen siendo exactas después de la normalización segura de CociHub.
+            Un alias por línea. Los alias solo coinciden cuando el ingrediente completo coincide exactamente tras la normalización.
+          </p>
+        </label>
+
+
+        <label className="block space-y-2">
+          <span className="text-sm font-semibold text-foreground">
+            Keywords seguras
+          </span>
+
+          <textarea
+            value={
+              keywordsText
+            }
+            disabled={
+              isPending
+            }
+            onChange={
+              (
+                event,
+              ) => {
+                setKeywordsText(
+                  event.target.value,
+                );
+              }
+            }
+            rows={
+              5
+            }
+            className="w-full rounded-xl border border-border bg-page px-3 py-3 text-sm text-foreground outline-none transition focus:border-brand"
+            placeholder={"mascarpone"}
+          />
+
+          <p className="text-xs leading-5 text-muted-foreground">
+            Una keyword o frase por línea. Úsalas solo cuando sean términos inequívocos que puedan reconocerse dentro de un ingrediente más largo. Evita palabras genéricas como queso, leche, crema, harina, pan o nata.
           </p>
         </label>
 

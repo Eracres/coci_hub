@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element */
+
 "use client";
 
 import {
@@ -34,6 +36,17 @@ import type {
 type AdminRecipeCommentsPanelProps = {
   comments:
     AdminRecipeComment[];
+};
+
+
+type AdminMessage = {
+  type:
+    "success" |
+    "warning" |
+    "error";
+
+  text:
+    string;
 };
 
 
@@ -101,14 +114,7 @@ export function AdminRecipeCommentsPanel({
     setMessage,
   ] =
     useState<
-      {
-        type:
-          "success" |
-          "error";
-
-        text:
-          string;
-      } |
+      AdminMessage |
       null
     >(
       null,
@@ -183,7 +189,10 @@ export function AdminRecipeCommentsPanel({
   ) {
     const confirmed =
       window.confirm(
-        "Esta acción eliminará el comentario definitivamente. ¿Quieres continuar?",
+        comment.images.length >
+        0
+          ? "Esta acción eliminará definitivamente el comentario y sus fotografías. ¿Quieres continuar?"
+          : "Esta acción eliminará el comentario definitivamente. ¿Quieres continuar?",
       );
 
 
@@ -210,9 +219,11 @@ export function AdminRecipeCommentsPanel({
 
         setMessage({
           type:
-            result.success
-              ? "success"
-              : "error",
+            !result.success
+              ? "error"
+              : result.warning
+                ? "warning"
+                : "success",
 
           text:
             result.message,
@@ -279,7 +290,10 @@ export function AdminRecipeCommentsPanel({
             message.type ===
             "success"
               ? "mt-6 rounded-2xl border border-secondary/25 bg-secondary/10 px-4 py-3 text-sm font-medium text-secondary-hover"
-              : "mt-6 rounded-2xl border border-error/25 bg-error/5 px-4 py-3 text-sm font-medium text-error"
+              : message.type ===
+                  "warning"
+                ? "mt-6 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm font-medium text-warning"
+                : "mt-6 rounded-2xl border border-error/25 bg-error/5 px-4 py-3 text-sm font-medium text-error"
           }
         >
           {
@@ -358,6 +372,17 @@ export function AdminRecipeCommentsPanel({
                           Editado
                         </span>
                       ) : null}
+
+
+                      {comment.images.length >
+                      0 ? (
+                        <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-brand">
+                          {comment.images.length ===
+                          1
+                            ? "1 foto"
+                            : `${comment.images.length} fotos`}
+                        </span>
+                      ) : null}
                     </div>
 
 
@@ -393,6 +418,49 @@ export function AdminRecipeCommentsPanel({
                     </div>
 
 
+                    {comment.images.length >
+                    0 ? (
+                      <div className="mt-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                          Fotografías del comentario
+                        </p>
+
+                        <div className="mt-3 grid max-w-3xl gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {comment.images.map(
+                            (
+                              image,
+                              imageIndex,
+                            ) => (
+                              <a
+                                key={
+                                  image.path
+                                }
+                                href={
+                                  image.url
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                                className="group relative block overflow-hidden rounded-2xl border border-border bg-page-muted"
+                              >
+                                <img
+                                  src={
+                                    image.url
+                                  }
+                                  alt={`Foto ${imageIndex + 1} del comentario de ${comment.authorDisplayName}`}
+                                  className="aspect-square w-full object-cover transition duration-200 group-hover:scale-[1.02]"
+                                />
+
+                                <span className="absolute bottom-2 right-2 rounded-full bg-black/70 px-2 py-1 text-[11px] font-semibold text-white">
+                                  Ampliar
+                                </span>
+                              </a>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
+
+
                     <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
                       <span className="font-medium text-muted-foreground">
                         Receta:
@@ -405,6 +473,20 @@ export function AdminRecipeCommentsPanel({
                         {
                           comment.recipeTitle
                         }
+
+                        <ExternalLink
+                          className="size-3.5"
+                          aria-hidden="true"
+                        />
+                      </Link>
+
+
+                      <Link
+                        href={`/recipes/${comment.recipeSlug}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1.5 font-medium text-muted-foreground transition hover:text-brand"
+                      >
+                        Ver receta pública
 
                         <ExternalLink
                           className="size-3.5"

@@ -18,6 +18,9 @@ export type AdminCommentActionResult = {
   success:
     boolean;
 
+  warning?:
+    boolean;
+
   message:
     string;
 };
@@ -166,9 +169,10 @@ export async function deleteAdminRecipeCommentAction(
 
 
   try {
-    await deleteAdminRecipeComment(
-      commentId,
-    );
+    const result =
+      await deleteAdminRecipeComment(
+        commentId,
+      );
 
 
     revalidateCommentPaths(
@@ -176,12 +180,37 @@ export async function deleteAdminRecipeCommentAction(
     );
 
 
+    if (
+      result.storageCleanupFailed
+    ) {
+      return {
+        success:
+          true,
+
+        warning:
+          true,
+
+        message:
+          result.deletedImageCount ===
+          1
+            ? "Comentario eliminado, pero no se pudo limpiar su imagen de Storage."
+            : `Comentario eliminado, pero no se pudieron limpiar sus ${result.deletedImageCount} imágenes de Storage.`,
+      };
+    }
+
+
     return {
       success:
         true,
 
+      warning:
+        false,
+
       message:
-        "Comentario eliminado definitivamente.",
+        result.deletedImageCount >
+        0
+          ? "Comentario e imágenes eliminados definitivamente."
+          : "Comentario eliminado definitivamente.",
     };
 
   } catch (

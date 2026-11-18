@@ -3,6 +3,31 @@ import {
 } from "@/lib/supabase/server";
 
 
+const RECIPE_COMMENT_IMAGES_BUCKET =
+  "recipe-comment-images";
+
+const COMMENT_IMAGE_URL_TTL_SECONDS =
+  60 * 60;
+
+
+export type RecipeCommentImage = {
+  path:
+    string;
+
+  url:
+    string;
+};
+
+
+export type RecipeCommentImageUpload = {
+  path:
+    string;
+
+  token:
+    string;
+};
+
+
 export type RecipeComment = {
   id:
     string;
@@ -18,6 +43,9 @@ export type RecipeComment = {
 
   body:
     string;
+
+  images:
+    RecipeCommentImage[];
 
   createdAt:
     string;
@@ -55,6 +83,9 @@ type RecipeCommentRow = {
   body:
     string;
 
+  image_paths:
+    string[];
+
   created_at:
     string;
 
@@ -64,6 +95,28 @@ type RecipeCommentRow = {
   is_own:
     boolean | null;
 };
+
+
+function getImageExtension(
+  mimeType:
+    string,
+) {
+  switch (
+    mimeType
+  ) {
+    case "image/jpeg":
+      return "jpg";
+
+    case "image/png":
+      return "png";
+
+    case "image/webp":
+      return "webp";
+
+    default:
+      return null;
+  }
+}
 
 
 /* =========================================================
@@ -128,6 +181,74 @@ export async function getRecipeComments(
     ) as RecipeCommentRow[];
 
 
+  const imagePaths =
+    Array.from(
+      new Set(
+        rows.flatMap(
+          (
+            row,
+          ) =>
+            row.image_paths ??
+            [],
+        ),
+      ),
+    );
+
+
+  const signedUrlByPath =
+    new Map<
+      string,
+      string
+    >();
+
+
+  if (
+    imagePaths.length >
+    0
+  ) {
+    const {
+      data:
+        signedImages,
+      error:
+        signedImagesError,
+    } =
+      await supabase.storage
+        .from(
+          RECIPE_COMMENT_IMAGES_BUCKET,
+        )
+        .createSignedUrls(
+          imagePaths,
+          COMMENT_IMAGE_URL_TTL_SECONDS,
+        );
+
+
+    if (
+      signedImagesError
+    ) {
+      console.error(
+        "GET RECIPE COMMENT IMAGE URLS ERROR:",
+        signedImagesError,
+      );
+    } else {
+      signedImages?.forEach(
+        (
+          image,
+        ) => {
+          if (
+            image.path &&
+            image.signedUrl
+          ) {
+            signedUrlByPath.set(
+              image.path,
+              image.signedUrl,
+            );
+          }
+        },
+      );
+    }
+  }
+
+
   return {
     comments:
       rows.map(
@@ -148,6 +269,42 @@ export async function getRecipeComments(
 
           body:
             row.body,
+
+          images:
+            (
+              row.image_paths ??
+              []
+            )
+              .map(
+                (
+                  path,
+                ) => {
+                  const url =
+                    signedUrlByPath.get(
+                      path,
+                    );
+
+
+                  if (
+                    !url
+                  ) {
+                    return null;
+                  }
+
+
+                  return {
+                    path,
+                    url,
+                  };
+                },
+              )
+              .filter(
+                (
+                  image,
+                ): image is RecipeCommentImage =>
+                  image !==
+                  null,
+              ),
 
           createdAt:
             row.created_at,
@@ -206,6 +363,183 @@ export async function addRecipeComment(
 
 
   return data as string;
+}
+
+
+/* =========================================================
+   CREATE SIGNED IMAGE UPLOAD
+========================================================= */
+
+export async function createRecipeCommentImageUpload(
+  commentId:
+    string,
+
+  mimeType:
+    string,
+): Promise<RecipeCommentImageUpload> {
+  const extension =
+    getImageExtension(
+      mimeType,
+    );
+
+
+  if (
+    !extension
+  ) {
+    throw new Error(
+      "Invalid image type",
+    );
+  }
+
+
+  const supabase =
+    await createClient();
+
+
+  const {
+    data:
+      claimsData,
+
+    error:
+      claimsError,
+  } =
+    await supabase.auth.getClaims();
+
+
+  const userId =
+    claimsData
+      ?.claims
+      ?.sub;
+
+
+  if (
+    claimsError ||
+    !userId
+  ) {
+    throw new Error(
+      "Not authenticated",
+    );
+  }
+
+
+  const imagePath =
+    `${userId}/${commentId}/${crypto.randomUUID()}.${extension}`;
+
+
+  const {
+    data,
+    error,
+  } =
+    await supabase.storage
+      .from(
+        RECIPE_COMMENT_IMAGES_BUCKET,
+      )
+      .createSignedUploadUrl(
+        imagePath,
+      );
+
+
+  if (
+    error
+  ) {
+    throw error;
+  }
+
+
+  if (
+    !data?.token
+  ) {
+    throw new Error(
+      "Signed upload token was not returned",
+    );
+  }
+
+
+  return {
+    path:
+      imagePath,
+
+    token:
+      data.token,
+  };
+}
+
+
+/* =========================================================
+   REMOVE COMMENT IMAGES
+========================================================= */
+
+export async function removeRecipeCommentImages(
+  imagePaths:
+    string[],
+) {
+  if (
+    imagePaths.length ===
+    0
+  ) {
+    return;
+  }
+
+
+  const supabase =
+    await createClient();
+
+
+  const {
+    error,
+  } =
+    await supabase.storage
+      .from(
+        RECIPE_COMMENT_IMAGES_BUCKET,
+      )
+      .remove(
+        imagePaths,
+      );
+
+
+  if (
+    error
+  ) {
+    throw error;
+  }
+}
+
+
+/* =========================================================
+   SET COMMENT IMAGES
+========================================================= */
+
+export async function setRecipeCommentImages(
+  commentId:
+    string,
+
+  imagePaths:
+    string[],
+) {
+  const supabase =
+    await createClient();
+
+
+  const {
+    error,
+  } =
+    await supabase.rpc(
+      "set_recipe_comment_images",
+      {
+        p_comment_id:
+          commentId,
+
+        p_image_paths:
+          imagePaths,
+      },
+    );
+
+
+  if (
+    error
+  ) {
+    throw error;
+  }
 }
 
 

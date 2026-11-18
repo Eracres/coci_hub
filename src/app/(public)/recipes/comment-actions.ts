@@ -6,7 +6,10 @@ import {
 
 import {
   addRecipeComment,
+  createRecipeCommentImageUpload,
   deleteRecipeComment,
+  removeRecipeCommentImages,
+  setRecipeCommentImages,
   updateRecipeComment,
 } from "@/services/recipes/recipe-comment-service";
 
@@ -17,7 +20,33 @@ export type RecipeCommentActionResult = {
 
   message:
     string;
+
+  commentId?:
+    string;
 };
+
+
+export type RecipeCommentImageUploadActionResult = {
+  success:
+    boolean;
+
+  message:
+    string;
+
+  path?:
+    string;
+
+  token?:
+    string;
+};
+
+
+const ALLOWED_IMAGE_TYPES =
+  new Set([
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+  ]);
 
 
 function normalizeCommentBody(
@@ -82,7 +111,7 @@ function getCommentErrorMessage(
       "22023",
     )
   ) {
-    return "El comentario no es válido.";
+    return "Los datos enviados no son válidos.";
   }
 
 
@@ -127,10 +156,11 @@ export async function addRecipeCommentAction(
 
 
   try {
-    await addRecipeComment(
-      recipeId,
-      normalizedBody,
-    );
+    const commentId =
+      await addRecipeComment(
+        recipeId,
+        normalizedBody,
+      );
 
 
     return {
@@ -139,6 +169,8 @@ export async function addRecipeCommentAction(
 
       message:
         "Comentario publicado.",
+
+      commentId,
     };
 
   } catch (
@@ -146,6 +178,301 @@ export async function addRecipeCommentAction(
   ) {
     console.error(
       "ADD RECIPE COMMENT ERROR:",
+      error,
+    );
+
+
+    return {
+      success:
+        false,
+
+      message:
+        getCommentErrorMessage(
+          error,
+        ),
+    };
+  }
+}
+
+
+/* =========================================================
+   CREATE SIGNED IMAGE UPLOAD
+========================================================= */
+
+export async function createRecipeCommentImageUploadAction(
+  commentId:
+    string,
+
+  mimeType:
+    string,
+): Promise<RecipeCommentImageUploadActionResult> {
+  const normalizedCommentId =
+    commentId.trim();
+
+
+  if (
+    !normalizedCommentId
+  ) {
+    return {
+      success:
+        false,
+
+      message:
+        "El comentario no es válido.",
+    };
+  }
+
+
+  if (
+    !ALLOWED_IMAGE_TYPES.has(
+      mimeType,
+    )
+  ) {
+    return {
+      success:
+        false,
+
+      message:
+        "La foto debe ser JPG, PNG o WebP.",
+    };
+  }
+
+
+  try {
+    const upload =
+      await createRecipeCommentImageUpload(
+        normalizedCommentId,
+        mimeType,
+      );
+
+
+    return {
+      success:
+        true,
+
+      message:
+        "Subida preparada.",
+
+      path:
+        upload.path,
+
+      token:
+        upload.token,
+    };
+
+  } catch (
+    error
+  ) {
+    console.error(
+      "CREATE RECIPE COMMENT IMAGE UPLOAD ERROR:",
+      error,
+    );
+
+
+    return {
+      success:
+        false,
+
+      message:
+        getCommentErrorMessage(
+          error,
+        ),
+    };
+  }
+}
+
+
+/* =========================================================
+   REMOVE COMMENT IMAGES
+========================================================= */
+
+export async function removeRecipeCommentImagesAction(
+  imagePaths:
+    string[],
+): Promise<RecipeCommentActionResult> {
+  const normalizedImagePaths =
+    imagePaths
+      .map(
+        (
+          imagePath,
+        ) =>
+          imagePath.trim(),
+      )
+      .filter(
+        Boolean,
+      );
+
+
+  if (
+    normalizedImagePaths.length ===
+    0
+  ) {
+    return {
+      success:
+        true,
+
+      message:
+        "No hay fotos que eliminar.",
+    };
+  }
+
+
+  if (
+    normalizedImagePaths.length >
+    3
+  ) {
+    return {
+      success:
+        false,
+
+      message:
+        "La petición contiene demasiadas fotos.",
+    };
+  }
+
+
+  try {
+    await removeRecipeCommentImages(
+      normalizedImagePaths,
+    );
+
+
+    return {
+      success:
+        true,
+
+      message:
+        "Fotos eliminadas.",
+    };
+
+  } catch (
+    error
+  ) {
+    console.error(
+      "REMOVE RECIPE COMMENT IMAGES ERROR:",
+      error,
+    );
+
+
+    return {
+      success:
+        false,
+
+      message:
+        getCommentErrorMessage(
+          error,
+        ),
+    };
+  }
+}
+
+
+/* =========================================================
+   SET COMMENT IMAGES
+========================================================= */
+
+export async function setRecipeCommentImagesAction(
+  commentId:
+    string,
+
+  imagePaths:
+    string[],
+): Promise<RecipeCommentActionResult> {
+  const normalizedCommentId =
+    commentId.trim();
+
+
+  if (
+    !normalizedCommentId
+  ) {
+    return {
+      success:
+        false,
+
+      message:
+        "El comentario no es válido.",
+    };
+  }
+
+
+  if (
+    imagePaths.length >
+    3
+  ) {
+    return {
+      success:
+        false,
+
+      message:
+        "Puedes adjuntar un máximo de 3 fotos.",
+    };
+  }
+
+
+  const normalizedImagePaths =
+    imagePaths.map(
+      (
+        imagePath,
+      ) =>
+        imagePath.trim(),
+    );
+
+
+  if (
+    normalizedImagePaths.some(
+      (
+        imagePath,
+      ) =>
+        imagePath.length ===
+        0,
+    )
+  ) {
+    return {
+      success:
+        false,
+
+      message:
+        "Una de las imágenes no es válida.",
+    };
+  }
+
+
+  if (
+    new Set(
+      normalizedImagePaths,
+    ).size !==
+    normalizedImagePaths.length
+  ) {
+    return {
+      success:
+        false,
+
+      message:
+        "Hay imágenes duplicadas.",
+    };
+  }
+
+
+  try {
+    await setRecipeCommentImages(
+      normalizedCommentId,
+      normalizedImagePaths,
+    );
+
+
+    return {
+      success:
+        true,
+
+      message:
+        "Fotos guardadas.",
+    };
+
+  } catch (
+    error
+  ) {
+    console.error(
+      "SET RECIPE COMMENT IMAGES ERROR:",
       error,
     );
 

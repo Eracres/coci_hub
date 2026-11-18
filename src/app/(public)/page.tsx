@@ -5,8 +5,9 @@ import {
   BookOpen,
   ChefHat,
   Clock3,
+  Grid2X2,
   Sparkles,
-  Users,
+  UsersRound,
 } from "lucide-react";
 
 import {
@@ -20,6 +21,10 @@ import {
 import {
   RecipeCard,
 } from "@/components/recipes/recipe-card";
+
+import {
+  RecipeSearchAutocomplete,
+} from "@/components/recipes/recipe-search-autocomplete";
 
 import {
   getPublicCategories,
@@ -133,247 +138,265 @@ export default async function HomePage() {
 
   return (
     <main className="overflow-hidden">
-      <section className="relative border-b border-border">
+
+      {/* ===================================================
+          HERO
+      =================================================== */}
+
+      <section className="relative border-b border-border bg-page">
+
+        {/* Future:
+            estos laterales podrán alojar imágenes temáticas
+            configurables desde Administración.
+        */}
+
         <div
-          className="pointer-events-none absolute -right-28 -top-28 size-80 rounded-full bg-brand/10 blur-3xl"
+          className="pointer-events-none absolute -left-40 top-16 size-80 rounded-full bg-secondary/15 blur-3xl"
           aria-hidden="true"
         />
 
         <div
-          className="pointer-events-none absolute -bottom-32 -left-32 size-80 rounded-full bg-secondary/20 blur-3xl"
+          className="pointer-events-none absolute -right-40 top-10 size-96 rounded-full bg-brand/10 blur-3xl"
           aria-hidden="true"
         />
 
-        <Container className="relative py-16 md:py-24 lg:py-28">
-          <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)] lg:gap-16">
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand/10 px-4 py-2 text-sm font-semibold text-brand">
-                <Sparkles
-                  className="size-4"
-                  aria-hidden="true"
-                />
+        <Container className="relative py-16 md:py-20 lg:py-24">
 
-                Tu rincón para cocinar,
-                aprender y compartir
-              </div>
+          <div className="mx-auto max-w-5xl text-center">
 
+            {/* =================================================
+                BADGE
+            ================================================= */}
 
-              <h1 className="mt-7 font-serif text-5xl font-bold leading-[1.02] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-                Coci
-                <span className="text-brand">
-                  Hub
-                </span>
-              </h1>
-
-
-              <p className="mt-6 max-w-2xl font-serif text-2xl leading-relaxed text-secondary-hover md:text-3xl">
-                Comer es un placer,
-                cocinar un privilegio,
-                enseñar una
-                responsabilidad.
-              </p>
-
-
-              <p className="mt-6 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
-                Descubre recetas
-                caseras, adapta las
-                cantidades a tu mesa
-                y conserva esas ideas
-                que merecen seguir
-                pasando de cocina en
-                cocina.
-              </p>
-
-
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Link
-                  href="/recipes"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-6 font-semibold text-inverse shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-md"
-                >
-                  Explorar recetas
-
-                  <ArrowRight
-                    className="size-4"
-                    aria-hidden="true"
-                  />
-                </Link>
-
-
-                <Link
-                  href="/categories"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-6 font-semibold text-foreground shadow-xs transition duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-page-muted"
-                >
-                  <BookOpen
-                    className="size-4 text-secondary-hover"
-                    aria-hidden="true"
-                  />
-
-                  Ver categorías
-                </Link>
-              </div>
-            </div>
-
-
-            <div className="relative">
-              <div
-                className="absolute -inset-4 rounded-[2rem] bg-secondary/10 blur-2xl"
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand/10 px-4 py-2 text-sm font-semibold text-brand">
+              <Sparkles
+                className="size-4"
                 aria-hidden="true"
               />
 
-              <div className="relative overflow-hidden rounded-3xl border border-border bg-surface shadow-lg">
-                <div className="border-b border-border bg-page-muted px-6 py-5 md:px-8">
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-11 items-center justify-center rounded-xl bg-brand text-inverse shadow-sm">
-                      <ChefHat
-                        className="size-5"
-                        aria-hidden="true"
-                      />
-                    </span>
-
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
-                        CociHub
-                      </p>
-
-                      <p className="mt-1 text-sm font-medium text-foreground">
-                        Cocina sin
-                        complicaciones
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              Tu rincón para cocinar, aprender y compartir
+            </div>
 
 
-                <div className="p-6 md:p-8">
-                  <h2 className="font-serif text-3xl font-bold leading-tight text-foreground">
-                    Recetas pensadas
-                    para cocinar de
-                    verdad
-                  </h2>
+            {/* =================================================
+                BRAND
+            ================================================= */}
+
+            <h1 className="mt-7 font-serif text-6xl font-bold leading-none tracking-tight text-foreground sm:text-7xl lg:text-8xl">
+              Coci
+              <span className="text-brand">
+                Hub
+              </span>
+            </h1>
 
 
-                  <p className="mt-4 leading-7 text-muted-foreground">
-                    Toda la información
-                    importante de una
-                    receta organizada de
-                    forma clara para que
-                    puedas centrarte en
-                    disfrutar cocinando.
+            {/* =================================================
+                MAIN MESSAGE
+            ================================================= */}
+
+            <p className="mx-auto mt-6 max-w-4xl font-serif text-2xl leading-relaxed text-secondary-hover sm:text-3xl md:text-4xl">
+              Comer es un placer, cocinar un privilegio,
+              enseñar una responsabilidad.
+            </p>
+
+
+            <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-muted-foreground sm:text-lg">
+              Descubre recetas caseras, adapta las cantidades
+              a tu mesa y conserva esas ideas que merecen
+              seguir pasando de cocina en cocina.
+            </p>
+
+
+            {/* =================================================
+                PRIMARY ACTIONS
+            ================================================= */}
+
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link
+                href="/recipes"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-6 font-semibold text-inverse shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-md"
+              >
+                Explorar recetas
+
+                <ArrowRight
+                  className="size-4"
+                  aria-hidden="true"
+                />
+              </Link>
+
+
+              <Link
+                href="/categories"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-6 font-semibold text-foreground shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-page-muted"
+              >
+                <BookOpen
+                  className="size-4 text-secondary-hover"
+                  aria-hidden="true"
+                />
+
+                Ver categorías
+              </Link>
+            </div>
+
+
+            {/* =================================================
+                SEARCH
+            ================================================= */}
+
+            <RecipeSearchAutocomplete />
+          </div>
+
+
+          {/* =================================================
+              FEATURE CARDS
+          ================================================= */}
+
+          <div className="mx-auto mt-12 grid max-w-6xl gap-4 md:grid-cols-3">
+
+            <div className="flex items-center gap-4 rounded-2xl border border-border bg-surface/90 p-5 text-left shadow-sm">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand">
+                <BookOpen
+                  className="size-5"
+                  aria-hidden="true"
+                />
+              </span>
+
+              <div>
+                <h2 className="font-serif text-lg font-bold text-foreground">
+                  Recetas claras
+                </h2>
+
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Ingredientes y pasos ordenados para cocinar sin perderte.
+                </p>
+              </div>
+            </div>
+
+
+            <div className="flex items-center gap-4 rounded-2xl border border-border bg-surface/90 p-5 text-left shadow-sm">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-secondary/20 text-secondary-hover">
+                <Grid2X2
+                  className="size-5"
+                  aria-hidden="true"
+                />
+              </span>
+
+              <div>
+                <h2 className="font-serif text-lg font-bold text-foreground">
+                  Categorías útiles
+                </h2>
+
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Encuentra fácilmente recetas según tus gustos y el momento.
+                </p>
+              </div>
+            </div>
+
+
+            <div className="flex items-center gap-4 rounded-2xl border border-border bg-surface/90 p-5 text-left shadow-sm">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-accent/20 text-warning">
+                <UsersRound
+                  className="size-5"
+                  aria-hidden="true"
+                />
+              </span>
+
+              <div>
+                <h2 className="font-serif text-lg font-bold text-foreground">
+                  Comunidad activa
+                </h2>
+
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Comparte tus recetas, comenta y aprende de otras personas.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+
+          {/* =================================================
+              REAL STATS
+          ================================================= */}
+
+          <div className="mx-auto mt-8 grid max-w-6xl overflow-hidden rounded-2xl border border-secondary/20 bg-secondary/10 md:grid-cols-3">
+
+            <div className="flex items-center justify-center gap-4 px-6 py-5">
+              <ChefHat
+                className="size-5 shrink-0 text-secondary-hover"
+                aria-hidden="true"
+              />
+
+              <div className="text-left">
+                <p className="font-serif text-2xl font-bold text-foreground">
+                  {
+                    recipes.length
+                  }
+                </p>
+
+                <p className="text-xs text-muted-foreground">
+                  {recipes.length ===
+                  1
+                    ? "receta publicada"
+                    : "recetas publicadas"}
+                </p>
+              </div>
+            </div>
+
+
+            <div className="border-t border-secondary/20 md:border-l md:border-t-0">
+              <div className="flex items-center justify-center gap-4 px-6 py-5">
+                <Grid2X2
+                  className="size-5 shrink-0 text-secondary-hover"
+                  aria-hidden="true"
+                />
+
+                <div className="text-left">
+                  <p className="font-serif text-2xl font-bold text-foreground">
+                    {
+                      activeCategories.length
+                    }
                   </p>
 
-
-                  <div className="mt-7 space-y-3">
-                    <div className="flex items-center gap-4 rounded-2xl border border-border bg-page px-4 py-3.5">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary/20 text-secondary-hover">
-                        <Users
-                          className="size-5"
-                          aria-hidden="true"
-                        />
-                      </span>
-
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          Raciones
-                          adaptables
-                        </p>
-
-                        <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-                          Ajusta cantidades
-                          según tus
-                          comensales.
-                        </p>
-                      </div>
-                    </div>
-
-
-                    <div className="flex items-center gap-4 rounded-2xl border border-border bg-page px-4 py-3.5">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
-                        <BookOpen
-                          className="size-5"
-                          aria-hidden="true"
-                        />
-                      </span>
-
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          Elaboraciones
-                          claras
-                        </p>
-
-                        <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-                          Ingredientes y
-                          pasos ordenados
-                          para cocinar sin
-                          perderte.
-                        </p>
-                      </div>
-                    </div>
-
-
-                    <div className="flex items-center gap-4 rounded-2xl border border-border bg-page px-4 py-3.5">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent/20 text-warning">
-                        <Clock3
-                          className="size-5"
-                          aria-hidden="true"
-                        />
-                      </span>
-
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          Todo de un
-                          vistazo
-                        </p>
-
-                        <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-                          Tiempos,
-                          dificultad y
-                          datos útiles
-                          antes de empezar.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-
-                  <div className="mt-7 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl bg-page-muted p-4">
-                      <div className="font-serif text-3xl font-bold text-foreground">
-                        {
-                          recipes.length
-                        }
-                      </div>
-
-                      <div className="mt-1 text-xs leading-5 text-muted-foreground">
-                        {recipes.length ===
-                        1
-                          ? "receta publicada"
-                          : "recetas publicadas"}
-                      </div>
-                    </div>
-
-
-                    <div className="rounded-2xl bg-page-muted p-4">
-                      <div className="font-serif text-3xl font-bold text-foreground">
-                        {
-                          activeCategories.length
-                        }
-                      </div>
-
-                      <div className="mt-1 text-xs leading-5 text-muted-foreground">
-                        {activeCategories.length ===
-                        1
-                          ? "categoría activa"
-                          : "categorías activas"}
-                      </div>
-                    </div>
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {activeCategories.length ===
+                    1
+                      ? "categoría activa"
+                      : "categorías activas"}
+                  </p>
                 </div>
               </div>
             </div>
+
+
+            <div className="border-t border-secondary/20 md:border-l md:border-t-0">
+              <div className="flex items-center justify-center gap-4 px-6 py-5">
+                <UsersRound
+                  className="size-5 shrink-0 text-secondary-hover"
+                  aria-hidden="true"
+                />
+
+                <div className="text-left">
+                  <p className="font-serif text-xl font-bold text-foreground">
+                    Comunidad
+                  </p>
+
+                  <p className="text-xs text-muted-foreground">
+                    abierta para compartir
+                  </p>
+                </div>
+              </div>
+            </div>
+
           </div>
+
         </Container>
       </section>
 
+
+      {/* ===================================================
+          FEATURED RECIPES
+      =================================================== */}
 
       {featuredRecipes.length >
       0 ? (
@@ -390,10 +413,7 @@ export default async function HomePage() {
                 </h2>
 
                 <p className="mt-3 leading-7 text-muted-foreground">
-                  Una selección de
-                  recetas que merece la
-                  pena tener siempre a
-                  mano.
+                  Una selección de recetas que merece la pena tener siempre a mano.
                 </p>
               </div>
 
@@ -433,6 +453,10 @@ export default async function HomePage() {
       ) : null}
 
 
+      {/* ===================================================
+          CATEGORIES
+      =================================================== */}
+
       {visibleCategories.length >
       0 ? (
         <section className="border-y border-border bg-page-muted/60 py-16 md:py-20">
@@ -440,8 +464,7 @@ export default async function HomePage() {
             <div className="flex flex-wrap items-end justify-between gap-5">
               <div className="max-w-2xl">
                 <p className="text-sm font-semibold uppercase tracking-[0.16em] text-secondary-hover">
-                  Encuentra tu próxima
-                  receta
+                  Encuentra tu próxima receta
                 </p>
 
                 <h2 className="mt-2 font-serif text-3xl font-bold text-foreground md:text-4xl">
@@ -449,11 +472,7 @@ export default async function HomePage() {
                 </h2>
 
                 <p className="mt-3 leading-7 text-muted-foreground">
-                  Navega por estilos,
-                  momentos y tipos de
-                  cocina para encontrar
-                  justo lo que te
-                  apetece.
+                  Navega por estilos, momentos y tipos de cocina para encontrar justo lo que te apetece.
                 </p>
               </div>
 
@@ -493,6 +512,10 @@ export default async function HomePage() {
       ) : null}
 
 
+      {/* ===================================================
+          LATEST RECIPES
+      =================================================== */}
+
       {latestRecipes.length >
       0 ? (
         <section className="bg-page py-16 md:py-20">
@@ -515,9 +538,7 @@ export default async function HomePage() {
                 </h2>
 
                 <p className="mt-3 leading-7 text-muted-foreground">
-                  Las incorporaciones
-                  más recientes a la
-                  cocina de CociHub.
+                  Las incorporaciones más recientes a la cocina de CociHub.
                 </p>
               </div>
 
@@ -557,6 +578,10 @@ export default async function HomePage() {
       ) : null}
 
 
+      {/* ===================================================
+          EMPTY STATE
+      =================================================== */}
+
       {!hasRecipes ? (
         <section className="py-16 md:py-20">
           <Container>
@@ -569,16 +594,12 @@ export default async function HomePage() {
               </span>
 
               <h2 className="mt-5 font-serif text-3xl font-bold text-foreground">
-                La cocina está a punto
-                de empezar
+                La cocina está a punto de empezar
               </h2>
 
 
               <p className="mx-auto mt-4 max-w-xl leading-7 text-muted-foreground">
-                Todavía no hay recetas
-                publicadas. Cuando
-                llegue la primera,
-                aparecerá aquí.
+                Todavía no hay recetas publicadas. Cuando llegue la primera, aparecerá aquí.
               </p>
             </div>
           </Container>
@@ -586,10 +607,15 @@ export default async function HomePage() {
       ) : null}
 
 
+      {/* ===================================================
+          COMMUNITY CTA
+      =================================================== */}
+
       {hasRecipes ? (
-        <section className="px-0 py-16 md:py-20">
+        <section className="py-16 md:py-20">
           <Container>
             <div className="relative overflow-hidden rounded-3xl bg-secondary-hover px-6 py-12 text-center text-inverse shadow-lg md:px-12 md:py-14">
+
               <div
                 className="absolute -right-16 -top-20 size-64 rounded-full bg-white/10 blur-3xl"
                 aria-hidden="true"
@@ -600,43 +626,50 @@ export default async function HomePage() {
                 aria-hidden="true"
               />
 
+
               <div className="relative">
                 <p className="text-sm font-semibold uppercase tracking-[0.16em] text-accent">
-                  ¿Qué cocinamos hoy?
+                  De cocina en cocina
                 </p>
 
 
-                <h2 className="mx-auto mt-3 max-w-2xl font-serif text-3xl font-bold md:text-4xl">
-                  Encuentra una receta
-                  y adapta las raciones
-                  a tu mesa
+                <h2 className="mx-auto mt-3 max-w-3xl font-serif text-3xl font-bold md:text-4xl">
+                  ¿Tienes una receta que merece seguir pasando de una mesa a otra?
                 </h2>
 
 
-                <p className="mx-auto mt-4 max-w-xl leading-7 text-white/80">
-                  Busca por nombre,
-                  categoría,
-                  dificultad,
-                  etiqueta o tiempo.
+                <p className="mx-auto mt-4 max-w-2xl leading-7 text-white/80">
+                  Comparte tus recetas, descubre las de otras personas y ayuda a que las buenas ideas sigan creciendo dentro de CociHub.
                 </p>
 
 
-                <Link
-                  href="/recipes"
-                  className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-6 font-semibold text-inverse shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-md"
-                >
-                  Buscar recetas
+                <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                  <Link
+                    href="/mi-cocihub/recetas/nueva"
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand px-6 font-semibold text-inverse shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-md"
+                  >
+                    Compartir una receta
 
-                  <ArrowRight
-                    className="size-4"
-                    aria-hidden="true"
-                  />
-                </Link>
+                    <ArrowRight
+                      className="size-4"
+                      aria-hidden="true"
+                    />
+                  </Link>
+
+
+                  <Link
+                    href="/recipes"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/25 bg-white/10 px-6 font-semibold text-white transition hover:bg-white/15"
+                  >
+                    Explorar la comunidad
+                  </Link>
+                </div>
               </div>
             </div>
           </Container>
         </section>
       ) : null}
+
     </main>
   );
 }

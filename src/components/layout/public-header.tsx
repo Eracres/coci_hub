@@ -1,16 +1,18 @@
 import {
   BookOpen,
-  ChefHat,
   ChevronDown,
   CircleUserRound,
   LogIn,
   LogOut,
   Menu,
   NotebookTabs,
+  Plus,
   Settings,
+  UserPlus,
   UserRound,
 } from "lucide-react";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import {
@@ -278,7 +280,7 @@ function Avatar({
 
   return (
     <span
-      className={`${sizeClass} flex shrink-0 items-center justify-center rounded-full border border-brand/20 bg-brand/10 text-xs font-semibold text-brand`}
+      className={`${sizeClass} flex shrink-0 items-center justify-center rounded-full border border-brand/20 bg-brand/10 text-xs font-bold text-brand`}
       aria-hidden="true"
     >
       {
@@ -436,48 +438,62 @@ export async function PublicHeader() {
 
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-page/95 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-border/80 bg-page/90 shadow-sm backdrop-blur-xl">
+      <Container className="flex min-h-[4.75rem] items-center justify-between gap-5 py-3">
 
-      <Container className="flex min-h-16 items-center justify-between gap-4 py-3">
+        {/* =================================================
+            BRAND
+        ================================================= */}
 
         <Link
           href="/"
-          className="group inline-flex shrink-0 items-center gap-3 rounded-lg"
+          className="group inline-flex shrink-0 items-center gap-3"
           aria-label="Ir al inicio de CociHub"
         >
-
-          <span className="flex size-10 items-center justify-center rounded-xl bg-brand text-inverse shadow-sm transition group-hover:bg-brand-hover">
-
-            <ChefHat
-              className="size-5"
-              aria-hidden="true"
+          <span className="relative flex size-12 items-center justify-center">
+            <Image
+              src="/brand/cocihub-mark.png"
+              alt=""
+              width={
+                48
+              }
+              height={
+                48
+              }
+              priority
+              className="size-12 object-contain drop-shadow-sm transition duration-200 group-hover:-translate-y-0.5 group-hover:scale-[1.03]"
             />
-
           </span>
 
 
-          <span className="font-serif text-xl font-semibold tracking-tight">
+          <span className="min-w-0">
+            <span className="block font-serif text-[1.35rem] font-bold leading-none tracking-tight">
+              <span className="text-foreground">
+                Coci
+              </span>
 
-            <span className="text-foreground">
-              Coci
+              <span className="text-brand">
+                Hub
+              </span>
             </span>
 
-            <span className="text-brand">
-              Hub
+            <span className="mt-1 hidden text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground lg:block">
+              Recetas · cocina · comunidad
             </span>
-
           </span>
-
         </Link>
 
 
-        <div className="hidden min-w-0 flex-1 items-center justify-end gap-3 md:flex">
+        {/* =================================================
+            DESKTOP
+        ================================================= */}
+
+        <div className="hidden min-w-0 flex-1 items-center justify-end gap-4 md:flex">
 
           <nav
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 rounded-2xl border border-border/80 bg-surface/80 p-1 shadow-sm"
             aria-label="Navegación principal"
           >
-
             {navigationItems.map(
               (
                 item,
@@ -489,7 +505,7 @@ export async function PublicHeader() {
                   href={
                     item.href
                   }
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-page-muted hover:text-foreground"
+                  className="rounded-xl px-3.5 py-2 text-sm font-semibold text-muted-foreground transition duration-200 hover:bg-page-muted hover:text-foreground"
                 >
                   {
                     item.label
@@ -497,64 +513,55 @@ export async function PublicHeader() {
                 </Link>
               ),
             )}
-
           </nav>
 
 
-          <div className="ml-2 h-7 w-px bg-border" />
-
-
           {!authenticated ? (
-
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-inverse shadow-sm transition hover:bg-brand-hover"
-            >
-
-              <LogIn
-                className="size-4"
-                aria-hidden="true"
-              />
-
-              Iniciar sesión
-
-            </Link>
-
-          ) : (
-
-            <details className="group relative">
-
-              <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl border border-border bg-surface py-1.5 pl-1.5 pr-3 transition hover:bg-page-muted [&::-webkit-details-marker]:hidden">
-
-                <Avatar
-                  avatarUrl={
-                    avatarUrl
-                  }
-                  name={
-                    displayName
-                  }
-                />
-
-
-                <span className="max-w-36 truncate text-sm font-semibold">
-                  {
-                    displayName
-                  }
-                </span>
-
-
-                <ChevronDown
-                  className="size-4 text-muted-foreground transition group-open:rotate-180"
+            <div className="flex items-center gap-2">
+              <Link
+                href="/register"
+                className="hidden items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition hover:bg-page-muted hover:text-foreground lg:inline-flex"
+              >
+                <UserPlus
+                  className="size-4"
                   aria-hidden="true"
                 />
 
-              </summary>
+                Crear cuenta
+              </Link>
 
 
-              <div className="absolute right-0 top-full mt-3 w-72 overflow-hidden rounded-2xl border border-border bg-surface shadow-xl">
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-inverse shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-brand-hover"
+              >
+                <LogIn
+                  className="size-4"
+                  aria-hidden="true"
+                />
 
-                <div className="flex items-center gap-3 border-b border-border p-4">
+                Iniciar sesión
+              </Link>
+            </div>
 
+          ) : (
+            <div className="flex items-center gap-2">
+
+              <Link
+                href="/mi-cocihub/recetas/nueva"
+                className="hidden items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-inverse shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-brand-hover lg:inline-flex"
+              >
+                <Plus
+                  className="size-4"
+                  aria-hidden="true"
+                />
+
+                Nueva receta
+              </Link>
+
+
+              <details className="group relative">
+                <summary className="flex cursor-pointer list-none items-center gap-2 rounded-2xl border border-border bg-surface py-1.5 pl-1.5 pr-3 shadow-sm transition hover:border-brand/30 hover:bg-page-muted [&::-webkit-details-marker]:hidden">
                   <Avatar
                     avatarUrl={
                       avatarUrl
@@ -565,135 +572,157 @@ export async function PublicHeader() {
                   />
 
 
-                  <div className="min-w-0">
+                  <div className="hidden min-w-0 text-left xl:block">
+                    <span className="block max-w-32 truncate text-xs font-semibold text-muted-foreground">
+                      Hola,
+                    </span>
 
-                    <p className="truncate text-sm font-semibold">
+                    <span className="block max-w-32 truncate text-sm font-bold text-foreground">
                       {
                         displayName
                       }
-                    </p>
-
-
-                    {username && (
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        @
-                        {
-                          username
-                        }
-                      </p>
-                    )}
-
+                    </span>
                   </div>
 
-                </div>
+
+                  <ChevronDown
+                    className="size-4 text-muted-foreground transition group-open:rotate-180"
+                    aria-hidden="true"
+                  />
+                </summary>
 
 
-                <div className="p-2">
-
-                  <Link
-                    href="/mi-cocihub"
-                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition hover:bg-page-muted"
-                  >
-
-                    <CircleUserRound
-                      className="size-4 text-brand"
-                      aria-hidden="true"
+                <div className="absolute right-0 top-full mt-3 w-72 overflow-hidden rounded-3xl border border-border bg-surface shadow-xl">
+                  <div className="flex items-center gap-3 border-b border-border bg-page-muted/40 p-4">
+                    <Avatar
+                      avatarUrl={
+                        avatarUrl
+                      }
+                      name={
+                        displayName
+                      }
                     />
 
-                    Mi CociHub
 
-                  </Link>
-
-
-                  <Link
-                    href="/mi-cocihub/recetas"
-                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition hover:bg-page-muted"
-                  >
-
-                    <NotebookTabs
-                      className="size-4 text-brand"
-                      aria-hidden="true"
-                    />
-
-                    Mis recetas
-
-                  </Link>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-foreground">
+                        {
+                          displayName
+                        }
+                      </p>
 
 
-                  <Link
-                    href="/mi-cocihub/perfil"
-                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition hover:bg-page-muted"
-                  >
-
-                    <UserRound
-                      className="size-4 text-brand"
-                      aria-hidden="true"
-                    />
-
-                    Mi perfil
-
-                  </Link>
+                      {username ? (
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                          @
+                          {
+                            username
+                          }
+                        </p>
+                      ) : null}
+                    </div>
 
 
-                  {profile
-                    ?.role ===
-                    "admin" && (
+                    {profile
+                      ?.role ===
+                      "admin" ? (
+                      <span className="rounded-full bg-brand/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-brand">
+                        Admin
+                      </span>
+                    ) : null}
+                  </div>
+
+
+                  <div className="p-2">
+                    <Link
+                      href="/mi-cocihub"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition hover:bg-page-muted"
+                    >
+                      <CircleUserRound
+                        className="size-4 text-brand"
+                        aria-hidden="true"
+                      />
+
+                      Mi CociHub
+                    </Link>
+
+
+                    <Link
+                      href="/mi-cocihub/recetas"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition hover:bg-page-muted"
+                    >
+                      <NotebookTabs
+                        className="size-4 text-brand"
+                        aria-hidden="true"
+                      />
+
+                      Mis recetas
+                    </Link>
+
+
+                    <Link
+                      href="/mi-cocihub/perfil"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition hover:bg-page-muted"
+                    >
+                      <UserRound
+                        className="size-4 text-brand"
+                        aria-hidden="true"
+                      />
+
+                      Mi perfil
+                    </Link>
+
+
+                    {profile
+                      ?.role ===
+                      "admin" ? (
                       <Link
                         href="/admin"
                         className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition hover:bg-page-muted"
                       >
-
                         <Settings
                           className="size-4 text-brand"
                           aria-hidden="true"
                         />
 
                         Administración
-
                       </Link>
-                    )}
+                    ) : null}
+                  </div>
 
-                </div>
 
-
-                <div className="border-t border-border p-2">
-
-                  <form
-                    action={
-                      publicLogout
-                    }
-                  >
-
-                    <button
-                      type="submit"
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition hover:bg-page-muted hover:text-foreground"
+                  <div className="border-t border-border p-2">
+                    <form
+                      action={
+                        publicLogout
+                      }
                     >
+                      <button
+                        type="submit"
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition hover:bg-page-muted hover:text-foreground"
+                      >
+                        <LogOut
+                          className="size-4"
+                          aria-hidden="true"
+                        />
 
-                      <LogOut
-                        className="size-4"
-                        aria-hidden="true"
-                      />
-
-                      Cerrar sesión
-
-                    </button>
-
-                  </form>
-
+                        Cerrar sesión
+                      </button>
+                    </form>
+                  </div>
                 </div>
-
-              </div>
-
-            </details>
+              </details>
+            </div>
           )}
-
         </div>
 
 
+        {/* =================================================
+            MOBILE
+        ================================================= */}
+
         <details className="group relative md:hidden">
-
-          <summary className="flex cursor-pointer list-none items-center justify-center rounded-xl border border-border bg-surface p-2.5 text-foreground shadow-xs transition hover:bg-page-muted [&::-webkit-details-marker]:hidden">
-
+          <summary className="flex cursor-pointer list-none items-center justify-center rounded-xl border border-border bg-surface p-2.5 text-foreground shadow-sm transition hover:border-brand/30 hover:bg-page-muted [&::-webkit-details-marker]:hidden">
             <span className="sr-only">
               Abrir menú de navegación
             </span>
@@ -703,55 +732,72 @@ export async function PublicHeader() {
               className="size-5"
               aria-hidden="true"
             />
-
           </summary>
 
 
-          <div className="absolute right-0 top-full mt-3 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-surface p-2 shadow-xl">
+          <div className="absolute right-0 top-full mt-3 w-[min(21rem,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-border bg-surface p-2 shadow-xl">
 
-            {authenticated && (
-
-              <div className="mb-2 flex items-center gap-3 rounded-xl bg-page-muted/40 p-3">
-
-                <Avatar
-                  avatarUrl={
-                    avatarUrl
-                  }
-                  name={
-                    displayName
-                  }
-                />
-
-
-                <div className="min-w-0">
-
-                  <p className="truncate text-sm font-semibold">
-                    {
+            {authenticated ? (
+              <div className="mb-2 rounded-2xl bg-page-muted/50 p-3">
+                <div className="flex items-center gap-3">
+                  <Avatar
+                    avatarUrl={
+                      avatarUrl
+                    }
+                    name={
                       displayName
                     }
-                  </p>
+                  />
 
 
-                  {username && (
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                      @
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-foreground">
                       {
-                        username
+                        displayName
                       }
                     </p>
-                  )}
 
+
+                    {username ? (
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        @
+                        {
+                          username
+                        }
+                      </p>
+                    ) : null}
+                  </div>
+
+
+                  {profile
+                    ?.role ===
+                    "admin" ? (
+                    <span className="rounded-full bg-brand/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-brand">
+                      Admin
+                    </span>
+                  ) : null}
                 </div>
 
+
+                <Link
+                  href="/mi-cocihub/recetas/nueva"
+                  className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-semibold text-inverse transition hover:bg-brand-hover"
+                >
+                  <Plus
+                    className="size-4"
+                    aria-hidden="true"
+                  />
+
+                  Nueva receta
+                </Link>
               </div>
-            )}
+            ) : null}
 
 
             <nav
               className="flex flex-col"
               aria-label="Navegación móvil"
             >
-
               {navigationItems.map(
                 (
                   item,
@@ -763,15 +809,14 @@ export async function PublicHeader() {
                     href={
                       item.href
                     }
-                    className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground transition hover:bg-page-muted hover:text-foreground"
+                    className="rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground transition hover:bg-page-muted hover:text-foreground"
                   >
                     {
                       item.label
-                  }
-                </Link>
-              ),
-            )}
-
+                    }
+                  </Link>
+                ),
+              )}
             </nav>
 
 
@@ -779,37 +824,45 @@ export async function PublicHeader() {
 
 
             {!authenticated ? (
+              <div className="grid gap-2">
+                <Link
+                  href="/register"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-page-muted"
+                >
+                  <UserPlus
+                    className="size-4 text-brand"
+                    aria-hidden="true"
+                  />
 
-              <Link
-                href="/login"
-                className="flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-semibold text-inverse transition hover:bg-brand-hover"
-              >
+                  Crear cuenta
+                </Link>
 
-                <LogIn
-                  className="size-4"
-                  aria-hidden="true"
-                />
 
-                Iniciar sesión
+                <Link
+                  href="/login"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-semibold text-inverse transition hover:bg-brand-hover"
+                >
+                  <LogIn
+                    className="size-4"
+                    aria-hidden="true"
+                  />
 
-              </Link>
+                  Iniciar sesión
+                </Link>
+              </div>
 
             ) : (
-
               <div className="space-y-1">
-
                 <Link
                   href="/mi-cocihub"
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-page-muted"
                 >
-
                   <CircleUserRound
                     className="size-4 text-brand"
                     aria-hidden="true"
                   />
 
                   Mi CociHub
-
                 </Link>
 
 
@@ -817,14 +870,12 @@ export async function PublicHeader() {
                   href="/mi-cocihub/recetas"
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-page-muted"
                 >
-
                   <BookOpen
                     className="size-4 text-brand"
                     aria-hidden="true"
                   />
 
                   Mis recetas
-
                 </Link>
 
 
@@ -832,34 +883,30 @@ export async function PublicHeader() {
                   href="/mi-cocihub/perfil"
                   className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-page-muted"
                 >
-
                   <UserRound
                     className="size-4 text-brand"
                     aria-hidden="true"
                   />
 
                   Mi perfil
-
                 </Link>
 
 
                 {profile
                   ?.role ===
-                    "admin" && (
-                    <Link
-                      href="/admin"
-                      className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-page-muted"
-                    >
+                  "admin" ? (
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-page-muted"
+                  >
+                    <Settings
+                      className="size-4 text-brand"
+                      aria-hidden="true"
+                    />
 
-                      <Settings
-                        className="size-4 text-brand"
-                        aria-hidden="true"
-                      />
-
-                      Administración
-
-                    </Link>
-                  )}
+                    Administración
+                  </Link>
+                ) : null}
 
 
                 <div className="my-2 border-t border-border" />
@@ -870,32 +917,24 @@ export async function PublicHeader() {
                     publicLogout
                   }
                 >
-
                   <button
                     type="submit"
                     className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-muted-foreground transition hover:bg-page-muted hover:text-foreground"
                   >
-
                     <LogOut
                       className="size-4"
                       aria-hidden="true"
                     />
 
                     Cerrar sesión
-
                   </button>
-
                 </form>
-
               </div>
             )}
-
           </div>
-
         </details>
 
       </Container>
-
     </header>
   );
 }

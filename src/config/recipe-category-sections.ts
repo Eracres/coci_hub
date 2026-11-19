@@ -27,23 +27,16 @@ export type RecipeCategorySection = {
  * TEMPORARILY HIDDEN CATEGORIES
  * =========================================================
  *
- * These categories remain available in PostgreSQL but are
- * intentionally not rendered in the community recipe
- * classification editor.
+ * Categories listed here remain available in PostgreSQL
+ * but are intentionally not rendered in interfaces that
+ * respect this configuration.
  *
- * "Cocina venezolana" is temporarily hidden after presenting
- * anomalous visual grouping behaviour despite its persisted
- * database value being valid.
- *
- * It can be restored later simply by removing it from this
- * list and adding it back to its visual subgroup.
+ * The list is currently empty.
  * =========================================================
  */
 
 export const HIDDEN_RECIPE_CATEGORY_NAMES:
-  string[] = [
-    "Cocina venezolana",
-  ];
+  string[] = [];
 
 
 export const RECIPE_CATEGORY_SECTIONS:
@@ -204,6 +197,7 @@ export const RECIPE_CATEGORY_SECTIONS:
           categoryNames: [
             "Cocina mexicana",
             "Cocina colombiana",
+            "Cocina venezolana",
             "Cocina ecuatoriana",
             "Cocina peruana",
           ],
@@ -248,14 +242,6 @@ export function normalizeRecipeCategoryName(
     string,
 ) {
   return value
-    .replace(
-      /[\u200B-\u200D\u2060\uFEFF]/g,
-      "",
-    )
-    .replace(
-      /\s+/g,
-      " ",
-    )
     .trim()
     .toLocaleLowerCase(
       "es",

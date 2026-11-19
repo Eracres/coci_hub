@@ -85,12 +85,16 @@ export function RecipeCard({
 
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-sm transition duration-300 hover:-translate-y-1 hover:border-brand/30 hover:shadow-md">
+    <article className="group h-full">
       <Link
         href={`/recipes/${recipe.slug}`}
-        className="flex h-full flex-col"
+        className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-sm transition duration-300 hover:-translate-y-1 hover:border-brand/30 hover:shadow-lg"
       >
-        <div className="relative aspect-[4/3] overflow-hidden bg-page-muted">
+        {/* =================================================
+            IMAGE
+        ================================================= */}
+
+        <div className="relative aspect-[16/10] overflow-hidden bg-page-muted">
           {recipe.imageUrl ? (
             <img
               src={
@@ -99,19 +103,22 @@ export function RecipeCard({
               alt={
                 recipe.title
               }
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.045]"
             />
           ) : (
             <div className="flex h-full items-center justify-center px-6 text-center">
-              <span className="rounded-full bg-surface px-4 py-2 text-sm text-muted-foreground shadow-sm">
+              <span className="rounded-full border border-border bg-surface/90 px-4 py-2 text-sm text-muted-foreground shadow-sm">
                 Imagen no disponible
               </span>
             </div>
           )}
 
 
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/35 to-transparent" />
+
+
           {recipe.featured ? (
-            <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-surface/95 px-3 py-1.5 text-xs font-semibold text-brand shadow-sm backdrop-blur-sm">
+            <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/95 px-3 py-1.5 text-xs font-semibold text-brand shadow-sm backdrop-blur-sm">
               <Star
                 className="size-3.5 fill-accent text-accent"
                 aria-hidden="true"
@@ -120,17 +127,41 @@ export function RecipeCard({
               Destacada
             </div>
           ) : null}
+
+
+          {difficultyLabel ? (
+            <span className="absolute bottom-3 right-3 rounded-full border border-white/30 bg-black/45 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md">
+              {
+                difficultyLabel
+              }
+            </span>
+          ) : null}
         </div>
 
 
-        <div className="flex flex-1 flex-col p-5 md:p-6">
-          <h2 className="font-serif text-2xl font-bold leading-tight text-foreground transition-colors duration-200 group-hover:text-brand">
-            {recipe.title}
+        {/* =================================================
+            CONTENT
+        ================================================= */}
+
+        <div className="flex flex-1 flex-col p-5">
+
+          {/* =================================================
+              TITLE
+          ================================================= */}
+
+          <h2 className="font-serif text-[1.35rem] font-bold leading-tight text-foreground transition-colors duration-200 group-hover:text-brand">
+            {
+              recipe.title
+            }
           </h2>
 
 
+          {/* =================================================
+              DESCRIPTION
+          ================================================= */}
+
           {recipe.shortDescription ? (
-            <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
+            <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
               {
                 recipe.shortDescription
               }
@@ -138,14 +169,18 @@ export function RecipeCard({
           ) : null}
 
 
-          {hasRatings ? (
-            <div className="mt-4 flex items-center gap-2 text-sm">
-              <Star
-                className="size-4 fill-accent text-accent"
-                aria-hidden="true"
-              />
+          {/* =================================================
+              RATING
+          ================================================= */}
 
-              <span className="font-semibold text-foreground">
+          {hasRatings ? (
+            <div className="mt-4 flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-semibold text-foreground">
+                <Star
+                  className="size-3.5 fill-accent text-accent"
+                  aria-hidden="true"
+                />
+
                 {ratingSummary.averageRating!.toLocaleString(
                   "es-ES",
                   {
@@ -158,20 +193,26 @@ export function RecipeCard({
                 )}
               </span>
 
-              <span className="text-muted-foreground">
-                ·{" "}
-                {getRatingCountLabel(
-                  ratingSummary.ratingCount,
-                )}
+
+              <span className="text-xs text-muted-foreground">
+                {
+                  getRatingCountLabel(
+                    ratingSummary.ratingCount,
+                  )
+                }
               </span>
             </div>
           ) : null}
 
 
-          <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          {/* =================================================
+              META
+          ================================================= */}
+
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             {recipe.totalMinutes >
             0 ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-page-muted px-3 py-1.5">
+              <span className="inline-flex items-center gap-1.5">
                 <Clock3
                   className="size-4 text-brand"
                   aria-hidden="true"
@@ -185,7 +226,7 @@ export function RecipeCard({
 
 
             {recipe.baseServings ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-page-muted px-3 py-1.5">
+              <span className="inline-flex items-center gap-1.5">
                 <Users
                   className="size-4 text-secondary-hover"
                   aria-hidden="true"
@@ -193,30 +234,31 @@ export function RecipeCard({
 
                 {
                   recipe.baseServings
-                } raciones
-              </span>
-            ) : null}
-
-
-            {difficultyLabel ? (
-              <span className="rounded-full bg-secondary/20 px-3 py-1.5 text-xs font-semibold text-secondary-hover">
-                {
-                  difficultyLabel
-                }
+                }{" "}
+                {recipe.baseServings ===
+                1
+                  ? "ración"
+                  : "raciones"}
               </span>
             ) : null}
           </div>
 
 
-          <div className="mt-auto pt-6">
-            <span className="inline-flex items-center gap-2 text-sm font-semibold text-brand transition-colors group-hover:text-brand-hover">
-              Ver receta
+          {/* =================================================
+              FOOTER
+          ================================================= */}
 
-              <ArrowRight
-                className="size-4 transition-transform duration-200 group-hover:translate-x-1"
-                aria-hidden="true"
-              />
-            </span>
+          <div className="mt-auto pt-5">
+            <div className="border-t border-border pt-4">
+              <span className="inline-flex items-center gap-2 text-sm font-semibold text-brand transition-colors group-hover:text-brand-hover">
+                Ver receta
+
+                <ArrowRight
+                  className="size-4 transition-transform duration-200 group-hover:translate-x-1"
+                  aria-hidden="true"
+                />
+              </span>
+            </div>
           </div>
         </div>
       </Link>

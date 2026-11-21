@@ -33,6 +33,10 @@ const RECIPE_IMAGES_BUCKET =
   "recipe-images";
 
 
+const PROFILE_HERO_IMAGES_BUCKET =
+  "profile-hero-images";
+
+
 type DashboardHeroType =
   | "preset"
   | "recipe"
@@ -338,6 +342,71 @@ export default async function MyProfilePage() {
     "admin"
       ? "Administrador"
       : "Cocinero de la comunidad";
+
+
+  // =======================================================
+  // CUSTOM DASHBOARD HERO
+  // =======================================================
+
+  let initialCustomHeroUrl:
+    string | null =
+      null;
+
+
+  if (
+    profile
+      .dashboard_hero_type ===
+      "custom" &&
+    profile
+      .dashboard_hero_value
+  ) {
+    const customHeroPath =
+      profile
+        .dashboard_hero_value;
+
+
+    if (
+      customHeroPath.startsWith(
+        `${userId}/hero-`,
+      ) &&
+      customHeroPath.endsWith(
+        ".webp",
+      )
+    ) {
+      const {
+        data:
+          signedHeroData,
+
+        error:
+          signedHeroError,
+      } =
+        await supabase
+          .storage
+          .from(
+            PROFILE_HERO_IMAGES_BUCKET,
+          )
+          .createSignedUrl(
+            customHeroPath,
+            60 *
+            60,
+          );
+
+
+      if (
+        signedHeroError
+      ) {
+        console.error(
+          "PROFILE HERO SIGNED URL ERROR:",
+          signedHeroError,
+        );
+
+      } else {
+        initialCustomHeroUrl =
+          signedHeroData
+            .signedUrl;
+      }
+    }
+  }
 
 
   // =======================================================
@@ -797,6 +866,9 @@ export default async function MyProfilePage() {
           initialHeroValue={
             profile
               .dashboard_hero_value
+          }
+          initialCustomHeroUrl={
+            initialCustomHeroUrl
           }
           recipes={
             heroRecipeOptions

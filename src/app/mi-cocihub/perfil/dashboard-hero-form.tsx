@@ -17,6 +17,8 @@ import type {
 } from "react";
 
 import {
+  useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -30,20 +32,41 @@ import {
 } from "@/config/profile-hero-presets";
 
 import {
+  saveMyCustomDashboardHeroAction,
   saveMyDashboardHeroAction,
 } from "./dashboard-hero-actions";
+
+
+const MAX_SOURCE_FILE_SIZE =
+  5 *
+  1024 *
+  1024;
+
+
+const TARGET_HERO_FILE_SIZE =
+  750 *
+  1024;
+
+
+const HERO_WIDTH =
+  1600;
+
+
+const HERO_HEIGHT =
+  700;
+
+
+const ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
 
 
 type DashboardHeroType =
   | "preset"
   | "recipe"
   | "custom"
-  | null;
-
-
-type SelectableHeroType =
-  | "preset"
-  | "recipe"
   | null;
 
 
@@ -76,6 +99,9 @@ type DashboardHeroFormProps = {
     DashboardHeroType;
 
   initialHeroValue:
+    string | null;
+
+  initialCustomHeroUrl:
     string | null;
 
   recipes:
@@ -153,6 +179,287 @@ function getInitials(
 }
 
 
+function loadImage(
+  file:
+    File,
+): Promise<
+  HTMLImageElement
+> {
+  return new Promise(
+    (
+      resolve,
+      reject,
+    ) => {
+      const image =
+        new Image();
+
+
+      const objectUrl =
+        URL.createObjectURL(
+          file,
+        );
+
+
+      image.onload =
+        () => {
+          URL.revokeObjectURL(
+            objectUrl,
+          );
+
+
+          resolve(
+            image,
+          );
+        };
+
+
+      image.onerror =
+        () => {
+          URL.revokeObjectURL(
+            objectUrl,
+          );
+
+
+          reject(
+            new Error(
+              "No se pudo leer la imagen.",
+            ),
+          );
+        };
+
+
+      image.src =
+        objectUrl;
+    },
+  );
+}
+
+
+function canvasToBlob(
+  canvas:
+    HTMLCanvasElement,
+
+  quality:
+    number,
+): Promise<
+  Blob
+> {
+  return new Promise(
+    (
+      resolve,
+      reject,
+    ) => {
+      canvas.toBlob(
+        (
+          blob,
+        ) => {
+          if (
+            !blob
+          ) {
+            reject(
+              new Error(
+                "No se pudo procesar la imagen.",
+              ),
+            );
+
+
+            return;
+          }
+
+
+          resolve(
+            blob,
+          );
+        },
+
+        "image/webp",
+
+        quality,
+      );
+    },
+  );
+}
+
+
+async function optimizeHeroImage(
+  sourceFile:
+    File,
+): Promise<
+  File
+> {
+  const image =
+    await loadImage(
+      sourceFile,
+    );
+
+
+  const canvas =
+    document.createElement(
+      "canvas",
+    );
+
+
+  canvas.width =
+    HERO_WIDTH;
+
+  canvas.height =
+    HERO_HEIGHT;
+
+
+  const context =
+    canvas.getContext(
+      "2d",
+    );
+
+
+  if (
+    !context
+  ) {
+    throw new Error(
+      "Tu navegador no permite procesar la imagen.",
+    );
+  }
+
+
+  const targetRatio =
+    HERO_WIDTH /
+    HERO_HEIGHT;
+
+
+  const sourceRatio =
+    image.naturalWidth /
+    image.naturalHeight;
+
+
+  let sourceX =
+    0;
+
+  let sourceY =
+    0;
+
+  let sourceWidth =
+    image.naturalWidth;
+
+  let sourceHeight =
+    image.naturalHeight;
+
+
+  if (
+    sourceRatio >
+    targetRatio
+  ) {
+    sourceWidth =
+      image.naturalHeight *
+      targetRatio;
+
+
+    sourceX =
+      (
+        image.naturalWidth -
+        sourceWidth
+      ) /
+      2;
+
+  } else {
+    sourceHeight =
+      image.naturalWidth /
+      targetRatio;
+
+
+    sourceY =
+      (
+        image.naturalHeight -
+        sourceHeight
+      ) /
+      2;
+  }
+
+
+  context.drawImage(
+    image,
+
+    sourceX,
+    sourceY,
+    sourceWidth,
+    sourceHeight,
+
+    0,
+    0,
+    HERO_WIDTH,
+    HERO_HEIGHT,
+  );
+
+
+  const qualities = [
+    0.9,
+    0.84,
+    0.78,
+    0.72,
+    0.66,
+    0.6,
+    0.54,
+    0.48,
+  ];
+
+
+  let blob:
+    Blob | null =
+      null;
+
+
+  for (
+    const quality
+    of qualities
+  ) {
+    const candidate =
+      await canvasToBlob(
+        canvas,
+        quality,
+      );
+
+
+    blob =
+      candidate;
+
+
+    if (
+      candidate.size <=
+      TARGET_HERO_FILE_SIZE
+    ) {
+      break;
+    }
+  }
+
+
+  if (
+    !blob ||
+    blob.size >
+      TARGET_HERO_FILE_SIZE
+  ) {
+    throw new Error(
+      "No se pudo reducir suficientemente la imagen. Prueba con otra fotografía.",
+    );
+  }
+
+
+  return new File(
+    [
+      blob,
+    ],
+
+    "hero.webp",
+
+    {
+      type:
+        "image/webp",
+
+      lastModified:
+        Date.now(),
+    },
+  );
+}
+
+
 export function DashboardHeroForm({
   displayName,
   username,
@@ -160,6 +467,7 @@ export function DashboardHeroForm({
   avatarUrl,
   initialHeroType,
   initialHeroValue,
+  initialCustomHeroUrl,
   recipes,
   automaticRecipeImageUrl,
 }: DashboardHeroFormProps) {
@@ -167,14 +475,16 @@ export function DashboardHeroForm({
     useRouter();
 
 
-  const normalizedInitialType:
-    SelectableHeroType =
-      initialHeroType ===
-        "preset" ||
-      initialHeroType ===
-        "recipe"
-        ? initialHeroType
-        : null;
+  const fileInputRef =
+    useRef<HTMLInputElement>(
+      null,
+    );
+
+
+  const customObjectUrlRef =
+    useRef<string | null>(
+      null,
+    );
 
 
   const [
@@ -182,9 +492,9 @@ export function DashboardHeroForm({
     setSelectedType,
   ] =
     useState<
-      SelectableHeroType
+      DashboardHeroType
     >(
-      normalizedInitialType,
+      initialHeroType,
     );
 
 
@@ -195,9 +505,7 @@ export function DashboardHeroForm({
     useState<
       string | null
     >(
-      normalizedInitialType
-        ? initialHeroValue
-        : null,
+      initialHeroValue,
     );
 
 
@@ -208,8 +516,59 @@ export function DashboardHeroForm({
     useState<
       ActiveTab
     >(
-      normalizedInitialType ??
+      initialHeroType ??
       "preset",
+    );
+
+
+  const [
+    savedCustomHeroUrl,
+    setSavedCustomHeroUrl,
+  ] =
+    useState<
+      string | null
+    >(
+      initialCustomHeroUrl,
+    );
+
+
+  const [
+    customPreviewUrl,
+    setCustomPreviewUrl,
+  ] =
+    useState<
+      string | null
+    >(
+      null,
+    );
+
+
+  const [
+    customFile,
+    setCustomFile,
+  ] =
+    useState<
+      File | null
+    >(
+      null,
+    );
+
+
+  const [
+    isPreparing,
+    setIsPreparing,
+  ] =
+    useState(
+      false,
+    );
+
+
+  const [
+    isSaving,
+    setIsSaving,
+  ] =
+    useState(
+      false,
     );
 
 
@@ -224,13 +583,73 @@ export function DashboardHeroForm({
     );
 
 
-  const [
-    isSaving,
-    setIsSaving,
-  ] =
-    useState(
-      false,
+  useEffect(
+    () => {
+      return () => {
+        if (
+          customObjectUrlRef.current
+        ) {
+          URL.revokeObjectURL(
+            customObjectUrlRef.current,
+          );
+        }
+      };
+    },
+    [],
+  );
+
+
+  function clearCustomPreview() {
+    if (
+      customObjectUrlRef.current
+    ) {
+      URL.revokeObjectURL(
+        customObjectUrlRef.current,
+      );
+
+
+      customObjectUrlRef.current =
+        null;
+    }
+
+
+    setCustomPreviewUrl(
+      null,
     );
+  }
+
+
+  function clearPendingCustomFile() {
+    clearCustomPreview();
+
+
+    setCustomFile(
+      null,
+    );
+
+
+    if (
+      fileInputRef.current
+    ) {
+      fileInputRef.current.value =
+        "";
+    }
+  }
+
+
+  function openTab(
+    tab:
+      ActiveTab,
+  ) {
+    setActiveTab(
+      tab,
+    );
+
+
+    setMessage(
+      null,
+    );
+  }
 
 
   const selectedPreset =
@@ -264,13 +683,19 @@ export function DashboardHeroForm({
 
 
   const activeImageUrl =
-    selectedRecipe
-      ?.imageUrl ??
-    (
-      isAutomatic
-        ? automaticRecipeImageUrl
-        : null
-    );
+    selectedType ===
+    "custom"
+      ? (
+          customPreviewUrl ??
+          savedCustomHeroUrl
+        )
+      : selectedRecipe
+          ?.imageUrl ??
+        (
+          isAutomatic
+            ? automaticRecipeImageUrl
+            : null
+        );
 
 
   let previewStyle:
@@ -308,10 +733,48 @@ export function DashboardHeroForm({
   }
 
 
+  const canSave =
+    !isSaving &&
+    !isPreparing &&
+    (
+      isAutomatic ||
+      (
+        activeTab ===
+          "preset" &&
+        selectedType ===
+          "preset" &&
+        Boolean(
+          selectedPreset,
+        )
+      ) ||
+      (
+        activeTab ===
+          "recipe" &&
+        selectedType ===
+          "recipe" &&
+        Boolean(
+          selectedRecipe,
+        )
+      ) ||
+      (
+        activeTab ===
+          "custom" &&
+        selectedType ===
+          "custom" &&
+        Boolean(
+          customFile,
+        )
+      )
+    );
+
+
   function selectPreset(
     key:
       string,
   ) {
+    clearPendingCustomFile();
+
+
     setSelectedType(
       "preset",
     );
@@ -337,6 +800,9 @@ export function DashboardHeroForm({
     id:
       string,
   ) {
+    clearPendingCustomFile();
+
+
     setSelectedType(
       "recipe",
     );
@@ -359,6 +825,9 @@ export function DashboardHeroForm({
 
 
   function selectAutomatic() {
+    clearPendingCustomFile();
+
+
     setSelectedType(
       null,
     );
@@ -375,35 +844,146 @@ export function DashboardHeroForm({
   }
 
 
-  async function handleSave() {
-    if (
-      activeTab ===
-      "custom"
-    ) {
-      return;
-    }
-
-
+  async function handleCustomFile(
+    file:
+      File | null,
+  ) {
     setMessage(
       null,
     );
 
 
-    const formData =
-      new FormData();
+    clearPendingCustomFile();
 
 
-    formData.set(
-      "heroType",
-      selectedType ??
-      "",
+    if (
+      !file
+    ) {
+      return;
+    }
+
+
+    if (
+      !ALLOWED_TYPES.includes(
+        file.type,
+      )
+    ) {
+      setMessage({
+        success:
+          false,
+
+        text:
+          "Formato no válido. Utiliza JPG, PNG o WebP.",
+      });
+
+
+      return;
+    }
+
+
+    if (
+      file.size >
+      MAX_SOURCE_FILE_SIZE
+    ) {
+      setMessage({
+        success:
+          false,
+
+        text:
+          "La imagen supera el límite máximo de 5 MB.",
+      });
+
+
+      return;
+    }
+
+
+    setIsPreparing(
+      true,
     );
 
 
-    formData.set(
-      "heroValue",
-      selectedValue ??
-      "",
+    try {
+      const optimizedFile =
+        await optimizeHeroImage(
+          file,
+        );
+
+
+      const objectUrl =
+        URL.createObjectURL(
+          optimizedFile,
+        );
+
+
+      customObjectUrlRef.current =
+        objectUrl;
+
+
+      setCustomPreviewUrl(
+        objectUrl,
+      );
+
+
+      setCustomFile(
+        optimizedFile,
+      );
+
+
+      setSelectedType(
+        "custom",
+      );
+
+
+      setSelectedValue(
+        null,
+      );
+
+
+      setActiveTab(
+        "custom",
+      );
+
+
+      setMessage({
+        success:
+          true,
+
+        text:
+          "Imagen preparada. Revisa la vista previa y guarda cuando estés conforme.",
+      });
+
+    } catch (
+      error
+    ) {
+      console.error(
+        "CUSTOM HERO OPTIMIZATION ERROR:",
+        error,
+      );
+
+
+      setMessage({
+        success:
+          false,
+
+        text:
+          error instanceof
+            Error
+            ? error.message
+            : "No se pudo preparar la imagen.",
+      });
+
+    } finally {
+      setIsPreparing(
+        false,
+      );
+    }
+  }
+
+
+  async function handleSave() {
+    setMessage(
+      null,
     );
 
 
@@ -413,6 +993,205 @@ export function DashboardHeroForm({
 
 
     try {
+      // ===================================================
+      // AUTOMATIC MODE
+      // ===================================================
+
+      if (
+        selectedType ===
+        null
+      ) {
+        const formData =
+          new FormData();
+
+
+        formData.set(
+          "heroType",
+          "",
+        );
+
+
+        formData.set(
+          "heroValue",
+          "",
+        );
+
+
+        const result =
+          await saveMyDashboardHeroAction(
+            formData,
+          );
+
+
+        setMessage({
+          success:
+            result.success,
+
+          text:
+            result.message,
+        });
+
+
+        if (
+          result.success
+        ) {
+          router.refresh();
+        }
+
+
+        return;
+      }
+
+
+      // ===================================================
+      // CUSTOM IMAGE
+      // ===================================================
+
+      if (
+        activeTab ===
+        "custom"
+      ) {
+        if (
+          selectedType !==
+            "custom" ||
+          !customFile
+        ) {
+          setMessage({
+            success:
+              false,
+
+            text:
+              "Selecciona una nueva imagen personalizada antes de guardar.",
+          });
+
+
+          return;
+        }
+
+
+        const formData =
+          new FormData();
+
+
+        formData.set(
+          "hero",
+          customFile,
+        );
+
+
+        const result =
+          await saveMyCustomDashboardHeroAction(
+            formData,
+          );
+
+
+        setMessage({
+          success:
+            result.success,
+
+          text:
+            result.message,
+        });
+
+
+        if (
+          !result.success
+        ) {
+          return;
+        }
+
+
+        if (
+          result.heroPath
+        ) {
+          setSelectedValue(
+            result.heroPath,
+          );
+        }
+
+
+        if (
+          result.heroUrl
+        ) {
+          setSavedCustomHeroUrl(
+            result.heroUrl,
+          );
+        }
+
+
+        clearPendingCustomFile();
+
+
+        router.refresh();
+
+
+        return;
+      }
+
+
+      // ===================================================
+      // PRESET
+      // ===================================================
+
+      if (
+        activeTab ===
+          "preset" &&
+        selectedType !==
+          "preset"
+      ) {
+        setMessage({
+          success:
+            false,
+
+          text:
+            "Selecciona una imagen de la colección CociHub antes de guardar.",
+        });
+
+
+        return;
+      }
+
+
+      // ===================================================
+      // RECIPE
+      // ===================================================
+
+      if (
+        activeTab ===
+          "recipe" &&
+        selectedType !==
+          "recipe"
+      ) {
+        setMessage({
+          success:
+            false,
+
+          text:
+            "Selecciona una receta antes de guardar.",
+        });
+
+
+        return;
+      }
+
+
+      const formData =
+        new FormData();
+
+
+      formData.set(
+        "heroType",
+        selectedType,
+      );
+
+
+      formData.set(
+        "heroValue",
+        selectedValue ??
+        "",
+      );
+
+
       const result =
         await saveMyDashboardHeroAction(
           formData,
@@ -442,12 +1221,35 @@ export function DashboardHeroForm({
   }
 
 
+  const selectionLabel =
+    isAutomatic
+      ? "Selección automática"
+      : selectedType ===
+        "preset"
+        ? "Colección CociHub"
+        : selectedType ===
+          "recipe"
+          ? "Imagen de receta"
+          : "Imagen propia";
+
+
+  const currentSelectionName =
+    isAutomatic
+      ? "Modo automático activo"
+      : selectedPreset
+        ? selectedPreset.label
+        : selectedRecipe
+          ? selectedRecipe.title
+          : selectedType ===
+            "custom"
+            ? customFile
+              ? "Nueva imagen personalizada"
+              : "Imagen personalizada"
+            : "Selecciona una imagen";
+
+
   return (
     <section className="mt-8 border-t border-border pt-7">
-      {/* ===================================================
-          TITLE
-      =================================================== */}
-
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:gap-8">
         <div className="flex items-center gap-3">
           <span className="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
@@ -486,20 +1288,15 @@ export function DashboardHeroForm({
 
 
           <span className="rounded-full border border-border bg-surface px-3 py-1 text-[11px] font-semibold text-muted-foreground">
-            {isAutomatic
-              ? "Selección automática"
-              : selectedType ===
-                "preset"
-                ? "Colección CociHub"
-                : "Imagen de receta"}
+            {
+              selectionLabel
+            }
           </span>
         </div>
 
 
         <div className="relative overflow-hidden rounded-[2rem] border border-border bg-surface shadow-sm">
           <div className="relative grid min-h-[205px] gap-5 px-6 py-7 md:grid-cols-[auto_minmax(0,1fr)_210px] md:items-center lg:px-8">
-            {/* BACKGROUND PREVIEW */}
-
             <div
               className="pointer-events-none absolute inset-y-0 left-[35%] right-[13%] hidden md:block"
               aria-hidden="true"
@@ -514,8 +1311,6 @@ export function DashboardHeroForm({
               }}
             />
 
-
-            {/* AVATAR */}
 
             <div className="relative z-10 flex justify-center md:justify-start">
               <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-surface bg-page-muted shadow-md">
@@ -540,8 +1335,6 @@ export function DashboardHeroForm({
               </div>
             </div>
 
-
-            {/* PROFILE */}
 
             <div className="relative z-10 min-w-0 text-center md:text-left">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand">
@@ -585,8 +1378,6 @@ export function DashboardHeroForm({
             </div>
 
 
-            {/* MOCK ACTIONS */}
-
             <div className="relative z-10 hidden flex-col gap-2 md:flex">
               <span className="rounded-xl bg-brand px-4 py-2.5 text-center text-xs font-semibold text-inverse shadow-sm">
                 + Nueva receta
@@ -617,7 +1408,7 @@ export function DashboardHeroForm({
             type="button"
             onClick={
               () =>
-                setActiveTab(
+                openTab(
                   "preset",
                 )
             }
@@ -634,7 +1425,6 @@ export function DashboardHeroForm({
                 aria-hidden="true"
               />
             </span>
-
 
             <span>
               <span className="block font-serif font-bold">
@@ -653,7 +1443,7 @@ export function DashboardHeroForm({
             type="button"
             onClick={
               () =>
-                setActiveTab(
+                openTab(
                   "recipe",
                 )
             }
@@ -670,7 +1460,6 @@ export function DashboardHeroForm({
                 aria-hidden="true"
               />
             </span>
-
 
             <span>
               <span className="block font-serif font-bold">
@@ -689,7 +1478,7 @@ export function DashboardHeroForm({
             type="button"
             onClick={
               () =>
-                setActiveTab(
+                openTab(
                   "custom",
                 )
             }
@@ -706,7 +1495,6 @@ export function DashboardHeroForm({
                 aria-hidden="true"
               />
             </span>
-
 
             <span>
               <span className="block font-serif font-bold">
@@ -736,12 +1524,10 @@ export function DashboardHeroForm({
                 CociHub al óleo
               </p>
 
-
               <h3 className="mt-1 font-serif text-2xl font-bold">
                 Colección CociHub
               </h3>
             </div>
-
 
             <p className="max-w-lg text-sm leading-6 text-muted-foreground">
               De momento utilizamos
@@ -799,7 +1585,6 @@ export function DashboardHeroForm({
                         </span>
                       ) : null}
 
-
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/5" />
                     </div>
 
@@ -810,7 +1595,6 @@ export function DashboardHeroForm({
                           preset.label
                         }
                       </p>
-
 
                       <p className="mt-1 text-xs leading-5 text-muted-foreground">
                         {
@@ -839,11 +1623,9 @@ export function DashboardHeroForm({
               Tu recetario
             </p>
 
-
             <h3 className="mt-1 font-serif text-2xl font-bold">
               Elige una de tus recetas
             </h3>
-
 
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               Solo aparecen las recetas
@@ -895,7 +1677,6 @@ export function DashboardHeroForm({
                           className="size-full object-cover transition duration-300 group-hover:scale-105"
                         />
 
-
                         {selected ? (
                           <span className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-secondary-hover text-inverse shadow-md">
                             <Check
@@ -904,7 +1685,6 @@ export function DashboardHeroForm({
                             />
                           </span>
                         ) : null}
-
 
                         <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
                       </div>
@@ -929,17 +1709,8 @@ export function DashboardHeroForm({
                 aria-hidden="true"
               />
 
-
               <p className="mt-3 font-serif text-lg font-bold">
                 No tienes recetas con imagen
-              </p>
-
-
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-                Cuando alguna de tus
-                recetas tenga fotografía,
-                podrás utilizarla como
-                imagen de Mi CociHub.
               </p>
             </div>
           )}
@@ -948,58 +1719,150 @@ export function DashboardHeroForm({
 
 
       {/* ===================================================
-          CUSTOM IMAGE - NEXT STEP
+          CUSTOM IMAGE
       =================================================== */}
 
       {activeTab ===
       "custom" ? (
-        <div className="mt-6 rounded-[2rem] border border-dashed border-accent/35 bg-accent/[0.035] px-6 py-10 text-center">
-          <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-accent/15 text-warning">
-            <Upload
-              className="size-6"
-              aria-hidden="true"
-            />
-          </span>
+        <div className="mt-6 rounded-[2rem] border border-accent/30 bg-surface p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-warning">
+                Tu espacio, tu imagen
+              </p>
+
+              <h3 className="mt-1 font-serif text-2xl font-bold">
+                Sube tu propia fotografía
+              </h3>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                CociHub realizará un
+                recorte panorámico
+                centrado, la convertirá
+                a WebP y la optimizará
+                automáticamente.
+              </p>
+            </div>
 
 
-          <h3 className="mt-4 font-serif text-2xl font-bold">
-            Tu propia imagen
-          </h3>
+            <div className="rounded-2xl border border-border bg-page-muted/40 px-4 py-3 text-xs leading-5 text-muted-foreground">
+              JPG · PNG · WebP
+              <br />
+              Máximo 5 MB
+              <br />
+              Resultado 1600 × 700
+            </div>
+          </div>
 
 
-          <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-muted-foreground">
-            Esta opción se activará en
-            el siguiente paso, cuando
-            incorporemos el recorte
-            panorámico, optimización WebP
-            y almacenamiento seguro de
-            la imagen.
-          </p>
+          <input
+            ref={
+              fileInputRef
+            }
+            id="dashboardHeroImage"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            disabled={
+              isPreparing ||
+              isSaving
+            }
+            className="sr-only"
+            onChange={(
+              event,
+            ) => {
+              void handleCustomFile(
+                event
+                  .target
+                  .files?.[0] ??
+                null,
+              );
+            }}
+          />
+
+
+          <label
+            htmlFor="dashboardHeroImage"
+            className={`mt-5 flex min-h-40 flex-col items-center justify-center rounded-2xl border border-dashed border-accent/45 bg-accent/[0.035] px-6 py-8 text-center transition ${
+              isPreparing ||
+              isSaving
+                ? "cursor-not-allowed opacity-60"
+                : "cursor-pointer hover:border-warning/70 hover:bg-accent/[0.06]"
+            }`}
+          >
+            {isPreparing ? (
+              <Loader2
+                className="size-8 animate-spin text-warning"
+                aria-hidden="true"
+              />
+            ) : (
+              <Upload
+                className="size-8 text-warning"
+                aria-hidden="true"
+              />
+            )}
+
+
+            <span className="mt-3 font-serif text-lg font-bold">
+              {isPreparing
+                ? "Preparando imagen..."
+                : customFile
+                  ? "Cambiar imagen seleccionada"
+                  : "Seleccionar una imagen"}
+            </span>
+
+
+            <span className="mt-1 text-sm text-muted-foreground">
+              El recorte se centrará
+              automáticamente.
+            </span>
+          </label>
+
+
+          {customFile ? (
+            <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-accent/25 bg-accent/[0.05] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">
+                  Imagen preparada
+                </p>
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  1600 × 700 · WebP
+                </p>
+              </div>
+
+
+              <p className="font-serif text-lg font-bold">
+                {
+                  Math.ceil(
+                    customFile.size /
+                    1024,
+                  )
+                } KB
+              </p>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
 
       {/* ===================================================
-          SAVE / RESET
+          SAVE
       =================================================== */}
 
       <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold">
-            {isAutomatic
-              ? "Modo automático activo"
-              : selectedPreset
-                ? selectedPreset.label
-                : selectedRecipe
-                  ? selectedRecipe.title
-                  : "Selecciona una imagen"}
+            {
+              currentSelectionName
+            }
           </p>
-
 
           <p className="mt-1 text-xs text-muted-foreground">
             {isAutomatic
               ? "CociHub elegirá automáticamente una imagen disponible de tus recetas."
-              : "La vista previa muestra cómo quedará antes de guardar."}
+              : customFile
+                ? "La nueva fotografía todavía no se ha guardado."
+                : "La vista previa muestra cómo quedará tu hero."}
           </p>
         </div>
 
@@ -1011,7 +1874,8 @@ export function DashboardHeroForm({
               selectAutomatic
             }
             disabled={
-              isSaving
+              isSaving ||
+              isPreparing
             }
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition hover:bg-page-muted disabled:opacity-50"
           >
@@ -1030,9 +1894,7 @@ export function DashboardHeroForm({
               handleSave
             }
             disabled={
-              isSaving ||
-              activeTab ===
-                "custom"
+              !canSave
             }
             className="inline-flex min-w-[210px] items-center justify-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-inverse shadow-sm transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -1047,7 +1909,6 @@ export function DashboardHeroForm({
                 aria-hidden="true"
               />
             )}
-
 
             {isSaving
               ? "Guardando..."

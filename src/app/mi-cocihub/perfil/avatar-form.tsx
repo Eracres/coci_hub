@@ -147,6 +147,7 @@ function loadImage(
             objectUrl,
           );
 
+
           resolve(
             image,
           );
@@ -158,6 +159,7 @@ function loadImage(
           URL.revokeObjectURL(
             objectUrl,
           );
+
 
           reject(
             new Error(
@@ -204,6 +206,7 @@ function canvasToBlob(
                 "No se pudo procesar la imagen.",
               ),
             );
+
 
             return;
           }
@@ -555,6 +558,7 @@ export function AvatarForm({
         null,
       );
 
+
       return;
     }
 
@@ -573,6 +577,7 @@ export function AvatarForm({
         "Formato no válido. Utiliza JPG, PNG o WebP.",
       );
 
+
       return;
     }
 
@@ -589,6 +594,7 @@ export function AvatarForm({
       setMessage(
         "La imagen supera el límite máximo de 5 MB.",
       );
+
 
       return;
     }
@@ -666,6 +672,7 @@ export function AvatarForm({
       setMessage(
         "Selecciona una imagen.",
       );
+
 
       return;
     }
@@ -825,240 +832,317 @@ export function AvatarForm({
 
 
   return (
-    <section className="rounded-2xl border border-border bg-surface p-6">
+    <section className="overflow-hidden rounded-[2rem] border border-border bg-surface shadow-sm">
+      {/* =================================================
+          HEADER
+      ================================================= */}
 
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-
-        {/* =================================================
-            AVATAR
-        ================================================= */}
-
-        <div className="shrink-0">
-
-          <div className="relative flex size-28 items-center justify-center overflow-hidden rounded-full border-4 border-surface bg-brand/10 shadow-sm ring-1 ring-border">
-
-            {displayedAvatar ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={
-                  displayedAvatar
-                }
-                alt={`Avatar de ${displayName}`}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span className="text-2xl font-semibold text-brand">
-                {
-                  getInitials(
-                    displayName,
-                  )
-                }
-              </span>
-            )}
+      <header className="border-b border-border bg-brand/[0.025] px-6 py-5 sm:px-7">
+        <div className="flex items-start gap-4">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand">
+            <Camera
+              className="size-5"
+              aria-hidden="true"
+            />
+          </span>
 
 
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-9 items-center justify-center bg-black/45 text-white">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand">
+              Tu imagen
+            </p>
 
-              <Camera
-                className="size-4"
-                aria-hidden="true"
-              />
 
+            <h2 className="mt-1 font-serif text-2xl font-bold">
+              Fotografía de perfil
+            </h2>
+
+
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Personaliza la imagen
+              con la que aparecerás
+              dentro de CociHub.
+            </p>
+          </div>
+        </div>
+      </header>
+
+
+      {/* =================================================
+          CONTENT
+      ================================================= */}
+
+      <div className="flex h-full flex-col p-6 sm:p-7">
+        {/* ===============================================
+            AVATAR PREVIEW
+        =============================================== */}
+
+        <div className="flex flex-col items-center text-center">
+          <div className="relative">
+            <div className="relative flex size-36 items-center justify-center overflow-hidden rounded-full border-4 border-surface bg-brand/10 shadow-md ring-1 ring-border sm:size-40">
+              {displayedAvatar ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={
+                    displayedAvatar
+                  }
+                  alt={`Avatar de ${displayName}`}
+                  className="size-full object-cover"
+                />
+              ) : (
+                <span className="font-serif text-4xl font-bold text-brand">
+                  {
+                    getInitials(
+                      displayName,
+                    )
+                  }
+                </span>
+              )}
+
+
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-11 items-center justify-center bg-black/45 text-white">
+                <Camera
+                  className="size-4"
+                  aria-hidden="true"
+                />
+              </div>
             </div>
 
+
+            {previewUrl ? (
+              <span className="absolute -right-2 top-2 rounded-full border-2 border-surface bg-accent px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-foreground shadow-sm">
+                Vista previa
+              </span>
+            ) : null}
           </div>
 
+
+          <p className="mt-5 font-serif text-lg font-bold">
+            {
+              displayName
+            }
+          </p>
+
+
+          <span
+            className={`mt-2 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+              previewUrl
+                ? "bg-accent/15 text-warning"
+                : hasCustomAvatar
+                  ? "bg-brand/10 text-brand"
+                  : fallbackAvatarUrl
+                    ? "bg-secondary/15 text-secondary-hover"
+                    : "bg-page-muted text-muted-foreground"
+            }`}
+          >
+            {previewUrl
+              ? "Nueva imagen preparada"
+              : hasCustomAvatar
+                ? "Avatar personalizado"
+                : fallbackAvatarUrl
+                  ? "Imagen de tu cuenta"
+                  : "Sin imagen personalizada"}
+          </span>
         </div>
 
 
-        {/* =================================================
-            INFORMATION
-        ================================================= */}
+        {/* ===============================================
+            DESCRIPTION
+        =============================================== */}
 
-        <div className="min-w-0 flex-1">
-
-          <h2 className="font-serif text-xl font-semibold">
-            Imagen de perfil
-          </h2>
-
-
-          <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-
+        <div className="mt-6 rounded-2xl border border-border bg-page-muted/35 px-4 py-4">
+          <p className="text-sm leading-6 text-muted-foreground">
             {hasCustomAvatar
               ? "Estás utilizando un avatar personalizado de CociHub."
               : fallbackAvatarUrl
-                ? "Ahora estás utilizando la imagen de tu cuenta de Google. Puedes sustituirla por una propia."
-                : "Añade una imagen para personalizar tu perfil."}
-
+                ? "Ahora estás utilizando la imagen de tu cuenta de Google. Puedes sustituirla por una fotografía propia."
+                : "Añade una fotografía para personalizar tu perfil."}
           </p>
 
 
-          <p className="mt-1 text-xs text-muted-foreground">
-            JPG, PNG o WebP · Máximo 5 MB · CociHub la optimizará automáticamente
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            JPG, PNG o WebP · Máximo
+            5 MB · CociHub recortará y
+            optimizará la imagen
+            automáticamente.
           </p>
+        </div>
 
 
-          <input
-            ref={
-              inputRef
-            }
-            id="profileAvatar"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            disabled={
+        {/* ===============================================
+            FILE INPUT
+        =============================================== */}
+
+        <input
+          ref={
+            inputRef
+          }
+          id="profileAvatar"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          disabled={
+            isPreparing ||
+            isSaving ||
+            isDeleting
+          }
+          className="sr-only"
+          onChange={(
+            event,
+          ) => {
+            void handleFile(
+              event
+                .target
+                .files?.[0] ??
+              null,
+            );
+          }}
+        />
+
+
+        {/* ===============================================
+            ACTIONS
+        =============================================== */}
+
+        <div className="mt-5 flex flex-col gap-3">
+          <label
+            htmlFor="profileAvatar"
+            className={`inline-flex w-full items-center justify-center gap-2 rounded-xl border border-brand/20 bg-brand/[0.035] px-4 py-3 text-sm font-semibold text-brand transition ${
               isPreparing ||
               isSaving ||
               isDeleting
-            }
-            className="sr-only"
-            onChange={(
-              event,
-            ) => {
-              void handleFile(
-                event
-                  .target
-                  .files?.[0] ??
-                null,
-              );
-            }}
-          />
+                ? "cursor-not-allowed opacity-50"
+                : "cursor-pointer hover:border-brand/40 hover:bg-brand/[0.07]"
+            }`}
+          >
+            {isPreparing ? (
+              <Loader2
+                className="size-4 animate-spin"
+                aria-hidden="true"
+              />
+            ) : (
+              <ImagePlus
+                className="size-4"
+                aria-hidden="true"
+              />
+            )}
 
 
-          <div className="mt-5 flex flex-wrap gap-3">
+            {isPreparing
+              ? "Preparando imagen..."
+              : hasCustomAvatar
+                ? "Cambiar fotografía"
+                : "Elegir fotografía"}
+          </label>
 
-            <label
-              htmlFor="profileAvatar"
-              className={`inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition ${
+
+          {selectedFile && (
+            <button
+              type="button"
+              disabled={
                 isPreparing ||
                 isSaving ||
                 isDeleting
-                  ? "cursor-not-allowed opacity-50"
-                  : "cursor-pointer hover:bg-page-muted"
-              }`}
+              }
+              onClick={
+                handleSave
+              }
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-semibold text-inverse shadow-sm transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
-
-              {isPreparing ? (
+              {isSaving ? (
                 <Loader2
-                  className="size-4 animate-spin text-brand"
+                  className="size-4 animate-spin"
                   aria-hidden="true"
                 />
               ) : (
-                <ImagePlus
-                  className="size-4 text-brand"
+                <Camera
+                  className="size-4"
                   aria-hidden="true"
                 />
               )}
 
 
-              {isPreparing
-                ? "Preparando..."
-                : hasCustomAvatar
-                  ? "Cambiar imagen"
-                  : "Elegir imagen"}
-
-            </label>
-
-
-            {selectedFile && (
-              <button
-                type="button"
-                disabled={
-                  isPreparing ||
-                  isSaving ||
-                  isDeleting
-                }
-                onClick={
-                  handleSave
-                }
-                className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
-              >
-
-                {isSaving && (
-                  <Loader2
-                    className="size-4 animate-spin"
-                    aria-hidden="true"
-                  />
-                )}
-
-
-                {isSaving
-                  ? "Guardando..."
-                  : "Guardar nuevo avatar"}
-
-              </button>
-            )}
-
-
-            {hasCustomAvatar && (
-              <button
-                type="button"
-                disabled={
-                  isPreparing ||
-                  isSaving ||
-                  isDeleting
-                }
-                onClick={
-                  handleDelete
-                }
-                className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-
-                {isDeleting ? (
-                  <Loader2
-                    className="size-4 animate-spin"
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <Trash2
-                    className="size-4"
-                    aria-hidden="true"
-                  />
-                )}
-
-
-                {isDeleting
-                  ? "Eliminando..."
-                  : "Quitar avatar personalizado"}
-
-              </button>
-            )}
-
-          </div>
-
-
-          {selectedFile && (
-            <p className="mt-3 text-xs text-muted-foreground">
-
-              Avatar optimizado:{" "}
-
-              <span className="font-medium text-foreground">
-                {
-                  Math.ceil(
-                    selectedFile.size /
-                    1024,
-                  )
-                } KB
-              </span>
-
-            </p>
+              {isSaving
+                ? "Guardando..."
+                : "Guardar nueva fotografía"}
+            </button>
           )}
 
 
-          {message && (
-            <p
-              role="status"
-              className="mt-4 rounded-xl border border-border bg-page-muted/40 px-4 py-3 text-sm"
-            >
-              {
-                message
+          {hasCustomAvatar && (
+            <button
+              type="button"
+              disabled={
+                isPreparing ||
+                isSaving ||
+                isDeleting
               }
-            </p>
-          )}
+              onClick={
+                handleDelete
+              }
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-surface px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isDeleting ? (
+                <Loader2
+                  className="size-4 animate-spin"
+                  aria-hidden="true"
+                />
+              ) : (
+                <Trash2
+                  className="size-4"
+                  aria-hidden="true"
+                />
+              )}
 
+
+              {isDeleting
+                ? "Eliminando..."
+                : fallbackAvatarUrl
+                  ? "Restaurar imagen de la cuenta"
+                  : "Quitar fotografía personalizada"}
+            </button>
+          )}
         </div>
 
-      </div>
 
+        {/* ===============================================
+            OPTIMIZED FILE INFO
+        =============================================== */}
+
+        {selectedFile && (
+          <div className="mt-4 rounded-xl border border-accent/25 bg-accent/[0.06] px-4 py-3 text-center">
+            <p className="text-xs text-muted-foreground">
+              Imagen optimizada y
+              preparada para guardar
+            </p>
+
+
+            <p className="mt-1 font-serif text-base font-bold text-foreground">
+              {
+                Math.ceil(
+                  selectedFile.size /
+                  1024,
+                )
+              } KB
+            </p>
+          </div>
+        )}
+
+
+        {/* ===============================================
+            STATUS MESSAGE
+        =============================================== */}
+
+        {message && (
+          <p
+            role="status"
+            className="mt-4 rounded-xl border border-brand/15 bg-brand/[0.045] px-4 py-3 text-sm leading-6"
+          >
+            {
+              message
+            }
+          </p>
+        )}
+      </div>
     </section>
   );
 }

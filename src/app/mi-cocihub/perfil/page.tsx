@@ -21,8 +21,23 @@ import {
 } from "./avatar-form";
 
 import {
+  DashboardHeroForm,
+} from "./dashboard-hero-form";
+
+import {
   ProfileForm,
 } from "./profile-form";
+
+
+const RECIPE_IMAGES_BUCKET =
+  "recipe-images";
+
+
+type DashboardHeroType =
+  | "preset"
+  | "recipe"
+  | "custom"
+  | null;
 
 
 type ProfileRow = {
@@ -36,6 +51,27 @@ type ProfileRow = {
     string | null;
 
   avatar_url:
+    string | null;
+
+  dashboard_hero_type:
+    DashboardHeroType;
+
+  dashboard_hero_value:
+    string | null;
+};
+
+
+type HeroRecipeRow = {
+  id:
+    string;
+
+  title:
+    string;
+
+  image_path:
+    string | null;
+
+  updated_at:
     string | null;
 };
 
@@ -183,7 +219,9 @@ export default async function MyProfilePage() {
         display_name,
         username,
         role,
-        avatar_url
+        avatar_url,
+        dashboard_hero_type,
+        dashboard_hero_value
       `)
       .eq(
         "id",
@@ -300,6 +338,118 @@ export default async function MyProfilePage() {
     "admin"
       ? "Administrador"
       : "Cocinero de la comunidad";
+
+
+  // =======================================================
+  // HERO RECIPE OPTIONS
+  // =======================================================
+
+  const {
+    data:
+      heroRecipesData,
+
+    error:
+      heroRecipesError,
+  } =
+    await supabase
+      .from(
+        "recipes",
+      )
+      .select(
+        "id, title, image_path, updated_at",
+      )
+      .eq(
+        "author_id",
+        userId,
+      )
+      .not(
+        "image_path",
+        "is",
+        null,
+      )
+      .order(
+        "updated_at",
+        {
+          ascending:
+            false,
+        },
+      );
+
+
+  if (
+    heroRecipesError
+  ) {
+    throw new Error(
+      "No se pudieron cargar las imágenes de tus recetas.",
+    );
+  }
+
+
+  const heroRecipeRows =
+    (
+      heroRecipesData ??
+      []
+    ) as HeroRecipeRow[];
+
+
+  const heroRecipeOptions =
+    heroRecipeRows
+      .filter(
+        (
+          recipe,
+        ) =>
+          Boolean(
+            recipe.image_path,
+          ),
+      )
+      .map(
+        (
+          recipe,
+        ) => {
+          const imagePath =
+            recipe
+              .image_path as
+              string;
+
+
+          const externalUrl =
+            normalizeExternalUrl(
+              imagePath,
+            );
+
+
+          const imageUrl =
+            externalUrl ??
+            supabase
+              .storage
+              .from(
+                RECIPE_IMAGES_BUCKET,
+              )
+              .getPublicUrl(
+                imagePath,
+              )
+              .data
+              .publicUrl;
+
+
+          return {
+            id:
+              recipe.id,
+
+            title:
+              recipe.title,
+
+            imageUrl,
+          };
+        },
+      );
+
+
+  const automaticRecipeImageUrl =
+    heroRecipeOptions[
+      0
+    ]?.imageUrl ??
+    null;
 
 
   // =======================================================
@@ -624,59 +774,37 @@ export default async function MyProfilePage() {
 
 
         {/* ===============================================
-            NEXT PERSONALIZATION BLOCK
+            DASHBOARD HERO PERSONALIZATION
         =============================================== */}
 
-        <section className="mt-8 border-t border-border pt-7">
-          <div className="rounded-[2rem] border border-dashed border-brand/25 bg-brand/[0.025] px-6 py-7 sm:px-8">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-3xl">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">
-                  Personaliza tu espacio
-                </p>
-
-
-                <h2 className="mt-2 font-serif text-2xl font-bold sm:text-3xl">
-                  Imagen de Mi CociHub
-                </h2>
-
-
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  En el siguiente paso
-                  podrás elegir la imagen
-                  que aparecerá en la
-                  cabecera de tu espacio
-                  personal: una pieza de
-                  la colección CociHub al
-                  óleo, una fotografía de
-                  tus recetas o una imagen
-                  propia.
-                </p>
-              </div>
-
-
-              <div
-                className="flex shrink-0 items-center gap-3 rounded-2xl border border-border bg-surface px-5 py-4 shadow-sm"
-                aria-hidden="true"
-              >
-                <span className="flex size-11 items-center justify-center rounded-xl bg-brand/10 text-brand">
-                  <ChefHat className="size-5" />
-                </span>
-
-
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Siguiente paso
-                  </p>
-
-                  <p className="mt-0.5 font-serif font-bold">
-                    Tu hero personal
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <DashboardHeroForm
+          displayName={
+            displayName
+          }
+          username={
+            profile.username
+          }
+          roleLabel={
+            roleLabel
+          }
+          avatarUrl={
+            displayedAvatarUrl
+          }
+          initialHeroType={
+            profile
+              .dashboard_hero_type
+          }
+          initialHeroValue={
+            profile
+              .dashboard_hero_value
+          }
+          recipes={
+            heroRecipeOptions
+          }
+          automaticRecipeImageUrl={
+            automaticRecipeImageUrl
+          }
+        />
       </div>
     </main>
   );

@@ -1,4 +1,5 @@
 import {
+  AlertCircle,
   Archive,
   ArrowLeft,
   ArrowRight,
@@ -24,6 +25,10 @@ import {
   createClient,
 } from "@/lib/supabase/server";
 
+import {
+  reopenPublishedRecipeForEditing,
+} from "./reopen-recipe-actions";
+
 
 const RECIPE_IMAGES_BUCKET =
   "recipe-images";
@@ -40,6 +45,9 @@ type PageProps = {
   searchParams?:
     Promise<{
       status?:
+        string;
+
+      error?:
         string;
     }>;
 };
@@ -444,6 +452,10 @@ export default async function MyRecipesPage({
     params?.status;
 
 
+  const pageError =
+    params?.error;
+
+
   const activeStatus =
     isRecipeStatus(
       requestedStatus,
@@ -613,17 +625,6 @@ export default async function MyRecipesPage({
   // =======================================================
   // OWN RECIPES
   // =======================================================
-  //
-  // IMPORTANT:
-  //
-  // This select must remain a string literal.
-  //
-  // Supabase uses the literal query at compile time
-  // to infer the returned TypeScript object.
-  //
-  // Building it dynamically with .join(",") widens
-  // the expression to string and breaks that inference.
-  // =======================================================
 
   const {
     data:
@@ -715,7 +716,7 @@ export default async function MyRecipesPage({
 
 
   // =======================================================
-  // RECIPE IMAGE
+  // IMAGE
   // =======================================================
 
   function getRecipeImageUrl(
@@ -754,10 +755,6 @@ export default async function MyRecipesPage({
       .publicUrl;
   }
 
-
-  // =======================================================
-  // RENDER
-  // =======================================================
 
   return (
     <main className="min-h-screen bg-page text-foreground">
@@ -870,15 +867,7 @@ export default async function MyRecipesPage({
       </header>
 
 
-      {/* ===================================================
-          CONTENT
-      =================================================== */}
-
       <div className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
-        {/* ===============================================
-            BREADCRUMB / BACK
-        =============================================== */}
-
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link
             href="/mi-cocihub"
@@ -913,10 +902,6 @@ export default async function MyRecipesPage({
           </div>
         </div>
 
-
-        {/* ===============================================
-            PAGE HEADER
-        =============================================== */}
 
         <header className="mt-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -965,9 +950,25 @@ export default async function MyRecipesPage({
         </header>
 
 
-        {/* ===============================================
-            STATUS SUMMARY
-        =============================================== */}
+        {pageError ? (
+          <div
+            className="mt-6 flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+            role="alert"
+          >
+            <AlertCircle
+              className="mt-0.5 size-5 shrink-0"
+              aria-hidden="true"
+            />
+
+            <p>
+              No hemos podido abrir esa
+              receta para editarla.
+              Actualiza la página e inténtalo
+              de nuevo.
+            </p>
+          </div>
+        ) : null}
+
 
         <section className="mt-7">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -1044,10 +1045,6 @@ export default async function MyRecipesPage({
           </div>
         </section>
 
-
-        {/* ===============================================
-            FILTERS
-        =============================================== */}
 
         <section className="mt-7 border-t border-border pt-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -1128,10 +1125,6 @@ export default async function MyRecipesPage({
           </div>
 
 
-          {/* =============================================
-              EMPTY STATE
-          ============================================= */}
-
           {visibleRecipes.length ===
           0 ? (
             <div className="mt-6 rounded-[2rem] border border-dashed border-border bg-surface px-6 py-12 text-center">
@@ -1173,10 +1166,6 @@ export default async function MyRecipesPage({
             </div>
 
           ) : (
-            /* ===========================================
-               RECIPE LIST
-            =========================================== */
-
             <div className="mt-6 grid gap-4">
               {visibleRecipes.map(
                 (
@@ -1219,9 +1208,7 @@ export default async function MyRecipesPage({
                       }
                       className="group overflow-hidden rounded-[1.6rem] border border-border bg-surface shadow-sm transition hover:border-brand/25 hover:shadow-md"
                     >
-                      <div className="grid lg:grid-cols-[220px_minmax(0,1fr)_190px]">
-                        {/* IMAGE */}
-
+                      <div className="grid lg:grid-cols-[220px_minmax(0,1fr)_210px]">
                         <div className="relative min-h-48 overflow-hidden bg-page-muted lg:min-h-full">
                           {imageUrl ? (
                             <Image
@@ -1250,13 +1237,8 @@ export default async function MyRecipesPage({
                               </div>
                             </div>
                           )}
-
-
-                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
                         </div>
 
-
-                        {/* CONTENT */}
 
                         <div className="min-w-0 p-5 sm:p-6">
                           <div className="flex flex-wrap items-center gap-2">
@@ -1323,18 +1305,9 @@ export default async function MyRecipesPage({
 
                           {hasReviewNotes ? (
                             <div className="mt-5 rounded-2xl border border-brand/20 bg-brand/[0.035] p-4">
-                              <div className="flex items-center gap-2">
-                                <span className="flex size-7 items-center justify-center rounded-lg bg-brand/10 text-brand">
-                                  <FilePenLine
-                                    className="size-3.5"
-                                    aria-hidden="true"
-                                  />
-                                </span>
-
-                                <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">
-                                  Comentario de revisión
-                                </p>
-                              </div>
+                              <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">
+                                Comentario de revisión
+                              </p>
 
 
                               <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -1346,8 +1319,6 @@ export default async function MyRecipesPage({
                           ) : null}
                         </div>
 
-
-                        {/* ACTION */}
 
                         <div className="flex items-center border-t border-border bg-page-muted/25 p-5 lg:border-l lg:border-t-0">
                           {recipe.status ===
@@ -1385,17 +1356,53 @@ export default async function MyRecipesPage({
 
                           ) : recipe.status ===
                             "published" ? (
-                            <Link
-                              href={`/recipes/${recipe.slug}`}
-                              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-secondary/30 bg-secondary/[0.07] px-4 py-3 text-sm font-semibold text-secondary-hover transition hover:bg-secondary/10"
-                            >
-                              <Eye
-                                className="size-4"
-                                aria-hidden="true"
-                              />
+                            <div className="w-full space-y-2">
+                              <Link
+                                href={`/recipes/${recipe.slug}`}
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-secondary/30 bg-secondary/[0.07] px-4 py-3 text-sm font-semibold text-secondary-hover transition hover:bg-secondary/10"
+                              >
+                                <Eye
+                                  className="size-4"
+                                  aria-hidden="true"
+                                />
 
-                              Ver publicada
-                            </Link>
+                                Ver publicada
+                              </Link>
+
+
+                              <form
+                                action={
+                                  reopenPublishedRecipeForEditing
+                                }
+                              >
+                                <input
+                                  type="hidden"
+                                  name="recipeId"
+                                  value={
+                                    recipe.id
+                                  }
+                                />
+
+                                <button
+                                  type="submit"
+                                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-semibold text-inverse shadow-sm transition hover:bg-brand-hover"
+                                >
+                                  <FilePenLine
+                                    className="size-4"
+                                    aria-hidden="true"
+                                  />
+
+                                  Editar receta
+                                </button>
+                              </form>
+
+
+                              <p className="px-1 text-center text-[10px] leading-4 text-muted-foreground">
+                                Se retirará temporalmente
+                                de publicación hasta superar
+                                una nueva revisión.
+                              </p>
+                            </div>
 
                           ) : (
                             <div className="w-full text-center">

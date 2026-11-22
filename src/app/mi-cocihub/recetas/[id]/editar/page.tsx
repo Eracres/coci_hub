@@ -1,9 +1,11 @@
 import {
   ArrowLeft,
-  ChefHat,
+  Check,
   FilePenLine,
+  UserRound,
 } from "lucide-react";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import {
@@ -30,6 +32,10 @@ import {
   getRecipeIngredients,
   getRecipeSteps,
 } from "@/services/recipes/recipe-service";
+
+import {
+  AdditionalInfoForm,
+} from "./additional-info-form";
 
 import {
   BasicInfoForm,
@@ -72,6 +78,7 @@ type EditorStep =
   | "steps"
   | "times"
   | "image"
+  | "additional"
   | "review";
 
 
@@ -90,12 +97,57 @@ type EditMyRecipePageProps = {
 };
 
 
-type RecipeTimesRow = {
+type RecipeEditorDetailsRow = {
   preparation_minutes:
     number | null;
 
   elaboration_minutes:
     number | null;
+
+  tips:
+    string | null;
+
+  substitutions:
+    string | null;
+
+  storage:
+    string | null;
+
+  freezing:
+    string | null;
+
+  reheating:
+    string | null;
+
+  source_type:
+    string | null;
+
+  source_title:
+    string | null;
+
+  source_author:
+    string | null;
+
+  source_page:
+    string | null;
+
+  source_url:
+    string | null;
+
+  source_notes:
+    string | null;
+};
+
+
+type ProfileRow = {
+  display_name:
+    string | null;
+
+  username:
+    string | null;
+
+  avatar_url:
+    string | null;
 };
 
 
@@ -108,6 +160,7 @@ const editorSteps:
     "steps",
     "times",
     "image",
+    "additional",
     "review",
   ];
 
@@ -138,8 +191,11 @@ const stepLabels:
     image:
       "Imagen",
 
+    additional:
+      "Información adicional",
+
     review:
-      "Revisión final",
+      "Revisar y enviar",
   };
 
 
@@ -149,6 +205,125 @@ function isEditorStep(
 ): value is EditorStep {
   return editorSteps.includes(
     value as EditorStep,
+  );
+}
+
+
+function normalizeExternalUrl(
+  value:
+    string | null | undefined,
+) {
+  if (
+    !value
+  ) {
+    return null;
+  }
+
+
+  try {
+    const url =
+      new URL(
+        value,
+      );
+
+
+    if (
+      url.protocol !==
+        "https:" &&
+      url.protocol !==
+        "http:"
+    ) {
+      return null;
+    }
+
+
+    return value;
+
+  } catch {
+    return null;
+  }
+}
+
+
+function getMetadataAvatar(
+  claims:
+    unknown,
+) {
+  if (
+    !claims ||
+    typeof claims !==
+      "object"
+  ) {
+    return null;
+  }
+
+
+  const claimsRecord =
+    claims as
+      Record<
+        string,
+        unknown
+      >;
+
+
+  const metadata =
+    claimsRecord
+      .user_metadata;
+
+
+  if (
+    !metadata ||
+    typeof metadata !==
+      "object"
+  ) {
+    return null;
+  }
+
+
+  const metadataRecord =
+    metadata as
+      Record<
+        string,
+        unknown
+      >;
+
+
+  const avatarUrl =
+    typeof metadataRecord
+      .avatar_url ===
+      "string"
+      ? metadataRecord
+          .avatar_url
+      : null;
+
+
+  const picture =
+    typeof metadataRecord
+      .picture ===
+      "string"
+      ? metadataRecord
+          .picture
+      : null;
+
+
+  return (
+    normalizeExternalUrl(
+      avatarUrl,
+    ) ??
+    normalizeExternalUrl(
+      picture,
+    )
+  );
+}
+
+
+function hasText(
+  value:
+    string | null,
+) {
+  return Boolean(
+    value
+      ?.trim(),
   );
 }
 
@@ -190,10 +365,22 @@ export default async function EditMyRecipePage({
       .getClaims();
 
 
-  const userId =
+  const claims =
     claimsData
-      ?.claims
-      ?.sub;
+      ?.claims as
+      Record<
+        string,
+        unknown
+      > |
+      undefined;
+
+
+  const userId =
+    typeof claims
+      ?.sub ===
+      "string"
+      ? claims.sub
+      : null;
 
 
   if (
@@ -235,14 +422,15 @@ export default async function EditMyRecipePage({
 
 
   // =======================================================
-  // RELATIONS + INGREDIENTS + STEPS + TIMES
+  // RECIPE DATA + PROFILE
   // =======================================================
 
   const [
     classificationRelations,
     ingredientGroups,
     recipeSteps,
-    recipeTimesResult,
+    recipeDetailsResult,
+    profileResult,
   ] =
     await Promise.all([
       getRecipeClassificationRelations(
@@ -263,7 +451,18 @@ export default async function EditMyRecipePage({
         )
         .select(`
           preparation_minutes,
-          elaboration_minutes
+          elaboration_minutes,
+          tips,
+          substitutions,
+          storage,
+          freezing,
+          reheating,
+          source_type,
+          source_title,
+          source_author,
+          source_page,
+          source_url,
+          source_notes
         `)
         .eq(
           "id",
@@ -274,21 +473,119 @@ export default async function EditMyRecipePage({
           userId,
         )
         .single(),
+
+      supabase
+        .from(
+          "profiles",
+        )
+        .select(
+          "display_name, username, avatar_url",
+        )
+        .eq(
+          "id",
+          userId,
+        )
+        .single(),
     ]);
 
 
   if (
-    recipeTimesResult.error
+    recipeDetailsResult.error
   ) {
     throw new Error(
-      `No se pudieron obtener los tiempos de la receta: ${recipeTimesResult.error.message}`,
+      `No se pudieron obtener los datos complementarios de la receta: ${recipeDetailsResult.error.message}`,
     );
   }
 
 
-  const recipeTimes =
-    recipeTimesResult.data as
-      RecipeTimesRow;
+  if (
+    profileResult.error ||
+    !profileResult.data
+  ) {
+    redirect(
+      "/login?error=profile-missing",
+    );
+  }
+
+
+  const recipeDetails =
+    recipeDetailsResult.data as
+      RecipeEditorDetailsRow;
+
+
+  const profile =
+    profileResult.data as
+      ProfileRow;
+
+
+  if (
+    !profile.username
+  ) {
+    redirect(
+      "/complete-profile",
+    );
+  }
+
+
+  // =======================================================
+  // PROFILE
+  // =======================================================
+
+  const displayName =
+    profile
+      .display_name
+      ?.trim() ||
+    profile.username;
+
+
+  const storedAvatar =
+    profile
+      .avatar_url
+      ?.trim() ||
+    null;
+
+
+  let profileAvatarUrl:
+    string | null =
+      null;
+
+
+  if (
+    storedAvatar
+  ) {
+    const externalAvatar =
+      normalizeExternalUrl(
+        storedAvatar,
+      );
+
+
+    if (
+      externalAvatar
+    ) {
+      profileAvatarUrl =
+        externalAvatar;
+
+    } else {
+      profileAvatarUrl =
+        supabase
+          .storage
+          .from(
+            "profile-avatars",
+          )
+          .getPublicUrl(
+            storedAvatar,
+          )
+          .data
+          .publicUrl;
+    }
+  }
+
+
+  const avatarUrl =
+    profileAvatarUrl ??
+    getMetadataAvatar(
+      claims,
+    );
 
 
   // =======================================================
@@ -373,13 +670,13 @@ export default async function EditMyRecipePage({
 
 
   const timesComplete =
-    recipeTimes
+    recipeDetails
       .preparation_minutes !==
       null &&
-    recipeTimes
+    recipeDetails
       .preparation_minutes >
       0 &&
-    recipeTimes
+    recipeDetails
       .elaboration_minutes !==
       null;
 
@@ -394,18 +691,54 @@ export default async function EditMyRecipePage({
     );
 
 
+  const additionalInfoComplete =
+    hasText(
+      recipeDetails.tips,
+    ) ||
+    hasText(
+      recipeDetails.substitutions,
+    ) ||
+    hasText(
+      recipeDetails.storage,
+    ) ||
+    hasText(
+      recipeDetails.freezing,
+    ) ||
+    hasText(
+      recipeDetails.reheating,
+    ) ||
+    hasText(
+      recipeDetails.source_type,
+    ) ||
+    hasText(
+      recipeDetails.source_title,
+    ) ||
+    hasText(
+      recipeDetails.source_author,
+    ) ||
+    hasText(
+      recipeDetails.source_page,
+    ) ||
+    hasText(
+      recipeDetails.source_url,
+    ) ||
+    hasText(
+      recipeDetails.source_notes,
+    );
+
+
   // =======================================================
   // TOTAL TIME
   // =======================================================
 
   const totalMinutes =
     (
-      recipeTimes
+      recipeDetails
         .preparation_minutes ??
       0
     ) +
     (
-      recipeTimes
+      recipeDetails
         .elaboration_minutes ??
       0
     );
@@ -517,14 +850,34 @@ export default async function EditMyRecipePage({
 
 
   // =======================================================
-  // CAN SUBMIT
+  // REQUIRED PROGRESS
   // =======================================================
-  //
-  // La interfaz utiliza exactamente los mismos apartados
-  // que se muestran al usuario.
-  //
-  // PostgreSQL realizará después la validación definitiva
-  // mediante submit_my_recipe_for_review().
+
+  const requiredTotal =
+    reviewChecklist.length;
+
+
+  const completedRequired =
+    reviewChecklist.filter(
+      (
+        item,
+      ) =>
+        item.complete,
+    ).length;
+
+
+  const progressPercentage =
+    Math.round(
+      (
+        completedRequired /
+        requiredTotal
+      ) *
+      100,
+    );
+
+
+  // =======================================================
+  // CAN SUBMIT
   // =======================================================
 
   const canSubmitForReview =
@@ -620,7 +973,7 @@ export default async function EditMyRecipePage({
 
 
   // =======================================================
-  // STEPPER COMPLETION
+  // STEPPER
   // =======================================================
 
   const completion:
@@ -648,6 +1001,9 @@ export default async function EditMyRecipePage({
 
     image:
       imageComplete,
+
+    additional:
+      additionalInfoComplete,
 
     review:
       false,
@@ -679,6 +1035,14 @@ export default async function EditMyRecipePage({
           current:
             step ===
             activeStep,
+
+          optional:
+            step ===
+            "additional",
+
+          final:
+            step ===
+            "review",
         }),
       );
 
@@ -688,95 +1052,248 @@ export default async function EditMyRecipePage({
   // =======================================================
 
   return (
-    <main className="min-h-screen bg-page px-4 py-8 text-foreground">
+    <main className="min-h-screen bg-page text-foreground">
+      {/* ===================================================
+          PERSONAL NAVIGATION
+      =================================================== */}
 
-      <div className="mx-auto w-full max-w-6xl">
-
-        {/* =================================================
-            TOP BAR
-        ================================================= */}
-
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
+      <header className="border-b border-border bg-surface/95 shadow-sm">
+        <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-6 px-4 py-3 sm:px-6 lg:px-8">
           <Link
-            href="/mi-cocihub/recetas"
-            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+            href="/"
+            className="flex shrink-0 items-center gap-3"
           >
-            <ArrowLeft
-              className="size-4"
-              aria-hidden="true"
+            <Image
+              src="/brand/cocihub-logo.png"
+              alt="CociHub"
+              width={154}
+              height={54}
+              priority
+              className="h-auto w-[142px]"
             />
-
-            Volver a Mis recetas
           </Link>
 
 
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium">
+          <nav
+            className="hidden items-center rounded-2xl border border-border bg-surface px-2 py-1 shadow-sm lg:flex"
+            aria-label="Navegación principal"
+          >
+            <Link
+              href="/"
+              className="rounded-xl px-4 py-2 text-sm font-semibold transition hover:bg-page-muted hover:text-brand"
+            >
+              Inicio
+            </Link>
 
-            <FilePenLine
-              className="size-4 text-brand"
-              aria-hidden="true"
-            />
+            <Link
+              href="/recipes"
+              className="rounded-xl px-4 py-2 text-sm font-semibold transition hover:bg-page-muted hover:text-brand"
+            >
+              Recetas
+            </Link>
 
-            Borrador
+            <Link
+              href="/categories"
+              className="rounded-xl px-4 py-2 text-sm font-semibold transition hover:bg-page-muted hover:text-brand"
+            >
+              Categorías
+            </Link>
 
-          </span>
+            <Link
+              href="/about"
+              className="rounded-xl px-4 py-2 text-sm font-semibold transition hover:bg-page-muted hover:text-brand"
+            >
+              Sobre CociHub
+            </Link>
+          </nav>
 
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/mi-cocihub/recetas"
+              className="hidden items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:bg-page-muted sm:inline-flex"
+            >
+              Mis recetas
+            </Link>
+
+
+            <Link
+              href="/mi-cocihub/perfil"
+              className="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2 shadow-sm transition hover:bg-page-muted"
+            >
+              <span className="flex size-8 items-center justify-center overflow-hidden rounded-full border border-border bg-page-muted">
+                {avatarUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={
+                      avatarUrl
+                    }
+                    alt=""
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <UserRound
+                    className="size-4 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                )}
+              </span>
+
+
+              <span className="hidden text-left sm:block">
+                <span className="block text-[10px] leading-none text-muted-foreground">
+                  Hola,
+                </span>
+
+                <span className="mt-0.5 block max-w-28 truncate text-sm font-semibold leading-none">
+                  {
+                    displayName
+                  }
+                </span>
+              </span>
+            </Link>
+          </div>
         </div>
+      </header>
 
 
-        {/* =================================================
-            HEADER
-        ================================================= */}
+      {/* ===================================================
+          CONTENT
+      =================================================== */}
 
-        <section className="rounded-3xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+      <div className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
+        {/* ===============================================
+            BACK
+        =============================================== */}
 
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+        <Link
+          href="/mi-cocihub/recetas"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition hover:text-brand"
+        >
+          <ArrowLeft
+            className="size-4"
+            aria-hidden="true"
+          />
 
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-inverse">
+          Volver a Mis recetas
+        </Link>
 
-              <ChefHat
-                className="size-6"
+
+        {/* ===============================================
+            EDITOR HEADER
+        =============================================== */}
+
+        <section className="mt-5 grid gap-6 border-b border-border pb-6 lg:grid-cols-[minmax(0,1fr)_390px] lg:items-center">
+          <div className="flex min-w-0 items-center gap-5">
+            <span className="flex size-24 shrink-0 items-center justify-center rounded-[1.6rem] border border-brand/15 bg-brand/[0.04] shadow-sm">
+              <Image
+                src="/brand/cocihub-mark-outline.png"
+                alt=""
+                width={68}
+                height={68}
+                className="size-[68px] object-contain"
                 aria-hidden="true"
               />
+            </span>
 
-            </div>
 
-
-            <div>
-
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand">
                 Editor de recetas
               </p>
 
 
-              <h1 className="mt-2 font-serif text-3xl font-semibold sm:text-4xl">
-                {
-                  recipe.title
-                }
-              </h1>
+              <div className="mt-1 flex flex-wrap items-center gap-3">
+                <h1 className="min-w-0 font-serif text-4xl font-bold tracking-tight sm:text-5xl">
+                  {
+                    recipe.title
+                  }
+                </h1>
 
 
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                <span className="inline-flex items-center gap-2 rounded-full border border-accent/35 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-warning">
+                  <FilePenLine
+                    className="size-3.5"
+                    aria-hidden="true"
+                  />
+
+                  Borrador
+                </span>
+              </div>
+
+
+              <p className="mt-3 max-w-3xl font-serif text-base italic leading-7 text-muted-foreground">
                 Completa tu receta paso a paso.
-                Puedes moverte libremente entre
-                las secciones mientras siga
-                siendo un borrador.
+                Puedes editarla en cualquier
+                momento antes de enviarla a
+                revisión.
               </p>
-
             </div>
-
           </div>
 
+
+          {/* =============================================
+              REQUIRED PROGRESS
+          ============================================= */}
+
+          <div className="border-t border-border pt-5 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-7 items-center justify-center rounded-full bg-secondary-hover text-inverse">
+                  <Check
+                    className="size-4"
+                    aria-hidden="true"
+                  />
+                </span>
+
+                <p className="text-sm font-bold">
+                  {
+                    completedRequired
+                  }{" "}
+                  de{" "}
+                  {
+                    requiredTotal
+                  }{" "}
+                  apartados obligatorios
+                </p>
+              </div>
+
+
+              <span className="rounded-full border border-secondary/25 bg-secondary/10 px-3 py-1 text-sm font-bold text-secondary-hover">
+                {
+                  progressPercentage
+                } %
+              </span>
+            </div>
+
+
+            <div
+              className="mt-4 h-3 overflow-hidden rounded-full bg-page-muted"
+              role="progressbar"
+              aria-label="Progreso de la receta"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={
+                progressPercentage
+              }
+            >
+              <div
+                className="h-full rounded-full bg-secondary-hover transition-[width]"
+                style={{
+                  width:
+                    `${progressPercentage}%`,
+                }}
+              />
+            </div>
+          </div>
         </section>
 
 
-        {/* =================================================
+        {/* ===============================================
             EDITOR
-        ================================================= */}
+        =============================================== */}
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
-
+        <div className="mt-6 grid items-start gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
           <RecipeEditorStepper
             steps={
               stepperItems
@@ -784,14 +1301,13 @@ export default async function EditMyRecipePage({
           />
 
 
-          <div>
-
+          <div className="min-w-0">
             {/* =============================================
-                BASIC
+                01 BASIC
             ============================================= */}
 
             {activeStep ===
-              "basic" && (
+              "basic" ? (
                 <BasicInfoForm
                   recipeId={
                     recipe.id
@@ -813,15 +1329,15 @@ export default async function EditMyRecipePage({
                       recipe.introduction,
                   }}
                 />
-              )}
+              ) : null}
 
 
             {/* =============================================
-                SERVINGS
+                02 SERVINGS
             ============================================= */}
 
             {activeStep ===
-              "servings" && (
+              "servings" ? (
                 <ServingsForm
                   recipeId={
                     recipe.id
@@ -836,63 +1352,63 @@ export default async function EditMyRecipePage({
                     `/mi-cocihub/recetas/${recipe.id}/editar?step=classification`
                   }
                 />
-              )}
+              ) : null}
 
 
             {/* =============================================
-                CLASSIFICATION
+                03 CLASSIFICATION
             ============================================= */}
 
             {activeStep ===
               "classification" &&
-              classificationOptions && (
-                <ClassificationForm
-                  recipeId={
-                    recipe.id
-                  }
-                  recipeTypes={
-                    classificationOptions
-                      .recipeTypes
-                  }
-                  categories={
-                    classificationOptions
-                      .categories
-                  }
-                  tags={
-                    classificationOptions
-                      .tags
-                  }
-                  initialValues={{
-                    recipeTypeId:
-                      recipe.recipe_type_id,
+            classificationOptions ? (
+              <ClassificationForm
+                recipeId={
+                  recipe.id
+                }
+                recipeTypes={
+                  classificationOptions
+                    .recipeTypes
+                }
+                categories={
+                  classificationOptions
+                    .categories
+                }
+                tags={
+                  classificationOptions
+                    .tags
+                }
+                initialValues={{
+                  recipeTypeId:
+                    recipe.recipe_type_id,
 
-                    difficulty:
-                      recipe.difficulty,
+                  difficulty:
+                    recipe.difficulty,
 
-                    categoryIds:
-                      classificationRelations
-                        .categoryIds,
+                  categoryIds:
+                    classificationRelations
+                      .categoryIds,
 
-                    tagIds:
-                      classificationRelations
-                        .tagIds,
-                  }}
-                  previousStepHref={
-                    `/mi-cocihub/recetas/${recipe.id}/editar?step=servings`
-                  }
-                  nextStepHref={
-                    `/mi-cocihub/recetas/${recipe.id}/editar?step=ingredients`
-                  }
-                />
-              )}
+                  tagIds:
+                    classificationRelations
+                      .tagIds,
+                }}
+                previousStepHref={
+                  `/mi-cocihub/recetas/${recipe.id}/editar?step=servings`
+                }
+                nextStepHref={
+                  `/mi-cocihub/recetas/${recipe.id}/editar?step=ingredients`
+                }
+              />
+            ) : null}
 
 
             {/* =============================================
-                INGREDIENTS
+                04 INGREDIENTS
             ============================================= */}
 
             {activeStep ===
-              "ingredients" && (
+              "ingredients" ? (
                 <IngredientsForm
                   recipeId={
                     recipe.id
@@ -907,15 +1423,15 @@ export default async function EditMyRecipePage({
                     `/mi-cocihub/recetas/${recipe.id}/editar?step=steps`
                   }
                 />
-              )}
+              ) : null}
 
 
             {/* =============================================
-                STEPS
+                05 STEPS
             ============================================= */}
 
             {activeStep ===
-              "steps" && (
+              "steps" ? (
                 <StepsForm
                   recipeId={
                     recipe.id
@@ -930,26 +1446,26 @@ export default async function EditMyRecipePage({
                     `/mi-cocihub/recetas/${recipe.id}/editar?step=times`
                   }
                 />
-              )}
+              ) : null}
 
 
             {/* =============================================
-                TIMES
+                06 TIMES
             ============================================= */}
 
             {activeStep ===
-              "times" && (
+              "times" ? (
                 <TimesForm
                   recipeId={
                     recipe.id
                   }
                   initialValues={{
                     preparationMinutes:
-                      recipeTimes
+                      recipeDetails
                         .preparation_minutes,
 
                     elaborationMinutes:
-                      recipeTimes
+                      recipeDetails
                         .elaboration_minutes,
                   }}
                   previousStepHref={
@@ -959,15 +1475,15 @@ export default async function EditMyRecipePage({
                     `/mi-cocihub/recetas/${recipe.id}/editar?step=image`
                   }
                 />
-              )}
+              ) : null}
 
 
             {/* =============================================
-                IMAGE
+                07 IMAGE
             ============================================= */}
 
             {activeStep ===
-              "image" && (
+              "image" ? (
                 <ImageForm
                   recipeId={
                     recipe.id
@@ -985,18 +1501,72 @@ export default async function EditMyRecipePage({
                     `/mi-cocihub/recetas/${recipe.id}/editar?step=times`
                   }
                   nextStepHref={
-                    `/mi-cocihub/recetas/${recipe.id}/editar?step=review`
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=additional`
                   }
                 />
-              )}
+              ) : null}
 
 
             {/* =============================================
-                REVIEW
+                08 ADDITIONAL INFO
             ============================================= */}
 
             {activeStep ===
-              "review" && (
+              "additional" ? (
+                <AdditionalInfoForm
+                  recipeId={
+                    recipe.id
+                  }
+                  initialValues={{
+                    tips:
+                      recipeDetails.tips,
+
+                    substitutions:
+                      recipeDetails.substitutions,
+
+                    storage:
+                      recipeDetails.storage,
+
+                    freezing:
+                      recipeDetails.freezing,
+
+                    reheating:
+                      recipeDetails.reheating,
+
+                    sourceType:
+                      recipeDetails.source_type,
+
+                    sourceTitle:
+                      recipeDetails.source_title,
+
+                    sourceAuthor:
+                      recipeDetails.source_author,
+
+                    sourcePage:
+                      recipeDetails.source_page,
+
+                    sourceUrl:
+                      recipeDetails.source_url,
+
+                    sourceNotes:
+                      recipeDetails.source_notes,
+                  }}
+                  previousStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=image`
+                  }
+                  nextStepHref={
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=review`
+                  }
+                />
+              ) : null}
+
+
+            {/* =============================================
+                09 REVIEW
+            ============================================= */}
+
+            {activeStep ===
+              "review" ? (
                 <ReviewForm
                   recipeId={
                     recipe.id
@@ -1027,11 +1597,11 @@ export default async function EditMyRecipePage({
                   }
                   times={{
                     preparationMinutes:
-                      recipeTimes
+                      recipeDetails
                         .preparation_minutes,
 
                     elaborationMinutes:
-                      recipeTimes
+                      recipeDetails
                         .elaboration_minutes,
 
                     totalMinutes,
@@ -1043,17 +1613,13 @@ export default async function EditMyRecipePage({
                     canSubmitForReview
                   }
                   previousStepHref={
-                    `/mi-cocihub/recetas/${recipe.id}/editar?step=image`
+                    `/mi-cocihub/recetas/${recipe.id}/editar?step=additional`
                   }
                 />
-              )}
-
+              ) : null}
           </div>
-
         </div>
-
       </div>
-
     </main>
   );
 }

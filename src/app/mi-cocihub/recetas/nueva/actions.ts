@@ -54,7 +54,6 @@ export async function createRecipe(
   formData:
     FormData,
 ): Promise<NewRecipeState> {
-
   const title =
     getValue(
       formData,
@@ -78,6 +77,10 @@ export async function createRecipe(
   };
 
 
+  // =======================================================
+  // TITLE VALIDATION
+  // =======================================================
+
   if (
     title.length <
       3 ||
@@ -90,6 +93,28 @@ export async function createRecipe(
 
       message:
         "El título debe tener entre 3 y 120 caracteres.",
+
+      values,
+    };
+  }
+
+
+  // =======================================================
+  // SLUG VALIDATION
+  // =======================================================
+
+  if (
+    slug.length <
+      3 ||
+    slug.length >
+      140
+  ) {
+    return {
+      status:
+        "error",
+
+      message:
+        "La dirección de la receta debe tener entre 3 y 140 caracteres.",
 
       values,
     };
@@ -112,6 +137,10 @@ export async function createRecipe(
     };
   }
 
+
+  // =======================================================
+  // AUTHENTICATION
+  // =======================================================
 
   const supabase =
     await createClient();
@@ -141,6 +170,10 @@ export async function createRecipe(
   }
 
 
+  // =======================================================
+  // CREATE DRAFT
+  // =======================================================
+
   const {
     data,
     error,
@@ -157,8 +190,9 @@ export async function createRecipe(
     );
 
 
-  if (error) {
-
+  if (
+    error
+  ) {
     if (
       error.code ===
       "23505"
@@ -173,6 +207,12 @@ export async function createRecipe(
         values,
       };
     }
+
+
+    console.error(
+      "CREATE COMMUNITY RECIPE DRAFT ERROR:",
+      error,
+    );
 
 
     return {
@@ -209,6 +249,10 @@ export async function createRecipe(
     };
   }
 
+
+  // =======================================================
+  // EDITOR
+  // =======================================================
 
   redirect(
     `/mi-cocihub/recetas/${recipe.id}/editar`,

@@ -21,6 +21,10 @@ import {
 } from "next/navigation";
 
 import {
+  getProfileHeroPreset,
+} from "@/config/profile-hero-presets";
+
+import {
   createClient,
 } from "@/lib/supabase/server";
 
@@ -33,11 +37,22 @@ const RECIPE_IMAGES_BUCKET =
   "recipe-images";
 
 
+const PROFILE_HERO_IMAGES_BUCKET =
+  "profile-hero-images";
+
+
 type RecipeStatus =
   | "draft"
   | "pending_review"
   | "published"
   | "archived";
+
+
+type DashboardHeroType =
+  | "preset"
+  | "recipe"
+  | "custom"
+  | null;
 
 
 type ProfileRow = {
@@ -51,6 +66,12 @@ type ProfileRow = {
     string | null;
 
   avatar_url:
+    string | null;
+
+  dashboard_hero_type:
+    DashboardHeroType;
+
+  dashboard_hero_value:
     string | null;
 };
 
@@ -452,9 +473,14 @@ export default async function MiCociHubPage() {
       .from(
         "profiles",
       )
-      .select(
-        "display_name, username, role, avatar_url",
-      )
+      .select(`
+        display_name,
+        username,
+        role,
+        avatar_url,
+        dashboard_hero_type,
+        dashboard_hero_value
+      `)
       .eq(
         "id",
         userId,
@@ -699,7 +725,31 @@ export default async function MiCociHubPage() {
       );
 
 
-  const heroImageRecipe =
+  // =======================================================
+  // DASHBOARD HERO
+  // =======================================================
+  //
+  // Fallback behaviour:
+  //
+  //   null / null
+  //      -> first recipe with an image
+  //
+  // Explicit behaviour:
+  //
+  //   preset
+  //      -> CociHub preset
+  //
+  //   recipe
+  //      -> selected own recipe
+  //
+  //   custom
+  //      -> private signed Storage URL
+  //
+  // If an explicit selection becomes invalid, the dashboard
+  // safely falls back to automatic mode.
+  // =======================================================
+
+  const automaticHeroRecipe =
     recipeList.find(
       (
         recipe,
@@ -710,12 +760,145 @@ export default async function MiCociHubPage() {
     );
 
 
-  const heroRecipeImageUrl =
+  const automaticHeroImageUrl =
     getRecipeImageUrl(
-      heroImageRecipe
+      automaticHeroRecipe
         ?.image_path ??
         null,
     );
+
+
+  let heroImageUrl:
+    string | null =
+      automaticHeroImageUrl;
+
+
+  let heroPresetBackground:
+    string | null =
+      null;
+
+
+  if (
+    profile
+      .dashboard_hero_type ===
+      "preset"
+  ) {
+    const preset =
+      getProfileHeroPreset(
+        profile
+          .dashboard_hero_value,
+      );
+
+
+    if (
+      preset
+    ) {
+      heroPresetBackground =
+        preset
+          .placeholderBackground;
+
+
+      heroImageUrl =
+        null;
+    }
+  }
+
+
+  if (
+    profile
+      .dashboard_hero_type ===
+      "recipe" &&
+    profile
+      .dashboard_hero_value
+  ) {
+    const selectedRecipe =
+      recipeList.find(
+        (
+          recipe,
+        ) =>
+          recipe.id ===
+            profile
+              .dashboard_hero_value &&
+          Boolean(
+            recipe.image_path,
+          ),
+      );
+
+
+    if (
+      selectedRecipe
+    ) {
+      heroImageUrl =
+        getRecipeImageUrl(
+          selectedRecipe
+            .image_path,
+        );
+
+
+      heroPresetBackground =
+        null;
+    }
+  }
+
+
+  if (
+    profile
+      .dashboard_hero_type ===
+      "custom" &&
+    profile
+      .dashboard_hero_value
+  ) {
+    const customHeroPath =
+      profile
+        .dashboard_hero_value;
+
+
+    if (
+      customHeroPath.startsWith(
+        `${userId}/hero-`,
+      ) &&
+      customHeroPath.endsWith(
+        ".webp",
+      )
+    ) {
+      const {
+        data:
+          signedHeroData,
+
+        error:
+          signedHeroError,
+      } =
+        await supabase
+          .storage
+          .from(
+            PROFILE_HERO_IMAGES_BUCKET,
+          )
+          .createSignedUrl(
+            customHeroPath,
+            60 *
+            60,
+          );
+
+
+      if (
+        signedHeroError
+      ) {
+        console.error(
+          "DASHBOARD HERO SIGNED URL ERROR:",
+          signedHeroError,
+        );
+
+      } else {
+        heroImageUrl =
+          signedHeroData
+            .signedUrl;
+
+
+        heroPresetBackground =
+          null;
+      }
+    }
+  }
 
 
   // =======================================================
@@ -932,14 +1115,36 @@ export default async function MiCociHubPage() {
             </div>
 
 
-            {/* DECORATIVE RECIPE IMAGE */}
+            {/* DECORATIVE HERO IMAGE */}
 
             <div className="relative -my-8 hidden min-h-[calc(100%+4rem)] self-stretch overflow-hidden xl:block">
-              {heroRecipeImageUrl ? (
+              {heroPresetBackground ? (
+                <>
+                  <div
+                    className="absolute inset-0"
+                    aria-hidden="true"
+                    style={{
+                      background:
+                        heroPresetBackground,
+
+                      WebkitMaskImage:
+                        "linear-gradient(to right, transparent 0%, black 24%, black 76%, transparent 100%)",
+
+                      maskImage:
+                        "linear-gradient(to right, transparent 0%, black 24%, black 76%, transparent 100%)",
+                    }}
+                  />
+
+                  <div
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-b from-surface/5 via-transparent to-surface/5"
+                    aria-hidden="true"
+                  />
+                </>
+              ) : heroImageUrl ? (
                 <>
                   <Image
                     src={
-                      heroRecipeImageUrl
+                      heroImageUrl
                     }
                     alt=""
                     fill

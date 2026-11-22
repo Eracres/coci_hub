@@ -1,53 +1,68 @@
-import { z } from "zod";
+import {
+  z,
+} from "zod";
 
-export const recipeBasicInfoSchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(
-      3,
-      "El título debe tener al menos 3 caracteres.",
-    )
-    .max(
-      120,
-      "El título no puede superar los 120 caracteres.",
-    ),
 
-  slug: z
-    .string()
-    .trim()
-    .min(
-      3,
-      "El slug debe tener al menos 3 caracteres.",
-    )
-    .max(
-      140,
-      "El slug no puede superar los 140 caracteres.",
-    )
-    .regex(
-      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-      "El slug solo puede contener letras minúsculas, números y guiones.",
-    ),
+export const recipeBasicInfoSchema =
+  z.object({
+    title:
+      z
+        .string()
+        .trim()
+        .min(
+          3,
+          "El título debe tener al menos 3 caracteres.",
+        )
+        .max(
+          120,
+          "El título no puede superar los 120 caracteres.",
+        ),
 
-  shortDescription: z
-    .string()
-    .trim()
-    .max(
-      180,
-      "La descripción corta no puede superar los 180 caracteres.",
-    ),
+    slug:
+      z
+        .string()
+        .trim()
+        .min(
+          3,
+          "La dirección debe tener al menos 3 caracteres.",
+        )
+        .max(
+          140,
+          "La dirección no puede superar los 140 caracteres.",
+        )
+        .regex(
+          /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+          "La dirección solo puede contener letras minúsculas, números y guiones.",
+        ),
 
-  introduction: z
-    .string()
-    .trim()
-    .max(
-      1500,
-      "La introducción no puede superar los 1500 caracteres.",
-    ),
-});
+    shortDescription:
+      z
+        .string()
+        .trim()
+        .min(
+          1,
+          "La descripción corta es obligatoria.",
+        )
+        .max(
+          180,
+          "La descripción corta no puede superar los 180 caracteres.",
+        ),
+
+    introduction:
+      z
+        .string()
+        .trim()
+        .max(
+          1500,
+          "La introducción no puede superar los 1500 caracteres.",
+        ),
+  });
+
 
 export type RecipeBasicInfoFormData =
-  z.infer<typeof recipeBasicInfoSchema>;
+  z.infer<
+    typeof recipeBasicInfoSchema
+  >;
 
 
 /*
@@ -55,11 +70,14 @@ export type RecipeBasicInfoFormData =
  * para guardar en PostgreSQL.
  */
 export type RecipeBasicInfoData = {
-  title: string;
-  slug: string;
+  title:
+    string;
+
+  slug:
+    string;
 
   shortDescription:
-    string | null;
+    string;
 
   introduction:
     string | null;
@@ -67,23 +85,26 @@ export type RecipeBasicInfoData = {
 
 
 /*
- * Convierte los strings vacíos del formulario
+ * Convierte los strings vacíos opcionales
  * en NULL antes de persistirlos.
  */
 export function normalizeRecipeBasicInfo(
-  data: RecipeBasicInfoFormData,
+  data:
+    RecipeBasicInfoFormData,
 ): RecipeBasicInfoData {
   return {
-    title: data.title,
-    slug: data.slug,
+    title:
+      data.title,
+
+    slug:
+      data.slug,
 
     shortDescription:
-      data.shortDescription === ""
-        ? null
-        : data.shortDescription,
+      data.shortDescription,
 
     introduction:
-      data.introduction === ""
+      data.introduction ===
+      ""
         ? null
         : data.introduction,
   };

@@ -10,7 +10,7 @@ import {
 
 import {
   normalizeRecipeServings,
-  recipeServingsSchema,
+  requiredRecipeServingsSchema,
   type RecipeServingsFormData,
 } from "@/schemas/recipe-servings-schema";
 
@@ -46,9 +46,12 @@ export async function updateMyRecipeServingsAction(
 ): Promise<
   UpdateMyRecipeServingsResult
 > {
+  // =======================================================
+  // VALIDATION
+  // =======================================================
 
   const validation =
-    recipeServingsSchema.safeParse(
+    requiredRecipeServingsSchema.safeParse(
       input,
     );
 
@@ -73,6 +76,27 @@ export async function updateMyRecipeServingsAction(
       validation.data,
     );
 
+
+  if (
+    normalized.baseServings ===
+    null
+  ) {
+    return {
+      success:
+        false,
+
+      fieldErrors: {
+        baseServings: [
+          "Indica cuántas raciones o porciones produce la receta.",
+        ],
+      },
+    };
+  }
+
+
+  // =======================================================
+  // PERSIST
+  // =======================================================
 
   try {
     await updateMyRecipeServings(
@@ -103,8 +127,10 @@ export async function updateMyRecipeServingsAction(
       message:
         "Raciones guardadas correctamente.",
     };
-  } catch (error) {
 
+  } catch (
+    error
+  ) {
     if (
       errorHasCode(
         error,

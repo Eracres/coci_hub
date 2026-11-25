@@ -763,9 +763,9 @@ export function StepsForm({
               />
               <span
                 aria-hidden="true"
-                className="relative h-6 w-11 rounded-full bg-border transition peer-checked:bg-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand"
+                className={"relative h-6 w-11 rounded-full transition peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand " + (isReorderMode ? "bg-brand" : "bg-border")}
               >
-                <span className="absolute left-1 top-1 size-4 rounded-full bg-white shadow transition peer-checked:translate-x-5" />
+                <span className={"absolute left-1 top-1 size-4 rounded-full bg-white shadow transition " + (isReorderMode ? "translate-x-5" : "")} />
               </span>
               Reordenar pasos
             </label>

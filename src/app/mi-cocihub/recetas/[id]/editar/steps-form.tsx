@@ -2,6 +2,7 @@
 
 import {
   useState,
+  type MouseEvent,
 } from "react";
 
 import Link from "next/link";
@@ -11,14 +12,21 @@ import {
 } from "next/navigation";
 
 import {
+  AlertTriangle,
   ArrowDown,
   ArrowUp,
+  Check,
+  ChevronDown,
+  ChevronUp,
   Clock3,
   Copy,
+  GripVertical,
+  Info,
   Lightbulb,
   ListOrdered,
   Pencil,
   Plus,
+  Save,
   Trash2,
 } from "lucide-react";
 
@@ -72,24 +80,12 @@ RecipeStepFormData = {
 };
 
 
-/* =========================================================
-   CLIENT ID
-========================================================= */
-
 function createClientId() {
-  return `step-${Date.now()}-${Math.random()
-    .toString(
-      36,
-    )
-    .slice(
-      2,
-    )}`;
+  return "step-" + Date.now() + "-" + Math.random()
+    .toString(36)
+    .slice(2);
 }
 
-
-/* =========================================================
-   EDITABLE DATA
-========================================================= */
 
 function createEditableSteps(
   steps:
@@ -108,9 +104,29 @@ function createEditableSteps(
 }
 
 
-/* =========================================================
-   STEPS FORM
-========================================================= */
+function formatMinutes(
+  minutes:
+    number,
+) {
+  const hours =
+    Math.floor(
+      minutes / 60,
+    );
+
+  const remainingMinutes =
+    minutes % 60;
+
+  if (hours === 0) {
+    return minutes + " min";
+  }
+
+  if (remainingMinutes === 0) {
+    return hours + " h";
+  }
+
+  return hours + " h " + remainingMinutes + " min";
+}
+
 
 export function StepsForm({
   recipeId,
@@ -121,108 +137,134 @@ export function StepsForm({
   const router =
     useRouter();
 
-
   const [
     steps,
     setSteps,
   ] =
-    useState<
-      EditableStep[]
-    >(
+    useState<EditableStep[]>(
       () =>
         createEditableSteps(
           initialSteps,
         ),
     );
 
-
   const [
     stepDraft,
     setStepDraft,
   ] =
-    useState<
-      RecipeStepFormData
-    >({
-      ...emptyStep,
-    });
-
+    useState<RecipeStepFormData>(
+      {
+        ...emptyStep,
+      },
+    );
 
   const [
-    editingIndex,
-    setEditingIndex,
+    editingClientId,
+    setEditingClientId,
   ] =
-    useState<
-      number | null
-    >(
+    useState<string | null>(
       null,
     );
 
+  const [
+    expandedStepIds,
+    setExpandedStepIds,
+  ] =
+    useState<Set<string>>(
+      () => new Set(),
+    );
+
+  const [
+    pendingDeleteClientId,
+    setPendingDeleteClientId,
+  ] =
+    useState<string | null>(
+      null,
+    );
+
+  const [
+    isReorderMode,
+    setIsReorderMode,
+  ] =
+    useState(false);
 
   const [
     editorError,
     setEditorError,
   ] =
-    useState<
-      string | null
-    >(
+    useState<string | null>(
       null,
     );
-
 
   const [
     message,
     setMessage,
   ] =
-    useState<
-      string | null
-    >(
+    useState<string | null>(
       null,
     );
-
 
   const [
     validationError,
     setValidationError,
   ] =
-    useState<
-      string | null
-    >(
+    useState<string | null>(
       null,
     );
-
 
   const [
     isDirty,
     setIsDirty,
   ] =
-    useState(
-      false,
-    );
-
+    useState(false);
 
   const [
     isSubmitting,
     setIsSubmitting,
   ] =
-    useState(
-      false,
+    useState(false);
+
+  const draftHasContent =
+    Boolean(
+      stepDraft.title.trim() ||
+      stepDraft.instructions.trim() ||
+      stepDraft.durationMinutes.trim() ||
+      stepDraft.tip.trim(),
     );
 
+  const hasUnconfirmedStep =
+    editingClientId !== null ||
+    draftHasContent;
 
-  /* =======================================================
-     EDITOR HELPERS
-  ======================================================= */
+  const stepsWithDuration =
+    steps.filter(
+      (step) =>
+        step.durationMinutes.trim() !== "",
+    );
+
+  const indicatedMinutes =
+    stepsWithDuration.reduce(
+      (total, step) =>
+        total + Number(step.durationMinutes),
+      0,
+    );
+
+  const hasPartialDuration =
+    stepsWithDuration.length > 0 &&
+    stepsWithDuration.length < steps.length;
+
+  const hasCompleteDuration =
+    steps.length > 0 &&
+    stepsWithDuration.length === steps.length;
 
   function clearEditor() {
     setStepDraft({
       ...emptyStep,
     });
 
-
-    setEditingIndex(
+    setEditingClientId(
       null,
     );
-
 
     setEditorError(
       null,
@@ -231,25 +273,32 @@ export function StepsForm({
 
 
   function markDirty() {
-    setIsDirty(
-      true,
-    );
-
-
-    setMessage(
-      null,
-    );
-
-
-    setValidationError(
-      null,
-    );
+    setIsDirty(true);
+    setMessage(null);
+    setValidationError(null);
   }
 
 
-  /* =======================================================
-     ADD / UPDATE STEP
-  ======================================================= */
+  function toggleExpanded(
+    clientId:
+      string,
+  ) {
+    setExpandedStepIds(
+      (current) => {
+        const next =
+          new Set(current);
+
+        if (next.has(clientId)) {
+          next.delete(clientId);
+        } else {
+          next.add(clientId);
+        }
+
+        return next;
+      },
+    );
+  }
+
 
   function saveStep() {
     const validation =
@@ -257,55 +306,37 @@ export function StepsForm({
         stepDraft,
       );
 
-
-    if (
-      !validation.success
-    ) {
+    if (!validation.success) {
       setEditorError(
-        validation.error
-          .issues[0]
-          ?.message ??
+        validation.error.issues[0]?.message ??
           "El paso no es válido.",
       );
 
       return;
     }
 
+    const savedClientId =
+      editingClientId ??
+      createClientId();
 
-    if (
-      editingIndex ===
-      null
-    ) {
+    if (editingClientId === null) {
       setSteps(
-        (
-          current,
-        ) => [
+        (current) => [
           ...current,
-
           {
-            clientId:
-              createClientId(),
-
+            clientId: savedClientId,
             ...validation.data,
           },
         ],
       );
     } else {
       setSteps(
-        (
-          current,
-        ) =>
+        (current) =>
           current.map(
-            (
-              step,
-              index,
-            ) =>
-              index ===
-              editingIndex
+            (step) =>
+              step.clientId === editingClientId
                 ? {
-                    clientId:
-                      step.clientId,
-
+                    clientId: step.clientId,
                     ...validation.data,
                   }
                 : step,
@@ -313,152 +344,166 @@ export function StepsForm({
       );
     }
 
+    setExpandedStepIds(
+      (current) =>
+        new Set([
+          ...current,
+          savedClientId,
+        ]),
+    );
 
     markDirty();
-
     clearEditor();
   }
 
 
-  /* =======================================================
-     EDIT
-  ======================================================= */
+  function blockPendingStepReplacement() {
+    if (!hasUnconfirmedStep) {
+      return false;
+    }
+
+    setValidationError(
+      editingClientId !== null
+        ? "Confirma o cancela la edición actual antes de abrir otro paso."
+        : "Añade o descarta el paso que estás escribiendo antes de abrir otro.",
+    );
+
+    document
+      .getElementById("step-editor")
+      ?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+    return true;
+  }
+
 
   function editStep(
-    index:
-      number,
+    clientId:
+      string,
   ) {
-    const step =
-      steps[
-        index
-      ];
-
-
-    if (
-      !step
-    ) {
+    if (blockPendingStepReplacement()) {
       return;
     }
 
+    const step =
+      steps.find(
+        (item) =>
+          item.clientId === clientId,
+      );
+
+    if (!step) {
+      return;
+    }
 
     setStepDraft({
-      title:
-        step.title,
-
-      instructions:
-        step.instructions,
-
-      durationMinutes:
-        step.durationMinutes,
-
-      tip:
-        step.tip,
+      title: step.title,
+      instructions: step.instructions,
+      durationMinutes: step.durationMinutes,
+      tip: step.tip,
     });
 
-
-    setEditingIndex(
-      index,
+    setEditingClientId(
+      step.clientId,
     );
 
-
-    setEditorError(
+    setPendingDeleteClientId(
       null,
     );
+
+    setExpandedStepIds(
+      (current) =>
+        new Set([
+          ...current,
+          step.clientId,
+        ]),
+    );
+
+    setEditorError(null);
+    setMessage(null);
+    setValidationError(null);
   }
 
-
-  /* =======================================================
-     DUPLICATE
-  ======================================================= */
 
   function duplicateStep(
-    index:
-      number,
+    clientId:
+      string,
   ) {
-    const step =
-      steps[
-        index
-      ];
-
-
-    if (
-      !step
-    ) {
+    if (blockPendingStepReplacement()) {
       return;
     }
 
+    const step =
+      steps.find(
+        (item) =>
+          item.clientId === clientId,
+      );
 
-    /*
-     * Igual que en Ingredientes:
-     *
-     * cargamos una copia en el editor pero no la insertamos
-     * hasta que el usuario confirme.
-     */
+    if (!step) {
+      return;
+    }
 
     setStepDraft({
-      title:
-        step.title,
-
-      instructions:
-        step.instructions,
-
-      durationMinutes:
-        step.durationMinutes,
-
-      tip:
-        step.tip,
+      title: step.title,
+      instructions: step.instructions,
+      durationMinutes: step.durationMinutes,
+      tip: step.tip,
     });
 
+    setEditingClientId(null);
+    setPendingDeleteClientId(null);
+    setEditorError(null);
+    setMessage(null);
+    setValidationError(null);
+  }
 
-    setEditingIndex(
-      null,
-    );
 
+  function requestRemoveStep(
+    clientId:
+      string,
+  ) {
+    if (blockPendingStepReplacement()) {
+      return;
+    }
 
-    setEditorError(
-      null,
+    setPendingDeleteClientId(
+      clientId,
     );
   }
 
 
-  /* =======================================================
-     REMOVE
-  ======================================================= */
-
-  function removeStep(
-    index:
-      number,
+  function confirmRemoveStep(
+    clientId:
+      string,
   ) {
     setSteps(
-      (
-        current,
-      ) =>
+      (current) =>
         current.filter(
-          (
-            _step,
-            currentIndex,
-          ) =>
-            currentIndex !==
-            index,
+          (step) =>
+            step.clientId !== clientId,
         ),
     );
 
+    setExpandedStepIds(
+      (current) => {
+        const next =
+          new Set(current);
 
-    markDirty();
+        next.delete(clientId);
 
+        return next;
+      },
+    );
 
-    if (
-      editingIndex ===
-      index
-    ) {
+    if (editingClientId === clientId) {
       clearEditor();
     }
+
+    setPendingDeleteClientId(null);
+    markDirty();
   }
 
-
-  /* =======================================================
-     MOVE
-  ======================================================= */
 
   function moveStep(
     from:
@@ -468,128 +513,93 @@ export function StepsForm({
       number,
   ) {
     if (
-      to <
-        0 ||
-      to >=
-        steps.length
+      to < 0 ||
+      to >= steps.length ||
+      from === to
     ) {
       return;
     }
 
-
     setSteps(
-      (
-        current,
-      ) => {
-        const copy = [
+      (current) => {
+        const next = [
           ...current,
         ];
-
 
         const [
           moved,
         ] =
-          copy.splice(
+          next.splice(
             from,
             1,
           );
 
-
-        if (
-          !moved
-        ) {
+        if (!moved) {
           return current;
         }
 
-
-        copy.splice(
+        next.splice(
           to,
           0,
           moved,
         );
 
-
-        return copy;
+        return next;
       },
     );
-
 
     markDirty();
   }
 
-
-  /* =======================================================
-     PAYLOAD
-  ======================================================= */
 
   function buildPayload():
   RecipeStepsFormData {
     return {
       steps:
         steps.map(
-          (
-            step,
-          ) => ({
-            title:
-              step.title,
-
-            instructions:
-              step.instructions,
-
-            durationMinutes:
-              step.durationMinutes,
-
-            tip:
-              step.tip,
+          (step) => ({
+            title: step.title,
+            instructions: step.instructions,
+            durationMinutes: step.durationMinutes,
+            tip: step.tip,
           }),
         ),
     };
   }
 
 
-  /* =======================================================
-     SAVE + CONTINUE
-  ======================================================= */
+  async function persistSteps(
+    advance:
+      boolean,
+  ) {
+    setMessage(null);
+    setValidationError(null);
 
-  async function handleContinue() {
-    setMessage(
-      null,
-    );
+    if (hasUnconfirmedStep) {
+      setValidationError(
+        editingClientId !== null
+          ? "Guarda los cambios del paso que estás editando o cancela la edición antes de continuar."
+          : "Confirma el paso que estás escribiendo o descártalo antes de guardar.",
+      );
 
-
-    setValidationError(
-      null,
-    );
-
-
-    const payload =
-      buildPayload();
-
+      return;
+    }
 
     const validation =
       recipeStepsSchema.safeParse(
-        payload,
+        buildPayload(),
       );
 
-
-    if (
-      !validation.success
-    ) {
+    if (!validation.success) {
       setValidationError(
-        validation.error
-          .issues[0]
-          ?.message ??
+        validation.error.issues[0]?.message ??
           "Hay pasos de elaboración que no son válidos.",
       );
 
       return;
     }
 
-
-    if (
-      validation.data.steps.length <
-      1
-    ) {
+    if (validation.data.steps.length < 1) {
       setValidationError(
         "Añade al menos un paso de elaboración para continuar.",
       );
@@ -597,27 +607,19 @@ export function StepsForm({
       return;
     }
 
-
-    /*
-     * Si no hemos cambiado nada, los pasos ya estaban
-     * persistidos y podemos avanzar directamente.
-     */
-
-    if (
-      !isDirty
-    ) {
-      router.push(
-        nextStepHref,
-      );
+    if (!isDirty) {
+      if (advance) {
+        router.push(nextStepHref);
+      } else {
+        setMessage(
+          "No hay cambios pendientes que guardar.",
+        );
+      }
 
       return;
     }
 
-
-    setIsSubmitting(
-      true,
-    );
-
+    setIsSubmitting(true);
 
     try {
       const result =
@@ -626,10 +628,7 @@ export function StepsForm({
           validation.data,
         );
 
-
-      if (
-        !result.success
-      ) {
+      if (!result.success) {
         setMessage(
           result.message ??
             "No se pudo guardar la elaboración.",
@@ -638,673 +637,904 @@ export function StepsForm({
         return;
       }
 
+      setIsDirty(false);
 
-      setIsDirty(
-        false,
-      );
-
-
-      router.push(
-        nextStepHref,
+      if (advance) {
+        router.push(nextStepHref);
+      } else {
+        setMessage(
+          "Borrador de elaboración guardado correctamente.",
+        );
+      }
+    } catch {
+      setMessage(
+        "No se pudo guardar la elaboración. Inténtalo de nuevo.",
       );
     } finally {
-      setIsSubmitting(
-        false,
-      );
+      setIsSubmitting(false);
     }
   }
 
 
-  /* =======================================================
-     RENDER
-  ======================================================= */
+  function handlePreviousClick(
+    event:
+      MouseEvent<HTMLAnchorElement>,
+  ) {
+    if (
+      !isDirty &&
+      !hasUnconfirmedStep
+    ) {
+      return;
+    }
+
+    const shouldLeave =
+      window.confirm(
+        "Tienes cambios de elaboración sin guardar. ¿Quieres salir de este apartado?",
+      );
+
+    if (!shouldLeave) {
+      event.preventDefault();
+    }
+  }
+
 
   return (
-    <section className="rounded-2xl border border-border bg-surface p-6">
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
 
-      {/* =================================================
-          HEADER
-      ================================================= */}
+      <section className="min-w-0 overflow-hidden rounded-2xl border border-border bg-surface">
 
-      <div>
+        <div className="p-5 sm:p-6">
 
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
-          Paso 5 de 8
-        </p>
+          {/* HEADER */}
 
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 
-        <div className="mt-2 flex items-center gap-2">
+            <div className="flex min-w-0 items-start gap-4">
 
-          <ListOrdered
-            className="size-5 text-brand"
-            aria-hidden="true"
-          />
+              <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand">
+                <ListOrdered
+                  className="size-7"
+                  aria-hidden="true"
+                />
+              </div>
 
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">
+                  05 · Elaboración
+                </p>
 
-          <h2 className="font-serif text-2xl font-semibold">
-            Elaboración
-          </h2>
+                <h2 className="mt-1 font-serif text-2xl font-semibold">
+                  Enseña a preparar tu receta
+                </h2>
 
-        </div>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Describe cada paso para que cualquiera pueda reproducir tu elaboración.
+                </p>
+              </div>
 
+            </div>
 
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Explica la receta paso a paso y en el orden en
-          el que debe prepararse.
-        </p>
+            <div className="grid shrink-0 grid-cols-2 gap-2">
 
+              <div className="min-w-28 rounded-xl bg-brand/10 px-3 py-3 text-center">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-brand">
+                  Pasos añadidos
+                </p>
+                <p className="mt-1 text-2xl font-bold text-brand">
+                  {steps.length}
+                </p>
+              </div>
 
-        <div className="mt-4 rounded-xl border border-border bg-page-muted/40 px-4 py-3">
+              <div className="min-w-32 rounded-xl bg-green-50 px-3 py-3 text-center">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-green-800">
+                  Tiempo indicado
+                </p>
+                <p className="mt-1 text-xl font-bold text-green-800">
+                  {stepsWithDuration.length === 0
+                    ? "—"
+                    : formatMinutes(indicatedMinutes)}
+                </p>
+                {steps.length > 0 && (
+                  <p className="mt-0.5 text-[10px] text-green-800">
+                    {hasPartialDuration
+                      ? "estimación parcial"
+                      : hasCompleteDuration
+                        ? "todos los pasos"
+                        : "sin tiempos indicados"}
+                  </p>
+                )}
+              </div>
 
-          <div className="flex items-start gap-3">
-
-            <Clock3
-              className="mt-0.5 size-4 shrink-0 text-brand"
-              aria-hidden="true"
-            />
-
-
-            <p className="text-xs leading-5 text-muted-foreground">
-              Si indicas la duración de los pasos,
-              CociHub calculará automáticamente el tiempo
-              de elaboración de la receta.
-            </p>
+            </div>
 
           </div>
 
-        </div>
 
-      </div>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+
+            <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={isReorderMode}
+                onChange={(event) =>
+                  setIsReorderMode(event.target.checked)
+                }
+                className="peer sr-only"
+              />
+              <span
+                aria-hidden="true"
+                className="relative h-6 w-11 rounded-full bg-border transition peer-checked:bg-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand"
+              >
+                <span className="absolute left-1 top-1 size-4 rounded-full bg-white shadow transition peer-checked:translate-x-5" />
+              </span>
+              Reordenar pasos
+            </label>
+
+            {isReorderMode && (
+              <p className="text-xs text-muted-foreground">
+                Usa las flechas de cada paso para cambiar el orden.
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                if (!hasUnconfirmedStep) {
+                  setStepDraft({
+                    ...emptyStep,
+                  });
+                  setEditingClientId(null);
+                  setEditorError(null);
+                }
+                document
+                  .getElementById("step-editor")
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
+              }}
+              className="inline-flex items-center gap-2 rounded-xl border border-brand px-4 py-2.5 text-sm font-semibold text-brand transition hover:bg-brand/5"
+            >
+              <Plus
+                className="size-4"
+                aria-hidden="true"
+              />
+              Añadir paso
+            </button>
+
+          </div>
 
 
-      {/* =================================================
-          STEP LIST
-      ================================================= */}
+          {/* TIMELINE */}
 
-      <div className="mt-7 space-y-4">
+          <div className="mt-5">
 
-        {steps.length ===
-        0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-page-muted/30 p-6 text-center">
+            {steps.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border bg-page-muted/30 px-5 py-8 text-center">
+                <ListOrdered
+                  className="mx-auto size-8 text-brand"
+                  aria-hidden="true"
+                />
+                <p className="mt-3 font-semibold">
+                  Todavía no hay pasos de elaboración.
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Añade el primero para empezar a construir la receta paso a paso.
+                </p>
+              </div>
+            ) : (
+              <ol className="space-y-3">
+                {steps.map(
+                  (step, index) => {
+                    const isExpanded =
+                      expandedStepIds.has(step.clientId);
 
-            <ListOrdered
-              className="mx-auto size-6 text-brand"
-              aria-hidden="true"
-            />
+                    const isDeletePending =
+                      pendingDeleteClientId === step.clientId;
+
+                    return (
+                      <li
+                        key={step.clientId}
+                        className="relative pl-12"
+                      >
+                        {index < steps.length - 1 && (
+                          <span
+                            aria-hidden="true"
+                            className="absolute bottom-[-0.9rem] left-[1.1rem] top-10 w-px bg-brand/40"
+                          />
+                        )}
+
+                        <span
+                          aria-hidden="true"
+                          className="absolute left-0 top-3 flex size-9 items-center justify-center rounded-full border border-brand bg-surface text-sm font-bold text-brand"
+                        >
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+
+                        <article className="overflow-hidden rounded-2xl border border-border bg-page-muted/25">
+
+                          <div className="flex items-center gap-2 px-3 py-3 sm:px-4">
+
+                            {isReorderMode && (
+                              <div className="flex shrink-0 items-center gap-1">
+                                <GripVertical
+                                  className="size-4 text-brand"
+                                  aria-hidden="true"
+                                />
+                                <div className="flex flex-col">
+                                  <button
+                                    type="button"
+                                    disabled={index === 0}
+                                    onClick={() =>
+                                      moveStep(index, index - 1)
+                                    }
+                                    aria-label={"Mover el paso " + (index + 1) + " hacia arriba"}
+                                    className="rounded p-0.5 text-muted-foreground transition hover:bg-surface hover:text-brand disabled:opacity-30"
+                                  >
+                                    <ArrowUp
+                                      className="size-3.5"
+                                      aria-hidden="true"
+                                    />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={index === steps.length - 1}
+                                    onClick={() =>
+                                      moveStep(index, index + 1)
+                                    }
+                                    aria-label={"Mover el paso " + (index + 1) + " hacia abajo"}
+                                    className="rounded p-0.5 text-muted-foreground transition hover:bg-surface hover:text-brand disabled:opacity-30"
+                                  >
+                                    <ArrowDown
+                                      className="size-3.5"
+                                      aria-hidden="true"
+                                    />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            <button
+                              type="button"
+                              aria-expanded={isExpanded}
+                              onClick={() =>
+                                toggleExpanded(step.clientId)
+                              }
+                              className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                            >
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate font-semibold">
+                                  {step.title || "Paso " + (index + 1)}
+                                </span>
+                                {!isExpanded && (
+                                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                                    {step.instructions}
+                                  </span>
+                                )}
+                              </span>
+
+                              {step.durationMinutes !== "" && (
+                                <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium sm:inline-flex">
+                                  <Clock3
+                                    className="size-3.5 text-brand"
+                                    aria-hidden="true"
+                                  />
+                                  {formatMinutes(
+                                    Number(step.durationMinutes),
+                                  )}
+                                </span>
+                              )}
+
+                              {step.tip && (
+                                <Lightbulb
+                                  className="hidden size-4 shrink-0 text-brand sm:block"
+                                  aria-label="Incluye un consejo"
+                                />
+                              )}
+
+                              {isExpanded ? (
+                                <ChevronUp
+                                  className="size-4 shrink-0"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <ChevronDown
+                                  className="size-4 shrink-0"
+                                  aria-hidden="true"
+                                />
+                              )}
+                            </button>
+
+                          </div>
 
 
-            <p className="mt-3 font-medium">
-              Todavía no hay pasos de elaboración.
-            </p>
+                          {isExpanded && (
+                            <div className="border-t border-border bg-surface px-4 py-4 sm:px-5">
 
+                              <p className="whitespace-pre-wrap text-sm leading-6">
+                                {step.instructions}
+                              </p>
+
+                              <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+
+                                {step.durationMinutes !== "" && (
+                                  <span className="inline-flex items-center gap-1.5 rounded-full bg-page-muted px-2.5 py-1">
+                                    <Clock3
+                                      className="size-3.5 text-brand"
+                                      aria-hidden="true"
+                                    />
+                                    {formatMinutes(
+                                      Number(step.durationMinutes),
+                                    )}
+                                  </span>
+                                )}
+
+                                {step.tip && (
+                                  <span className="inline-flex items-center gap-1.5 rounded-full bg-page-muted px-2.5 py-1">
+                                    <Lightbulb
+                                      className="size-3.5 text-brand"
+                                      aria-hidden="true"
+                                    />
+                                    Consejo incluido
+                                  </span>
+                                )}
+
+                              </div>
+
+                              {step.tip && (
+                                <div className="mt-3 rounded-xl border border-brand/20 bg-brand/5 px-4 py-3">
+                                  <p className="flex items-start gap-2 text-sm leading-6">
+                                    <Lightbulb
+                                      className="mt-1 size-4 shrink-0 text-brand"
+                                      aria-hidden="true"
+                                    />
+                                    <span>
+                                      {step.tip}
+                                    </span>
+                                  </p>
+                                </div>
+                              )}
+
+                              {isDeletePending ? (
+                                <div
+                                  role="alert"
+                                  className="mt-4 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                                >
+                                  <p className="text-sm text-red-800">
+                                    ¿Eliminar este paso? Esta acción no se puede deshacer.
+                                  </p>
+                                  <div className="flex gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        confirmRemoveStep(step.clientId)
+                                      }
+                                      className="rounded-lg bg-red-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-800"
+                                    >
+                                      Sí, eliminar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setPendingDeleteClientId(null)
+                                      }
+                                      className="rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold transition hover:bg-page-muted"
+                                    >
+                                      Cancelar
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      editStep(step.clientId)
+                                    }
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold transition hover:bg-page-muted"
+                                  >
+                                    <Pencil
+                                      className="size-3.5"
+                                      aria-hidden="true"
+                                    />
+                                    Editar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      duplicateStep(step.clientId)
+                                    }
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold transition hover:bg-page-muted"
+                                  >
+                                    <Copy
+                                      className="size-3.5"
+                                      aria-hidden="true"
+                                    />
+                                    Duplicar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      requestRemoveStep(step.clientId)
+                                    }
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-red-700 transition hover:border-red-300 hover:bg-red-50"
+                                  >
+                                    <Trash2
+                                      className="size-3.5"
+                                      aria-hidden="true"
+                                    />
+                                    Eliminar
+                                  </button>
+                                </div>
+                              )}
+
+                            </div>
+                          )}
+
+                        </article>
+                      </li>
+                    );
+                  },
+                )}
+              </ol>
+            )}
+
+          </div>
+
+
+          {/* STEP EDITOR */}
+
+          <div
+            id="step-editor"
+            className="mt-5 rounded-2xl border border-brand/25 bg-gradient-to-br from-brand/5 via-surface to-page-muted/40 p-4 sm:p-5"
+          >
+            <div className="flex items-center gap-2">
+              <Plus
+                className="size-4 text-brand"
+                aria-hidden="true"
+              />
+              <h3
+                id="step-editor-title"
+                className="font-semibold"
+              >
+                {editingClientId === null
+                  ? "Añadir paso de elaboración"
+                  : "Editar paso de elaboración"}
+              </h3>
+            </div>
 
             <p className="mt-1 text-sm text-muted-foreground">
-              Añade el primero utilizando el formulario
-              inferior.
+              Completa los detalles de esta fase. Después podrás añadir el siguiente paso.
             </p>
 
-          </div>
-        ) : (
-          steps.map(
-            (
-              step,
-              index,
-            ) => (
-              <article
-                key={
-                  step.clientId
-                }
-                className="rounded-2xl border border-border bg-page-muted/30 p-4 sm:p-5"
-              >
+            <div className="mt-4 grid gap-4">
 
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-
-                  <div className="min-w-0 flex-1">
-
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand">
-                      Paso {
-                        index +
-                        1
-                      }
-                    </p>
-
-
-                    {step.title && (
-                      <h3 className="mt-1 font-semibold">
-                        {
-                          step.title
-                        }
-                      </h3>
-                    )}
-
-
-                    <p className="mt-3 whitespace-pre-wrap text-sm leading-6">
-                      {
-                        step.instructions
-                      }
-                    </p>
-
-
-                    <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
-
-                      {step.durationMinutes && (
-                        <span className="inline-flex items-center gap-1.5">
-
-                          <Clock3
-                            className="size-3.5 text-brand"
-                            aria-hidden="true"
-                          />
-
-                          {
-                            step.durationMinutes
-                          } min
-
-                        </span>
-                      )}
-
-
-                      {step.tip && (
-                        <span className="inline-flex items-center gap-1.5">
-
-                          <Lightbulb
-                            className="size-3.5 text-brand"
-                            aria-hidden="true"
-                          />
-
-                          Consejo incluido
-
-                        </span>
-                      )}
-
-                    </div>
-
-
-                    {step.tip && (
-                      <div className="mt-4 rounded-xl border border-border bg-surface px-4 py-3">
-
-                        <p className="flex items-start gap-2 text-sm leading-6 text-muted-foreground">
-
-                          <Lightbulb
-                            className="mt-1 size-4 shrink-0 text-brand"
-                            aria-hidden="true"
-                          />
-
-                          <span>
-                            {
-                              step.tip
-                            }
-                          </span>
-
-                        </p>
-
-                      </div>
-                    )}
-
-                  </div>
-
-
-                  <div className="flex shrink-0 flex-wrap gap-2">
-
-                    <button
-                      type="button"
-                      disabled={
-                        index ===
-                        0
-                      }
-                      onClick={() =>
-                        moveStep(
-                          index,
-                          index -
-                            1,
-                        )
-                      }
-                      className="inline-flex size-9 items-center justify-center rounded-lg border border-border bg-surface transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-40"
-                      aria-label="Mover paso hacia arriba"
-                      title="Mover paso hacia arriba"
-                    >
-                      <ArrowUp
-                        className="size-4"
-                        aria-hidden="true"
-                      />
-                    </button>
-
-
-                    <button
-                      type="button"
-                      disabled={
-                        index ===
-                        steps.length -
-                          1
-                      }
-                      onClick={() =>
-                        moveStep(
-                          index,
-                          index +
-                            1,
-                        )
-                      }
-                      className="inline-flex size-9 items-center justify-center rounded-lg border border-border bg-surface transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-40"
-                      aria-label="Mover paso hacia abajo"
-                      title="Mover paso hacia abajo"
-                    >
-                      <ArrowDown
-                        className="size-4"
-                        aria-hidden="true"
-                      />
-                    </button>
-
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        editStep(
-                          index,
-                        )
-                      }
-                      className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium transition hover:bg-page-muted"
-                    >
-                      <Pencil
-                        className="size-4"
-                        aria-hidden="true"
-                      />
-
-                      Editar
-                    </button>
-
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        duplicateStep(
-                          index,
-                        )
-                      }
-                      className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium transition hover:bg-page-muted"
-                    >
-                      <Copy
-                        className="size-4"
-                        aria-hidden="true"
-                      />
-
-                      Duplicar
-                    </button>
-
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        removeStep(
-                          index,
-                        )
-                      }
-                      className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium transition hover:border-red-300 hover:bg-red-50 hover:text-red-700"
-                    >
-                      <Trash2
-                        className="size-4"
-                        aria-hidden="true"
-                      />
-
-                      Eliminar
-                    </button>
-
-                  </div>
-
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <label
+                    htmlFor="step-title"
+                    className="text-sm font-medium"
+                  >
+                    Título del paso
+                    <span className="ml-1 font-normal text-muted-foreground">
+                      Opcional
+                    </span>
+                  </label>
+                  <span
+                    className="text-xs text-muted-foreground"
+                    aria-live="polite"
+                  >
+                    {stepDraft.title.length}/120
+                  </span>
                 </div>
 
-              </article>
-            ),
-          )
-        )}
-
-      </div>
-
-
-      {/* =================================================
-          STEP EDITOR
-      ================================================= */}
-
-      <div className="mt-7 rounded-2xl border border-border bg-page-muted/30 p-4 sm:p-5">
-
-        <div className="flex items-center gap-2">
-
-          <Plus
-            className="size-4 text-brand"
-            aria-hidden="true"
-          />
-
-
-          <h3 className="font-semibold">
-            {editingIndex ===
-            null
-              ? "Añadir paso"
-              : `Editar paso ${editingIndex + 1}`}
-          </h3>
-
-        </div>
+                <input
+                  id="step-title"
+                  type="text"
+                  maxLength={120}
+                  value={stepDraft.title}
+                  onChange={(event) =>
+                    setStepDraft(
+                      (current) => ({
+                        ...current,
+                        title: event.target.value,
+                      }),
+                    )
+                  }
+                  className="w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+                  placeholder="Ej. Preparar la mezcla"
+                />
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Ej. Preparar la masa, hornear o emplatar.
+                </p>
+              </div>
 
 
-        <div className="mt-5 space-y-5">
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <label
+                    htmlFor="step-instructions"
+                    className="text-sm font-medium"
+                  >
+                    Instrucciones
+                    <span className="ml-1 text-brand">*</span>
+                  </label>
+                  <span
+                    className="text-xs text-muted-foreground"
+                    aria-live="polite"
+                  >
+                    {stepDraft.instructions.length}/2500
+                  </span>
+                </div>
 
-          {/* TITLE */}
+                <textarea
+                  id="step-instructions"
+                  rows={4}
+                  minLength={10}
+                  maxLength={2500}
+                  required
+                  value={stepDraft.instructions}
+                  onChange={(event) =>
+                    setStepDraft(
+                      (current) => ({
+                        ...current,
+                        instructions: event.target.value,
+                      }),
+                    )
+                  }
+                  className="w-full resize-y rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+                  placeholder="Explica qué hacer, cómo hacerlo y qué resultado debe obtenerse."
+                />
 
-          <div>
-
-            <label
-              htmlFor="step-title"
-              className="mb-2 block text-sm font-medium"
-            >
-              Título del paso
-            </label>
-
-
-            <input
-              id="step-title"
-              type="text"
-              maxLength={
-                120
-              }
-              value={
-                stepDraft.title
-              }
-              onChange={(
-                event,
-              ) =>
-                setStepDraft(
-                  (
-                    current,
-                  ) => ({
-                    ...current,
-
-                    title:
-                      event
-                        .target
-                        .value,
-                  }),
-                )
-              }
-              className="w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
-              placeholder="Opcional. Ej. Preparar las patatas"
-            />
-
-          </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Describe una acción concreta y el resultado que se busca. Mínimo 10 caracteres.
+                </p>
+              </div>
 
 
-          {/* INSTRUCTIONS */}
+              <div className="grid gap-4 md:grid-cols-2">
 
-          <div>
+                <div>
+                  <label
+                    htmlFor="step-duration"
+                    className="mb-2 block text-sm font-medium"
+                  >
+                    Duración aproximada
+                    <span className="ml-1 font-normal text-muted-foreground">
+                      Opcional
+                    </span>
+                  </label>
 
-            <label
-              htmlFor="step-instructions"
-              className="mb-2 block text-sm font-medium"
-            >
-              Instrucciones
-            </label>
+                  <div className="flex max-w-xs items-center gap-3">
+                    <input
+                      id="step-duration"
+                      type="number"
+                      min={0}
+                      step={1}
+                      inputMode="numeric"
+                      value={stepDraft.durationMinutes}
+                      onChange={(event) =>
+                        setStepDraft(
+                          (current) => ({
+                            ...current,
+                            durationMinutes: event.target.value,
+                          }),
+                        )
+                      }
+                      className="w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+                      placeholder="Ej. 10"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      min
+                    </span>
+                  </div>
 
-
-            <textarea
-              id="step-instructions"
-              rows={
-                6
-              }
-              maxLength={
-                2500
-              }
-              value={
-                stepDraft.instructions
-              }
-              onChange={(
-                event,
-              ) =>
-                setStepDraft(
-                  (
-                    current,
-                  ) => ({
-                    ...current,
-
-                    instructions:
-                      event
-                        .target
-                        .value,
-                  }),
-                )
-              }
-              className="w-full resize-y rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
-              placeholder="Describe detalladamente qué debe hacerse en este paso."
-            />
-
-
-            <p className="mt-2 text-xs text-muted-foreground">
-              Mínimo 10 caracteres.
-            </p>
-
-          </div>
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Indica minutos enteros si conoces la duración.
+                  </p>
+                </div>
 
 
-          {/* DURATION */}
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <label
+                      htmlFor="step-tip"
+                      className="text-sm font-medium"
+                    >
+                      Consejo del autor
+                      <span className="ml-1 font-normal text-muted-foreground">
+                        Opcional
+                      </span>
+                    </label>
+                    <span
+                      className="text-xs text-muted-foreground"
+                      aria-live="polite"
+                    >
+                      {stepDraft.tip.length}/800
+                    </span>
+                  </div>
 
-          <div>
+                  <textarea
+                    id="step-tip"
+                    rows={3}
+                    maxLength={800}
+                    value={stepDraft.tip}
+                    onChange={(event) =>
+                      setStepDraft(
+                        (current) => ({
+                          ...current,
+                          tip: event.target.value,
+                        }),
+                      )
+                    }
+                    className="w-full resize-y rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+                    placeholder="Trucos, recomendaciones o errores que evitar."
+                  />
+                </div>
 
-            <label
-              htmlFor="step-duration"
-              className="mb-2 block text-sm font-medium"
-            >
-              Duración aproximada
-            </label>
-
-
-            <div className="flex max-w-xs items-center gap-3">
-
-              <input
-                id="step-duration"
-                type="number"
-                min={
-                  0
-                }
-                step={
-                  1
-                }
-                inputMode="numeric"
-                value={
-                  stepDraft.durationMinutes
-                }
-                onChange={(
-                  event,
-                ) =>
-                  setStepDraft(
-                    (
-                      current,
-                    ) => ({
-                      ...current,
-
-                      durationMinutes:
-                        event
-                          .target
-                          .value,
-                    }),
-                  )
-                }
-                className="w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
-                placeholder="Ej. 10"
-              />
-
-
-              <span className="text-sm text-muted-foreground">
-                min
-              </span>
+              </div>
 
             </div>
 
 
-            <p className="mt-2 text-xs leading-5 text-muted-foreground">
-              Opcional. La suma de las duraciones se utiliza
-              para calcular automáticamente el tiempo de elaboración.
+            {editorError && (
+              <p
+                role="alert"
+                className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              >
+                {editorError}
+              </p>
+            )}
+
+            {hasUnconfirmedStep && (
+              <p
+                role="status"
+                className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+              >
+                <AlertTriangle
+                  className="mt-0.5 size-4 shrink-0"
+                  aria-hidden="true"
+                />
+                <span>
+                  {editingClientId !== null
+                    ? "Los cambios de este paso aún no se han confirmado."
+                    : "Este paso todavía no forma parte de la receta. Pulsa «Añadir paso» para confirmarlo."}
+                </span>
+              </p>
+            )}
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={saveStep}
+                className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-inverse transition hover:bg-brand-hover"
+              >
+                {editingClientId === null ? (
+                  <Plus
+                    className="size-4"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Check
+                    className="size-4"
+                    aria-hidden="true"
+                  />
+                )}
+                {editingClientId === null
+                  ? "Añadir paso"
+                  : "Guardar cambios"}
+              </button>
+
+              {editingClientId !== null && (
+                <button
+                  type="button"
+                  onClick={clearEditor}
+                  className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition hover:bg-page-muted"
+                >
+                  Cancelar edición
+                </button>
+              )}
+
+              {draftHasContent && editingClientId === null && (
+                <button
+                  type="button"
+                  onClick={clearEditor}
+                  className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition hover:bg-page-muted"
+                >
+                  Descartar paso sin confirmar
+                </button>
+              )}
+            </div>
+
+          </div>
+
+
+          {validationError && (
+            <p
+              role="alert"
+              className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+              {validationError}
             </p>
-
-          </div>
-
-
-          {/* TIP */}
-
-          <div>
-
-            <label
-              htmlFor="step-tip"
-              className="mb-2 block text-sm font-medium"
-            >
-              Consejo
-            </label>
-
-
-            <textarea
-              id="step-tip"
-              rows={
-                3
-              }
-              maxLength={
-                800
-              }
-              value={
-                stepDraft.tip
-              }
-              onChange={(
-                event,
-              ) =>
-                setStepDraft(
-                  (
-                    current,
-                  ) => ({
-                    ...current,
-
-                    tip:
-                      event
-                        .target
-                        .value,
-                  }),
-                )
-              }
-              className="w-full resize-y rounded-xl border border-border bg-surface px-4 py-3 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
-              placeholder="Opcional. Ej. No subas demasiado el fuego."
-            />
-
-          </div>
-
-        </div>
-
-
-        {editorError && (
-          <p
-            role="alert"
-            className="mt-4 text-sm text-red-700"
-          >
-            {
-              editorError
-            }
-          </p>
-        )}
-
-
-        <div className="mt-5 flex flex-wrap gap-3">
-
-          <button
-            type="button"
-            onClick={
-              saveStep
-            }
-            className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-inverse transition hover:bg-brand-hover"
-          >
-            <Plus
-              className="size-4"
-              aria-hidden="true"
-            />
-
-            {editingIndex ===
-            null
-              ? "Añadir paso"
-              : "Guardar cambios"}
-          </button>
-
-
-          {editingIndex !==
-            null && (
-            <button
-              type="button"
-              onClick={
-                clearEditor
-              }
-              className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition hover:bg-page-muted"
-            >
-              Cancelar edición
-            </button>
           )}
 
+          {message && (
+            <p
+              role="status"
+              className="mt-5 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
+            >
+              {message}
+            </p>
+          )}
+
+
+          <div className="mt-5 flex items-start gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-xs leading-5 text-green-900">
+            <Info
+              className="mt-0.5 size-4 shrink-0"
+              aria-hidden="true"
+            />
+            <p>
+              <strong>Consejo:</strong> Una acción clara por paso facilita seguir la receta.
+            </p>
+          </div>
+
         </div>
 
-      </div>
+
+        {/* FOOTER ACTIONS */}
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-page-muted/20 px-5 py-4 sm:px-6">
+
+          <Link
+            href={previousStepHref}
+            onClick={handlePreviousClick}
+            className="rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition hover:bg-page-muted"
+          >
+            ← Ingredientes
+          </Link>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={isSubmitting || !isDirty}
+              onClick={() =>
+                void persistSteps(false)
+              }
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold transition hover:bg-page-muted disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Save
+                className="size-4"
+                aria-hidden="true"
+              />
+              {isSubmitting
+                ? "Guardando..."
+                : "Guardar borrador"}
+            </button>
+
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() =>
+                void persistSteps(true)
+              }
+              className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSubmitting
+                ? "Guardando..."
+                : "Guardar y continuar"}
+              <ArrowDown
+                className="size-4 -rotate-90"
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+
+        </div>
+
+      </section>
 
 
-      {/* =================================================
-          FEEDBACK
-      ================================================= */}
+      {/* CONTEXTUAL HELP */}
 
-      {validationError && (
-        <p
-          role="alert"
-          className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-        >
-          {
-            validationError
-          }
-        </p>
-      )}
+      <aside className="h-fit rounded-2xl border border-border bg-surface xl:sticky xl:top-6">
 
+        <div className="border-b border-border px-5 py-5 text-center">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-brand/10 text-brand">
+            <Lightbulb
+              className="size-6"
+              aria-hidden="true"
+            />
+          </div>
+          <h2 className="mt-3 font-serif text-xl font-semibold">
+            Ayuda para este paso
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Consejos para explicar la elaboración.
+          </p>
+        </div>
 
-      {message && (
-        <p
-          role="alert"
-          className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-        >
-          {
-            message
-          }
-        </p>
-      )}
+        <ol className="space-y-4 px-5 py-5">
+          <li className="flex gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand/10 text-sm font-bold text-brand">
+              1
+            </span>
+            <div>
+              <h3 className="text-sm font-semibold">
+                Una acción por paso
+              </h3>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Divide la receta en fases fáciles de seguir.
+              </p>
+            </div>
+          </li>
+          <li className="flex gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-green-50 text-sm font-bold text-green-800">
+              2
+            </span>
+            <div>
+              <h3 className="text-sm font-semibold">
+                Sé preciso
+              </h3>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Indica temperaturas, texturas y técnicas.
+              </p>
+            </div>
+          </li>
+          <li className="flex gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-50 text-sm font-bold text-amber-800">
+              3
+            </span>
+            <div>
+              <h3 className="text-sm font-semibold">
+                Respeta el orden
+              </h3>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Organiza los pasos según se realizan.
+              </p>
+            </div>
+          </li>
+          <li className="flex gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-green-50 text-sm font-bold text-green-800">
+              4
+            </span>
+            <div>
+              <h3 className="text-sm font-semibold">
+                Comparte tus trucos
+              </h3>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Usa los consejos para transmitir tu experiencia.
+              </p>
+            </div>
+          </li>
+        </ol>
 
+        <div className="mx-4 mb-4 rounded-xl bg-brand/5 px-4 py-4">
+          <p className="flex items-start gap-2 text-sm font-semibold">
+            <Lightbulb
+              className="mt-0.5 size-4 shrink-0 text-brand"
+              aria-hidden="true"
+            />
+            Un pequeño ejemplo
+          </p>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            En lugar de «freír las patatas», explica cómo conseguir el punto perfecto.
+          </p>
+        </div>
 
-      {/* =================================================
-          NAVIGATION
-      ================================================= */}
+        <div className="mx-4 mb-4 rounded-xl border border-border bg-page-muted/30 px-4 py-3">
+          <p className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
+            <Clock3
+              className="mt-0.5 size-4 shrink-0 text-brand"
+              aria-hidden="true"
+            />
+            <span>
+              El tiempo indicado suma las duraciones introducidas. Las tareas simultáneas pueden hacer que el tiempo real sea menor.
+            </span>
+          </p>
+        </div>
 
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+      </aside>
 
-        <Link
-          href={
-            previousStepHref
-          }
-          className="rounded-xl border border-border bg-surface px-5 py-3 text-sm font-semibold transition hover:bg-page-muted"
-        >
-          ← Anterior
-        </Link>
-
-
-        <button
-          type="button"
-          disabled={
-            isSubmitting
-          }
-          onClick={
-            handleContinue
-          }
-          className="rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isSubmitting
-            ? "Guardando..."
-            : isDirty
-              ? "Guardar y continuar →"
-              : "Continuar →"}
-        </button>
-
-      </div>
-
-    </section>
+    </div>
   );
 }

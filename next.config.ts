@@ -1,5 +1,8 @@
-
 import type { NextConfig } from "next";
+
+/* =========================================================
+   SUPABASE REMOTE IMAGES
+========================================================= */
 
 type RemotePatterns = NonNullable<
   NonNullable<NextConfig["images"]>["remotePatterns"]
@@ -27,11 +30,12 @@ if (supabaseUrl) {
   });
 }
 
-// =======================================================
-// GITHUB CODESPACES
-// =======================================================
+/* =========================================================
+   GITHUB CODESPACES
+========================================================= */
 
-const codespaceName = process.env.CODESPACE_NAME;
+const codespaceName =
+  process.env.CODESPACE_NAME;
 
 const codespaceDomain =
   process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN;
@@ -43,47 +47,73 @@ const codespaceOrigin =
     ? `${codespaceName}-3000.${codespaceDomain}`
     : undefined;
 
-// =======================================================
-// NEXT.JS CONFIGURATION
-// =======================================================
+/* =========================================================
+   NEXT.JS CONFIGURATION
+========================================================= */
 
 const nextConfig: NextConfig = {
-  // =====================================================
-  // TURBOPACK
-  // =====================================================
+  /* =======================================================
+     TURBOPACK
+  ======================================================= */
 
   turbopack: {
     root: process.cwd(),
   },
 
-  // =====================================================
-  // IMAGES
-  // =====================================================
+  /* =======================================================
+     IMAGES
+  ======================================================= */
 
   images: {
-    formats: ["image/avif", "image/webp"],
+    formats: [
+      "image/avif",
+      "image/webp",
+    ],
 
     remotePatterns,
   },
 
-  // =====================================================
-  // CODESPACES DEVELOPMENT
-  // =====================================================
+  /* =======================================================
+     CODESPACES DEVELOPMENT
+  ======================================================= */
 
   ...(codespaceOrigin
     ? {
-        allowedDevOrigins: [codespaceOrigin],
+        allowedDevOrigins: [
+          codespaceOrigin,
+        ],
+      }
+    : {}),
 
-        experimental: {
-          serverActions: {
+  /* =======================================================
+     SERVER ACTIONS
+  ======================================================= */
+
+  experimental: {
+    serverActions: {
+      /*
+       * CociHub admite fotografías de hasta 5 MB.
+       * Reservamos espacio adicional para los
+       * datos y cabeceras del formulario.
+       */
+
+      bodySizeLimit: "6mb",
+
+      /*
+       * Mantener la compatibilidad con el
+       * entorno de desarrollo de Codespaces.
+       */
+
+      ...(codespaceOrigin
+        ? {
             allowedOrigins: [
               codespaceOrigin,
               "localhost:3000",
             ],
-          },
-        },
-      }
-    : {}),
+          }
+        : {}),
+    },
+  },
 };
 
 export default nextConfig;

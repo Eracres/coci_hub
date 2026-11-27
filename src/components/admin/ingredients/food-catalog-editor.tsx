@@ -8,12 +8,12 @@ import {
   Tags,
 } from "lucide-react";
 
-import {
-  useRouter,
-} from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import {
   type FormEvent,
+  useEffect,
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -28,325 +28,454 @@ import type {
 } from "@/services/ingredients/admin-food-catalog-service";
 
 
-type FoodCatalogEditorProps = {
-  foodItem:
-    AdminFoodCatalogItem | null;
+/* =========================================================
+   TYPES AND CONSTANTS
+========================================================= */
 
-  allergens:
-    AdminFoodAllergenOption[];
+type FoodCatalogEditorProps = {
+  foodItem: AdminFoodCatalogItem | null;
+  allergens: AdminFoodAllergenOption[];
+  catalogHref: string;
 };
 
 
-function createSlug(
-  value:
-    string,
-) {
+type EditorMessage = {
+  type: "success" | "error";
+  text: string;
+};
+
+
+const EDITOR_ID = "food-catalog-editor";
+
+const EDITOR_HASH = `#${EDITOR_ID}`;
+
+const SUCCESS_MESSAGE_PREFIX =
+  "cocihub:food-catalog:success:";
+
+const UNSAVED_CHANGES_MESSAGE =
+  "Tienes cambios sin guardar. ¿Quieres descartarlos y continuar?";
+
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function createSlug(value: string) {
   return value
-    .normalize(
-      "NFD",
-    )
-    .replace(
-      /[\u0300-\u036f]/g,
-      "",
-    )
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim()
-    .replace(
-      /[^a-z0-9]+/g,
-      "-",
-    )
-    .replace(
-      /^-+|-+$/g,
-      "",
-    );
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 
-function parseLines(
-  value:
-    string,
-) {
+function parseLines(value: string) {
   return value
-    .split(
-      "\n",
-    )
-    .map(
-      (
-        line,
-      ) =>
-        line.trim(),
-    )
-    .filter(
-      Boolean,
-    );
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
+
+function scrollToEditor() {
+  const editor = document.getElementById(EDITOR_ID);
+
+  if (!editor) {
+    return;
+  }
+
+  const prefersReducedMotion =
+    window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+  editor.scrollIntoView({
+    behavior: prefersReducedMotion ? "instant" : "smooth",
+    block: "start",
+  });
+
+  editor.focus({
+    preventScroll: true,
+  });
+}
+
+
+/* =========================================================
+   FOOD CATALOG EDITOR
+========================================================= */
 
 export function FoodCatalogEditor({
   foodItem,
   allergens,
+  catalogHref,
 }: FoodCatalogEditorProps) {
-  const router =
-    useRouter();
+  const router = useRouter();
+
+  const [isPending, startTransition] = useTransition();
+
+  const saveLock = useRef(false);
+
+  const [name, setName] = useState(
+    foodItem?.name ?? "",
+  );
+
+  const [slug, setSlug] = useState(
+    foodItem?.slug ?? "",
+  );
+
+  const [slugTouched, setSlugTouched] = useState(
+    foodItem !== null,
+  );
+
+  const [aliasesText, setAliasesText] = useState(
+    (foodItem?.aliases ?? []).join("\n"),
+  );
+
+  const [keywordsText, setKeywordsText] = useState(
+    (foodItem?.keywords ?? []).join("\n"),
+  );
+
+  const [selectedAllergenIds, setSelectedAllergenIds] =
+    useState<string[]>(foodItem?.allergenIds ?? []);
+
+  const [isActive, setIsActive] = useState(
+    foodItem?.isActive ?? true,
+  );
+
+  const [markReviewed, setMarkReviewed] = useState(
+    foodItem
+      ? foodItem.allergenReviewedAt !== null
+      : true,
+  );
+
+  const [message, setMessage] =
+    useState<EditorMessage | null>(null);
 
 
-  const [
-    isPending,
-    startTransition,
-  ] =
-    useTransition();
+  /* =======================================================
+     UNSAVED CHANGES
+  ======================================================= */
 
-
-  const [
+  const currentSnapshot = JSON.stringify({
     name,
-    setName,
-  ] =
-    useState(
-      foodItem?.name ??
-        "",
-    );
-
-
-  const [
     slug,
-    setSlug,
-  ] =
-    useState(
-      foodItem?.slug ??
-        "",
-    );
-
-
-  const [
-    slugTouched,
-    setSlugTouched,
-  ] =
-    useState(
-      foodItem !==
-        null,
-    );
-
-
-  const [
     aliasesText,
-    setAliasesText,
-  ] =
-    useState(
-      (
-        foodItem?.aliases ??
-        []
-      ).join(
-        "\n",
-      ),
-    );
-
-
-  const [
     keywordsText,
-    setKeywordsText,
-  ] =
-    useState(
-      (
-        foodItem?.keywords ??
-        []
-      ).join(
-        "\n",
-      ),
-    );
-
-
-  const [
-    selectedAllergenIds,
-    setSelectedAllergenIds,
-  ] =
-    useState<
-      string[]
-    >(
-      foodItem?.allergenIds ??
-        [],
-    );
-
-
-  const [
+    allergenIds: [...selectedAllergenIds].sort(),
     isActive,
-    setIsActive,
-  ] =
-    useState(
-      foodItem?.isActive ??
-        true,
-    );
-
-
-  const [
     markReviewed,
-    setMarkReviewed,
-  ] =
-    useState(
-      foodItem
-        ? foodItem.allergenReviewedAt !==
-            null
-        : true,
-    );
+  });
+
+  const [savedSnapshot, setSavedSnapshot] = useState(
+    currentSnapshot,
+  );
+
+  const isDirty = currentSnapshot !== savedSnapshot;
 
 
-  const [
-    message,
-    setMessage,
-  ] =
-    useState<
-      {
-        type:
-          "success" |
-          "error";
-
-        text:
-          string;
-      } |
-      null
-    >(
-      null,
-    );
-
-
-  function handleNameChange(
-    value:
-      string,
-  ) {
-    setName(
-      value,
-    );
-
-
-    if (
-      !slugTouched
+  useEffect(() => {
+    function handleBeforeUnload(
+      event: BeforeUnloadEvent,
     ) {
-      setSlug(
-        createSlug(
-          value,
-        ),
+      if (!isDirty && !isPending && !saveLock.current) {
+        return;
+      }
+
+      event.preventDefault();
+      event.returnValue = "";
+    }
+
+
+    function handleNavigation(event: MouseEvent) {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      if (!(event.target instanceof Element)) {
+        return;
+      }
+
+      const anchor = event.target.closest("a[href]");
+
+      if (!(anchor instanceof HTMLAnchorElement)) {
+        return;
+      }
+
+      if (
+        (anchor.target && anchor.target !== "_self") ||
+        anchor.hasAttribute("download")
+      ) {
+        return;
+      }
+
+      const destination = new URL(
+        anchor.href,
+        window.location.href,
       );
+
+      const current = new URL(window.location.href);
+
+      const samePage =
+        destination.origin === current.origin &&
+        destination.pathname === current.pathname &&
+        destination.search === current.search;
+
+      // Clicking the current editor link must still scroll
+      // to the editor without resetting the current draft.
+
+      if (
+        samePage &&
+        destination.hash === EDITOR_HASH &&
+        current.hash === EDITOR_HASH
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        scrollToEditor();
+
+        return;
+      }
+
+      // Hash-only navigation does not discard the form.
+
+      if (samePage && destination.hash) {
+        return;
+      }
+
+      if (isPending || saveLock.current) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        window.alert(
+          "Espera a que termine el guardado del ingrediente.",
+        );
+
+        return;
+      }
+
+      if (
+        isDirty &&
+        !window.confirm(UNSAVED_CHANGES_MESSAGE)
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }
+
+
+    document.addEventListener(
+      "click",
+      handleNavigation,
+      true,
+    );
+
+    window.addEventListener(
+      "beforeunload",
+      handleBeforeUnload,
+    );
+
+    return () => {
+      document.removeEventListener(
+        "click",
+        handleNavigation,
+        true,
+      );
+
+      window.removeEventListener(
+        "beforeunload",
+        handleBeforeUnload,
+      );
+    };
+  }, [isDirty, isPending]);
+
+
+  /* =======================================================
+     EDITOR FOCUS AND SUCCESS MESSAGE
+  ======================================================= */
+
+  const foodItemId = foodItem?.id ?? null;
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      if (window.location.hash === EDITOR_HASH) {
+        scrollToEditor();
+      }
+
+      if (!foodItemId) {
+        return;
+      }
+
+      try {
+        const key =
+          `${SUCCESS_MESSAGE_PREFIX}${foodItemId}`;
+
+        const storedMessage =
+          window.sessionStorage.getItem(key);
+
+        if (storedMessage) {
+          window.sessionStorage.removeItem(key);
+
+          setMessage({
+            type: "success",
+            text: storedMessage,
+          });
+        }
+      } catch {
+        // Storage may be unavailable in some browsers.
+        // Saving the ingredient must still work.
+      }
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [foodItemId]);
+
+
+  /* =======================================================
+     FORM HANDLERS
+  ======================================================= */
+
+  function handleNameChange(value: string) {
+    setName(value);
+
+    if (!slugTouched) {
+      setSlug(createSlug(value));
     }
   }
 
 
-  function toggleAllergen(
-    allergenId:
-      string,
-  ) {
-    setSelectedAllergenIds(
-      (
-        current,
-      ) =>
-        current.includes(
-          allergenId,
-        )
-          ? current.filter(
-              (
-                id,
-              ) =>
-                id !==
-                allergenId,
-            )
-          : [
-              ...current,
-              allergenId,
-            ],
+  function toggleAllergen(allergenId: string) {
+    setSelectedAllergenIds((current) =>
+      current.includes(allergenId)
+        ? current.filter((id) => id !== allergenId)
+        : [...current, allergenId],
     );
   }
 
 
   function handleSubmit(
-    event:
-      FormEvent<HTMLFormElement>,
+    event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
+    if (saveLock.current || isPending) {
+      return;
+    }
 
-    setMessage(
-      null,
-    );
+    saveLock.current = true;
 
+    setMessage(null);
 
-    const aliases =
-      parseLines(
-        aliasesText,
-      );
+    const aliases = parseLines(aliasesText);
 
-    const keywords =
-      parseLines(
-        keywordsText,
-      );
+    const keywords = parseLines(keywordsText);
 
+    const submittedSnapshot = currentSnapshot;
 
-    startTransition(
-      async () => {
-        const result =
-          await saveFoodCatalogItemAction(
-            {
-              foodItemId:
-                foodItem?.id ??
-                null,
+    startTransition(async () => {
+      try {
+        const result = await saveFoodCatalogItemAction({
+          foodItemId,
+          name,
+          slug,
+          aliases,
+          keywords,
+          allergenIds: selectedAllergenIds,
+          isActive,
+          markAllergensReviewed: markReviewed,
+        });
 
-              name,
-
-              slug,
-
-              aliases,
-
-              keywords,
-
-              allergenIds:
-                selectedAllergenIds,
-
-              isActive,
-
-              markAllergensReviewed:
-                markReviewed,
-            },
-          );
-
-
-        if (
-          !result.success
-        ) {
-          setMessage(
-            {
-              type:
-                "error",
-
-              text:
-                result.message,
-            },
-          );
+        if (!result.success) {
+          setMessage({
+            type: "error",
+            text: result.message,
+          });
 
           return;
         }
 
+        setSavedSnapshot(submittedSnapshot);
 
-        setMessage(
-          {
-            type:
-              "success",
+        setMessage({
+          type: "success",
+          text: result.message,
+        });
 
-            text:
-              result.message,
-          },
+        // Existing ingredient: preserve the current URL,
+        // filters, editor and success message.
+
+        if (foodItemId === result.foodItemId) {
+          router.refresh();
+
+          return;
+        }
+
+        // New ingredient: preserve the success message
+        // across the change from creation to edit mode.
+
+        try {
+          window.sessionStorage.setItem(
+            `${SUCCESS_MESSAGE_PREFIX}${result.foodItemId}`,
+            result.message,
+          );
+        } catch {
+          // Navigation remains available without storage.
+        }
+
+        const destination = new URL(
+          catalogHref,
+          window.location.origin,
         );
 
+        destination.searchParams.set(
+          "edit",
+          result.foodItemId,
+        );
+
+        destination.hash = EDITOR_HASH;
 
         router.replace(
-          `/admin/ingredients?edit=${result.foodItemId}`,
+          `${destination.pathname}${destination.search}${destination.hash}`,
+        );
+      } catch (error) {
+        console.error(
+          "FOOD CATALOG EDITOR SAVE ERROR:",
+          error,
         );
 
-
-        router.refresh();
-      },
-    );
+        setMessage({
+          type: "error",
+          text:
+            "No se pudo confirmar el guardado. Comprueba el catálogo antes de volver a intentarlo.",
+        });
+      } finally {
+        saveLock.current = false;
+      }
+    });
   }
 
 
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
   return (
-    <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+    <section
+      id={EDITOR_ID}
+      tabIndex={-1}
+      aria-labelledby="food-catalog-editor-title"
+      className="scroll-mt-8 rounded-2xl border border-border bg-surface p-6 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+    >
       <div className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary/20 text-secondary-hover">
           <Tags
@@ -355,36 +484,36 @@ export function FoodCatalogEditor({
           />
         </span>
 
-
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-secondary-hover">
-            {
-              foodItem
-                ? "Editar catálogo"
-                : "Nuevo ingrediente"
-            }
+            {foodItem
+              ? "Editar catálogo"
+              : "Nuevo ingrediente"}
           </p>
 
-          <h2 className="mt-1 font-serif text-xl font-bold text-foreground">
-            {
-              foodItem?.name ??
-              "Añadir alimento canónico"
-            }
+          <h2
+            id="food-catalog-editor-title"
+            className="mt-1 font-serif text-xl font-bold text-foreground"
+          >
+            {foodItem?.name ?? "Añadir alimento canónico"}
           </h2>
 
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Gestiona el nombre que CociHub reconoce, sus alias exactos, sus keywords seguras y los alérgenos deterministas asociados.
+            Gestiona el nombre que CociHub reconoce,
+            sus alias exactos, sus keywords seguras y
+            los alérgenos deterministas asociados.
           </p>
         </div>
       </div>
 
 
       <form
-        onSubmit={
-          handleSubmit
-        }
+        onSubmit={handleSubmit}
         className="mt-6 space-y-6"
       >
+
+        {/* NAME AND SLUG */}
+
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-2">
             <span className="text-sm font-semibold text-foreground">
@@ -393,30 +522,17 @@ export function FoodCatalogEditor({
 
             <input
               type="text"
-              value={
-                name
-              }
-              maxLength={
-                120
-              }
-              disabled={
-                isPending
-              }
-              onChange={
-                (
-                  event,
-                ) => {
-                  handleNameChange(
-                    event.target.value,
-                  );
-                }
-              }
+              value={name}
+              maxLength={120}
+              disabled={isPending}
+              onChange={(event) => {
+                handleNameChange(event.target.value);
+              }}
               className="min-h-11 w-full rounded-xl border border-border bg-page px-3 text-sm text-foreground outline-none transition focus:border-brand"
               placeholder="Ej. Mascarpone"
               required
             />
           </label>
-
 
           <label className="space-y-2">
             <span className="text-sm font-semibold text-foreground">
@@ -426,28 +542,13 @@ export function FoodCatalogEditor({
             <div className="flex gap-2">
               <input
                 type="text"
-                value={
-                  slug
-                }
-                maxLength={
-                  140
-                }
-                disabled={
-                  isPending
-                }
-                onChange={
-                  (
-                    event,
-                  ) => {
-                    setSlugTouched(
-                      true,
-                    );
-
-                    setSlug(
-                      event.target.value,
-                    );
-                  }
-                }
+                value={slug}
+                maxLength={140}
+                disabled={isPending}
+                onChange={(event) => {
+                  setSlugTouched(true);
+                  setSlug(event.target.value);
+                }}
                 className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-page px-3 text-sm text-foreground outline-none transition focus:border-brand"
                 placeholder="mascarpone"
                 required
@@ -455,25 +556,14 @@ export function FoodCatalogEditor({
 
               <button
                 type="button"
-                disabled={
-                  isPending ||
-                  !name.trim()
-                }
-                onClick={
-                  () => {
-                    setSlugTouched(
-                      true,
-                    );
-
-                    setSlug(
-                      createSlug(
-                        name,
-                      ),
-                    );
-                  }
-                }
+                disabled={isPending || !name.trim()}
+                onClick={() => {
+                  setSlugTouched(true);
+                  setSlug(createSlug(name));
+                }}
                 className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-surface px-3 text-muted-foreground transition hover:border-brand/40 hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
                 title="Regenerar slug"
+                aria-label="Regenerar slug"
               >
                 <RotateCcw
                   className="size-4"
@@ -485,39 +575,35 @@ export function FoodCatalogEditor({
         </div>
 
 
+        {/* ALIASES */}
+
         <label className="block space-y-2">
           <span className="text-sm font-semibold text-foreground">
             Alias reconocidos
           </span>
 
           <textarea
-            value={
-              aliasesText
-            }
-            disabled={
-              isPending
-            }
-            onChange={
-              (
-                event,
-              ) => {
-                setAliasesText(
-                  event.target.value,
-                );
-              }
-            }
-            rows={
-              5
-            }
+            value={aliasesText}
+            disabled={isPending}
+            onChange={(event) => {
+              setAliasesText(event.target.value);
+            }}
+            rows={5}
             className="w-full rounded-xl border border-border bg-page px-3 py-3 text-sm text-foreground outline-none transition focus:border-brand"
-            placeholder={"queso mascarpone italiano\nmascarpone italiano"}
+            placeholder={
+              "queso mascarpone italiano\nmascarpone italiano"
+            }
           />
 
           <p className="text-xs leading-5 text-muted-foreground">
-            Un alias por línea. Los alias solo coinciden cuando el ingrediente completo coincide exactamente tras la normalización.
+            Un alias por línea. Los alias solo coinciden cuando
+            el ingrediente completo coincide exactamente
+            tras la normalización.
           </p>
         </label>
 
+
+        {/* KEYWORDS */}
 
         <label className="block space-y-2">
           <span className="text-sm font-semibold text-foreground">
@@ -525,33 +611,26 @@ export function FoodCatalogEditor({
           </span>
 
           <textarea
-            value={
-              keywordsText
-            }
-            disabled={
-              isPending
-            }
-            onChange={
-              (
-                event,
-              ) => {
-                setKeywordsText(
-                  event.target.value,
-                );
-              }
-            }
-            rows={
-              5
-            }
+            value={keywordsText}
+            disabled={isPending}
+            onChange={(event) => {
+              setKeywordsText(event.target.value);
+            }}
+            rows={5}
             className="w-full rounded-xl border border-border bg-page px-3 py-3 text-sm text-foreground outline-none transition focus:border-brand"
-            placeholder={"mascarpone"}
+            placeholder="mascarpone"
           />
 
           <p className="text-xs leading-5 text-muted-foreground">
-            Una keyword o frase por línea. Úsalas solo cuando sean términos inequívocos que puedan reconocerse dentro de un ingrediente más largo. Evita palabras genéricas como queso, leche, crema, harina, pan o nata.
+            Una keyword o frase por línea. Úsalas solo cuando sean
+            términos inequívocos que puedan reconocerse dentro de
+            un ingrediente más largo. Evita palabras genéricas como
+            queso, leche, crema, harina, pan o nata.
           </p>
         </label>
 
+
+        {/* ALLERGENS */}
 
         <fieldset>
           <legend className="text-sm font-semibold text-foreground">
@@ -559,86 +638,58 @@ export function FoodCatalogEditor({
           </legend>
 
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            Marca solo alérgenos que el alimento contiene de forma determinista. Los posibles rastros dependen del producto concreto y no pertenecen a este catálogo.
+            Marca solo alérgenos que el alimento contiene de forma
+            determinista. Los posibles rastros dependen del producto
+            concreto y no pertenecen a este catálogo.
           </p>
 
-
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {allergens.map(
-              (
-                allergen,
-              ) => {
-                const checked =
-                  selectedAllergenIds.includes(
-                    allergen.id,
-                  );
+            {allergens.map((allergen) => {
+              const checked =
+                selectedAllergenIds.includes(allergen.id);
 
+              return (
+                <label
+                  key={allergen.id}
+                  className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-page/40 px-3 py-3 text-sm transition hover:border-brand/30"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={isPending}
+                    onChange={() => {
+                      toggleAllergen(allergen.id);
+                    }}
+                    className="size-4"
+                  />
 
-                return (
-                  <label
-                    key={
-                      allergen.id
-                    }
-                    className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-page/40 px-3 py-3 text-sm transition hover:border-brand/30"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={
-                        checked
-                      }
-                      disabled={
-                        isPending
-                      }
-                      onChange={
-                        () => {
-                          toggleAllergen(
-                            allergen.id,
-                          );
-                        }
-                      }
-                      className="size-4"
-                    />
-
-                    <span className="min-w-0">
-                      <span className="block font-semibold text-foreground">
-                        {
-                          allergen.name
-                        }
-                      </span>
-
-                      <span className="block text-xs text-muted-foreground">
-                        {
-                          allergen.slug
-                        }
-                      </span>
+                  <span className="min-w-0">
+                    <span className="block font-semibold text-foreground">
+                      {allergen.name}
                     </span>
-                  </label>
-                );
-              },
-            )}
+
+                    <span className="block text-xs text-muted-foreground">
+                      {allergen.slug}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
           </div>
         </fieldset>
 
+
+        {/* CATALOG STATUS */}
 
         <div className="space-y-3 rounded-xl border border-border bg-page-muted/40 p-4">
           <label className="flex items-start gap-3">
             <input
               type="checkbox"
-              checked={
-                isActive
-              }
-              disabled={
-                isPending
-              }
-              onChange={
-                (
-                  event,
-                ) => {
-                  setIsActive(
-                    event.target.checked,
-                  );
-                }
-              }
+              checked={isActive}
+              disabled={isPending}
+              onChange={(event) => {
+                setIsActive(event.target.checked);
+              }}
               className="mt-1 size-4"
             />
 
@@ -648,30 +699,20 @@ export function FoodCatalogEditor({
               </span>
 
               <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                Solo los alimentos activos participan en la resolución automática.
+                Solo los alimentos activos participan
+                en la resolución automática.
               </span>
             </span>
           </label>
 
-
           <label className="flex items-start gap-3">
             <input
               type="checkbox"
-              checked={
-                markReviewed
-              }
-              disabled={
-                isPending
-              }
-              onChange={
-                (
-                  event,
-                ) => {
-                  setMarkReviewed(
-                    event.target.checked,
-                  );
-                }
-              }
+              checked={markReviewed}
+              disabled={isPending}
+              onChange={(event) => {
+                setMarkReviewed(event.target.checked);
+              }}
               className="mt-1 size-4"
             />
 
@@ -686,29 +727,32 @@ export function FoodCatalogEditor({
               </span>
 
               <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                También puede marcarse cuando, tras revisarlo, el alimento no tiene ningún alérgeno determinista del catálogo.
+                También puede marcarse cuando, tras revisarlo,
+                el alimento no tiene ningún alérgeno determinista
+                del catálogo.
               </span>
             </span>
           </label>
         </div>
 
 
+        {/* OPERATION RESULT */}
+
         {message ? (
           <p
             role="status"
             className={
-              message.type ===
-              "success"
+              message.type === "success"
                 ? "rounded-xl border border-brand/20 bg-brand/5 px-4 py-3 text-sm text-brand"
                 : "rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm text-error"
             }
           >
-            {
-              message.text
-            }
+            {message.text}
           </p>
         ) : null}
 
+
+        {/* SAVE BUTTON */}
 
         <button
           type="submit"

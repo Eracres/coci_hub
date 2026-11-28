@@ -22,11 +22,8 @@ import {
 
 
 export type SubmitRecipeReviewResult = {
-  success:
-    boolean;
-
-  message?:
-    string;
+  success: boolean;
+  message?: string;
 };
 
 
@@ -35,74 +32,42 @@ export type SubmitRecipeReviewResult = {
 ========================================================= */
 
 async function notifyAdminAboutSubmittedRecipe(
-  recipeId:
-    string,
-
-  userId:
-    string,
-
-  submissionType:
-    | "new"
-    | "resubmission",
+  recipeId: string,
+  userId: string,
+  submissionType: "new" | "resubmission",
 ) {
+
   const supabase =
     await createClient();
 
-
   const [
     {
-      data:
-        recipe,
-
-      error:
-        recipeError,
+      data: recipe,
+      error: recipeError,
     },
-
     {
-      data:
-        profile,
-
-      error:
-        profileError,
+      data: profile,
+      error: profileError,
     },
-  ] =
-    await Promise.all([
-      supabase
-        .from(
-          "recipes",
-        )
-        .select(
-          "id, title",
-        )
-        .eq(
-          "id",
-          recipeId,
-        )
-        .eq(
-          "author_id",
-          userId,
-        )
-        .single(),
+  ] = await Promise.all([
 
-      supabase
-        .from(
-          "profiles",
-        )
-        .select(
-          "display_name, username",
-        )
-        .eq(
-          "id",
-          userId,
-        )
-        .single(),
-    ]);
+    supabase
+      .from("recipes")
+      .select("id, title")
+      .eq("id", recipeId)
+      .eq("author_id", userId)
+      .single(),
+
+    supabase
+      .from("profiles")
+      .select("display_name, username")
+      .eq("id", userId)
+      .single(),
+
+  ]);
 
 
-  if (
-    recipeError ||
-    !recipe
-  ) {
+  if (recipeError || !recipe) {
     throw new Error(
       `Could not load submitted recipe for email notification: ${
         recipeError?.message ??
@@ -112,10 +77,7 @@ async function notifyAdminAboutSubmittedRecipe(
   }
 
 
-  if (
-    profileError ||
-    !profile
-  ) {
+  if (profileError || !profile) {
     throw new Error(
       `Could not load recipe author for email notification: ${
         profileError?.message ??
@@ -148,6 +110,7 @@ async function notifyAdminAboutSubmittedRecipe(
 
     submissionType,
   });
+
 }
 
 
@@ -156,41 +119,26 @@ async function notifyAdminAboutSubmittedRecipe(
 ========================================================= */
 
 export async function submitMyRecipeForReviewAction(
-  recipeId:
-    string,
-): Promise<
-  SubmitRecipeReviewResult
-> {
+  recipeId: string,
+): Promise<SubmitRecipeReviewResult> {
+
   const supabase =
     await createClient();
 
 
   const {
-    data:
-      claimsData,
-
-    error:
-      claimsError,
-  } =
-    await supabase
-      .auth
-      .getClaims();
+    data: claimsData,
+    error: claimsError,
+  } = await supabase.auth.getClaims();
 
 
   const userId =
-    claimsData
-      ?.claims
-      ?.sub;
+    claimsData?.claims?.sub;
 
 
-  if (
-    claimsError ||
-    !userId
-  ) {
+  if (claimsError || !userId) {
     return {
-      success:
-        false,
-
+      success: false,
       message:
         "Tu sesión ha caducado. Vuelve a iniciar sesión.",
     };
@@ -200,57 +148,49 @@ export async function submitMyRecipeForReviewAction(
   // =======================================================
   // DETECT FIRST SUBMISSION OR RESUBMISSION
   // =======================================================
-  //
-  // submit_my_recipe_for_review() clears review_notes.
-  //
-  // Therefore we must inspect them BEFORE calling the RPC.
-  //
-  // If review_notes contains data, the draft came from
-  // a previous moderation return and is being submitted
-  // again after corrections.
-  // =======================================================
 
   const {
-    data:
-      recipeBeforeSubmission,
-
-    error:
-      recipeBeforeSubmissionError,
-  } =
-    await supabase
-      .from(
-        "recipes",
-      )
-      .select(
-        "review_notes",
-      )
-      .eq(
-        "id",
-        recipeId,
-      )
-      .eq(
-        "author_id",
-        userId,
-      )
-      .maybeSingle();
+    data: recipeBeforeSubmission,
+    error: recipeBeforeSubmissionError,
+  } = await supabase
+    .rpc(
+      "get_recipe_review_info",
+      {
+        p_recipe_id: recipeId,
+      },
+    )
+    .maybeSingle();
 
 
   if (
-    recipeBeforeSubmissionError
+    recipeBeforeSubmissionError ||
+    !recipeBeforeSubmission
   ) {
+
     console.error(
       "GET RECIPE REVIEW HISTORY ERROR:",
       recipeBeforeSubmissionError,
     );
+
+    return {
+      success: false,
+      message:
+        "No se pudo comprobar la información de revisión de la receta.",
+    };
+
   }
+
+
+  const reviewInfo =
+    recipeBeforeSubmission as {
+      review_notes: string | null;
+    };
 
 
   const submissionType:
     | "new"
     | "resubmission" =
-      recipeBeforeSubmission
-        ?.review_notes
-        ?.trim()
+      reviewInfo.review_notes?.trim()
         ? "resubmission"
         : "new";
 
@@ -261,61 +201,37 @@ export async function submitMyRecipeForReviewAction(
 
   const {
     error,
-  } =
-    await supabase.rpc(
-      "submit_my_recipe_for_review",
-      {
-        p_recipe_id:
-          recipeId,
-      },
-    );
+  } = await supabase.rpc(
+    "submit_my_recipe_for_review",
+    {
+      p_recipe_id: recipeId,
+    },
+  );
 
 
-  if (
-    error
-  ) {
-    if (
-      errorHasCode(
-        error,
-        "42501",
-      )
-    ) {
+  if (error) {
+
+    if (errorHasCode(error, "42501")) {
       return {
-        success:
-          false,
-
+        success: false,
         message:
           "No tienes permiso para enviar esta receta a revisión.",
       };
     }
 
 
-    if (
-      errorHasCode(
-        error,
-        "P0002",
-      )
-    ) {
+    if (errorHasCode(error, "P0002")) {
       return {
-        success:
-          false,
-
+        success: false,
         message:
           "No se encontró la receta.",
       };
     }
 
 
-    if (
-      errorHasCode(
-        error,
-        "22023",
-      )
-    ) {
+    if (errorHasCode(error, "22023")) {
       return {
-        success:
-          false,
-
+        success: false,
         message:
           "La receta todavía no cumple todos los requisitos para enviarse a revisión.",
       };
@@ -327,42 +243,34 @@ export async function submitMyRecipeForReviewAction(
       error,
     );
 
-
     return {
-      success:
-        false,
-
+      success: false,
       message:
         "No se pudo enviar la receta a revisión.",
     };
+
   }
 
 
   // =======================================================
   // ADMIN NOTIFICATION
   // =======================================================
-  //
-  // Email delivery is intentionally independent from the
-  // functional state change.
-  //
-  // If Resend fails, the recipe must remain correctly
-  // submitted for review.
-  // =======================================================
 
   try {
+
     await notifyAdminAboutSubmittedRecipe(
       recipeId,
       userId,
       submissionType,
     );
 
-  } catch (
-    notificationError
-  ) {
+  } catch (notificationError) {
+
     console.error(
       "RECIPE REVIEW ADMIN EMAIL ERROR:",
       notificationError,
     );
+
   }
 
 
@@ -374,11 +282,9 @@ export async function submitMyRecipeForReviewAction(
     `/mi-cocihub/recetas/${recipeId}/editar`,
   );
 
-
   revalidatePath(
     "/mi-cocihub/recetas",
   );
-
 
   revalidatePath(
     "/mi-cocihub",
@@ -390,13 +296,12 @@ export async function submitMyRecipeForReviewAction(
   // =======================================================
 
   return {
-    success:
-      true,
+    success: true,
 
     message:
-      submissionType ===
-        "resubmission"
+      submissionType === "resubmission"
         ? "La receta corregida se ha enviado de nuevo a revisión."
         : "La receta se ha enviado a revisión.",
   };
+
 }

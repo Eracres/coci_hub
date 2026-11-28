@@ -11,23 +11,12 @@ export type AdminRecipeReviewStatus =
 
 
 export type AdminRecipeReviewInfo = {
-  id:
-    string;
-
-  status:
-    AdminRecipeReviewStatus;
-
-  submitted_at:
-    string | null;
-
-  reviewed_at:
-    string | null;
-
-  reviewed_by:
-    string | null;
-
-  review_notes:
-    string | null;
+  id: string;
+  status: AdminRecipeReviewStatus;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  review_notes: string | null;
 };
 
 
@@ -36,49 +25,29 @@ export type AdminRecipeReviewInfo = {
 ========================================================= */
 
 export async function getAdminRecipeReviewInfo(
-  recipeId:
-    string,
-): Promise<
-  AdminRecipeReviewInfo | null
-> {
+  recipeId: string,
+): Promise<AdminRecipeReviewInfo | null> {
+
   const supabase =
     await createClient();
-
 
   const {
     data,
     error,
-  } =
-    await supabase
-      .from(
-        "recipes",
-      )
-      .select(`
-        id,
-        status,
-        submitted_at,
-        reviewed_at,
-        reviewed_by,
-        review_notes
-      `)
-      .eq(
-        "id",
-        recipeId,
-      )
-      .maybeSingle();
+  } = await supabase
+    .rpc(
+      "get_recipe_review_info",
+      {
+        p_recipe_id: recipeId,
+      },
+    )
+    .maybeSingle();
 
-
-  if (
-    error
-  ) {
+  if (error) {
     throw new Error(
       `No se pudo obtener la información de revisión: ${error.message}`,
     );
   }
 
-
-  return (
-    data as
-      AdminRecipeReviewInfo | null
-  );
+  return data as AdminRecipeReviewInfo | null;
 }

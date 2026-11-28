@@ -578,15 +578,8 @@ export default async function MiCociHubPage() {
       recipesError,
   } =
     await supabase
-      .from(
-        "recipes",
-      )
-      .select(
-        "id,title,slug,status,image_path,image_alt,updated_at,submitted_at,published_at",
-      )
-      .eq(
-        "author_id",
-        userId,
+      .rpc(
+        "get_my_dashboard_recipes",
       )
       .order(
         "updated_at",

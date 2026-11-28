@@ -634,15 +634,8 @@ export default async function MyRecipesPage({
       recipesError,
   } =
     await supabase
-      .from(
-        "recipes",
-      )
-      .select(
-        "id,title,slug,status,short_description,image_path,image_alt,created_at,updated_at,submitted_at,published_at,review_notes",
-      )
-      .eq(
-        "author_id",
-        userId,
+      .rpc(
+        "get_my_recipes",
       )
       .order(
         "updated_at",
